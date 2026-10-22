@@ -1,0 +1,58 @@
+/* Shared typography and a quieter blue/navy palette. */
+:root{--blue:#506be5;--dark:#111c31;--ink:#243550;--font-fa:'Vazirmatn',Tahoma,Arial,sans-serif}
+body{font-family:var(--font-fa);background:#f5f7fb;font-weight:400;text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased}
+button,input,textarea,select{font-family:var(--font-fa)}
+h1,h2,h3{font-weight:700;letter-spacing:0}
+.ava-wordmark small{font-family:var(--font-fa);color:#5c6e8e}
+.brand-motto p{font-size:12px;color:#647491}
+.site-header{background:#fffffffa;box-shadow:0 5px 28px #15244905}
+.header-nav-bar{background:#f6f8fc;border-color:#e4e9f2}
+.main-navigation>a,.products-menu-trigger,.services-menu-trigger,.partners-menu-trigger{font-size:13px;font-weight:500;color:#4d5e7a}
+.main-navigation .catalog-link{background:#edf1ff;color:#4d65d0}
+.products-dropdown a{font-size:13px;color:#50607a}
+.products-dropdown .dropdown-eyebrow{color:#8190a8}
+.button{border-radius:9px;font-weight:500;background:linear-gradient(135deg,#607cf1,#4964d8);box-shadow:0 5px 16px #4d66e525}
+.button:hover{background:linear-gradient(135deg,#5470e5,#3f59ca);box-shadow:0 8px 20px #4d66e533}
+.hero{padding:46px 7% 0;background:radial-gradient(ellipse at 20% 75%,#2a3b64 0,transparent 57%),linear-gradient(120deg,#14223c,#111b30 65%)}
+.hero-content{min-height:430px;gap:40px}
+.hero h1{font-size:clamp(48px,5vw,72px);font-weight:750;line-height:1.5;letter-spacing:-.5px;margin:18px 0 16px;color:#f4f7ff}
+.hero h1 em{color:#a6b6ff}
+.hero-copy>p{font-size:14px;line-height:2.2;color:#c0cde3;max-width:460px}
+.hero .eyebrow{font-size:11px;font-weight:500;color:#a5b8d9;letter-spacing:0}
+.hero .actions{margin:24px 0;gap:22px}
+.hero .button{padding:12px 20px;font-size:12px}
+.hero .secondary{color:#c1cee6;font-size:12px}
+.hero .details{margin-top:24px;color:#95a8cb;font-size:10px;gap:18px}
+.hero .visual{height:350px}
+.hero .flower{transform:translate(-50%,-50%) scale(.84)}
+.hero .badge{background:#17243ceF;border-color:#ffffff24;padding:12px 17px}
+.hero .badge b{color:#a5b7ff;font-size:38px}
+.hero .badge span{font-size:12px}
+.hero .badge small{font-size:10px;color:#b0bfdb}
+.hero .visual-note{color:#9aacce}
+.hero-bottom{margin-top:28px;padding:18px 0;color:#9fb0ce;border-top-color:#ffffff1b;font-size:10px}
+.section-head h2{font-size:32px;font-weight:700;line-height:1.75;color:#273c5b}
+.section-head p{font-size:13px;color:#74849e;line-height:2.2}
+.kicker{color:#7187b1;font-weight:500}
+.card{border-color:#e1e7f1;border-radius:12px;box-shadow:0 4px 18px #21385803}
+.card p,.step p,.experience p{color:#71819a}
+.product-card{border-color:#e0e6f1;box-shadow:0 3px 12px #24375b03}
+.product-card h3{color:#2d466b;font-weight:650}
+.product-card p{font-size:12px;color:#72839e}
+.product-category-label{color:#6d83af}
+.product-model{color:#7e8ea8}
+.catalog-heading>p{color:#73849e}
+.catalog-search,.catalog-tools select,.module-tools select{font-family:var(--font-fa)}
+.catalog-breadcrumbs{color:#7a8ba6}
+.product-summary,.product-body{font-size:14px;color:#70829e}
+.product-introduction h1,.catalog-heading h1{font-weight:750;letter-spacing:0;color:#243a5b}
+.product-tab-panels h2,.related-products h2{font-weight:650;letter-spacing:0}
+.admin-form input:not([type=checkbox]),.admin-form textarea,.admin-form select{font-family:var(--font-fa)}
+.admin-button{background:#506be5;font-weight:600}
+.admin-sidebar a.active{background:#506be5}
+.admin-page-heading h1{font-weight:750}
+.contact{background:#14223a}
+.contact p{color:#b5c4dd}
+@media(max-width:1000px){.hero{padding:38px 6% 0}.hero-content{min-height:420px;gap:28px}.hero h1{font-size:clamp(44px,5.5vw,56px)}.hero .visual{height:310px}.hero .flower{transform:translate(-50%,-50%) scale(.75)}.main-navigation>a,.products-menu-trigger,.services-menu-trigger,.partners-menu-trigger{font-size:11px}.brand-motto p{font-size:11px}}
+@media(max-width:650px){.hero{padding:30px 6% 0}.hero-content{min-height:0;gap:16px}.hero h1{font-size:clamp(44px,12vw,52px);line-height:1.5;margin:16px 0}.hero-copy>p{font-size:13px;line-height:2.15}.hero .actions{margin:22px 0;gap:18px}.hero .button{padding:11px 16px;font-size:11px}.hero .secondary{font-size:11px}.hero .details{margin-top:20px;font-size:10px;gap:14px}.hero .visual{height:260px;margin:8px 8px 0}.hero .monitor{inset:14px 0 44px}.hero .flower{transform:translate(-50%,-50%) scale(.65)}.hero .badge{bottom:40px;padding:9px 13px}.hero .badge b{font-size:33px}.hero .badge span{font-size:11px}.hero .badge small{font-size:9px}.hero .visual-note{bottom:-5px;font-size:7px}.hero-bottom{margin-top:22px;padding:15px 0;font-size:9px}.section-head h2{font-size:27px}.section-head p{font-size:12px}.product-card p{font-size:11px}.product-summary,.product-body{font-size:13px}}
+@media(max-width:600px){.main-navigation>a,.products-menu-trigger,.services-menu-trigger,.partners-menu-trigger{font-size:10px}.brand-motto p{font-size:9px}.products-dropdown a{font-size:12px}.product-card h3{font-size:13px}}

@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#10172b">
+<title>آوا | فروش و اجاره نمایشگر</title>
+<style>
+:root{--blue:#5271ff;--dark:#10172b;--ink:#182138}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:190px}
+body{margin:0;background:#f7f8fc;color:var(--ink);font-family:Tahoma,Arial,sans-serif;line-height:1.9}
+a{text-decoration:none;color:inherit}
+button,input,textarea{font:inherit}
+button,a,input,textarea{-webkit-tap-highlight-color:transparent}
+button{cursor:pointer}
+:focus-visible{outline:3px solid #8b9eff;outline-offset:5px}
+.logo{font-size:36px;font-weight:bold;display:flex;align-items:center;gap:13px}
+.logo small{font:11px Arial;letter-spacing:3px;border-right:1px solid #d9dfea;padding-right:13px;color:#63708b}
+.logo b{color:var(--blue)}
+.site-header{position:sticky;top:0;z-index:10;background:#fffffffa;backdrop-filter:blur(18px);box-shadow:0 5px 24px #15244908}
+.header-top{max-width:none;min-height:112px;margin:auto;padding:20px 2.5%;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:24px}
+.ava-brand{justify-self:start;display:flex;align-items:center;gap:10px;white-space:nowrap}
+.ava-mark{width:108px;height:48px;flex-shrink:0;filter:drop-shadow(0 5px 7px #5271ff20)}
+.ava-wordmark{display:flex;flex-direction:column;gap:9px;align-items:flex-start}
+.ava-name{font:700 13px/1.3 Arial,sans-serif;letter-spacing:1.7px;color:#17223e}
+.ava-wordmark small{font:12px/1.5 Tahoma,Arial,sans-serif;letter-spacing:0;color:#627396}
+.brand-motto{grid-column:2;text-align:center;display:flex;flex-direction:column;align-items:center;gap:9px}
+.brand-motto strong{font:italic 600 34px/1.1 Arial,sans-serif;letter-spacing:-1.2px;color:#182642}
+.brand-motto strong span{color:var(--blue)}
+.brand-motto p{margin:0;font-size:11px;color:#6c7890;line-height:1.7}
+.header-nav-bar{border-top:1px solid #edf0f7;border-bottom:1px solid #e2e7f2;background:#f7f9fd}
+.main-navigation{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));align-items:stretch;max-width:1440px;margin:auto;padding:0 5%;direction:rtl}
+.main-navigation>a{position:relative;display:flex;align-items:center;justify-content:center;gap:7px;min-height:46px;padding:8px 12px;font-size:12px;color:#52617d;white-space:nowrap;transition:color .2s,background .2s}
+.main-navigation>a:after{content:"";height:2px;position:absolute;bottom:0;right:20%;left:20%;border-radius:3px;background:var(--blue);transform:scaleX(0);transition:transform .2s}
+.main-navigation>a:hover,.main-navigation>a:focus-visible{color:#405de0;background:#edf1ff}
+.main-navigation>a:hover:after,.main-navigation>a:focus-visible:after{transform:scaleX(1)}
+.main-navigation>a+a:before{content:"";position:absolute;right:0;top:calc(50% - 6px);height:12px;width:1px;background:#e0e6f1}
+.main-navigation .catalog-link{color:#405de0;font-weight:bold;background:#eef2ff}
+.catalog-link svg{width:16px;height:16px;flex-shrink:0}
+.outline{border:1px solid #dfe4f0;border-radius:5px;padding:10px 17px;font-size:11px}
+.section-dialog{width:min(460px,calc(100% - 36px));padding:32px;border:1px solid #e1e7f7;border-radius:22px;background:#fff;color:var(--ink);box-shadow:0 28px 90px #10172b30}
+.section-dialog::backdrop{background:#10172b9c;backdrop-filter:blur(5px)}
+.section-dialog h2{font-size:26px;margin:18px 0 12px}
+.section-dialog p{font-size:13px;line-height:2.2;color:#68758e}
+.section-dialog .dialog-close{border:0;border-radius:9px;width:36px;height:36px;background:#f0f3ff;color:#405de0;font-size:24px;align-self:flex-end}
+.section-dialog form{margin:0}
+.section-dialog .button{margin-top:14px}
+[id]{scroll-margin-top:12px}
+@media(max-width:900px){
+.header-top{gap:16px;padding:18px 2.5%;min-height:102px;grid-template-columns:minmax(0,1fr) auto}
+.brand-motto{grid-column:2}
+.ava-name{font-size:13px;letter-spacing:1.6px}
+.ava-mark{width:92px;height:41px}
+.main-navigation{padding:0 3%}
+.main-navigation>a{font-size:11px;padding:8px 4px}
+}
+@media(max-width:600px){
+.header-top{min-height:96px;padding:17px 2.5%;gap:12px}
+.ava-brand{gap:7px}
+.ava-mark{width:58px;height:29px}
+.ava-name{font-size:10px;letter-spacing:1.1px}
+.ava-wordmark{gap:6px}
+.ava-wordmark small{font-size:11px;letter-spacing:0}
+.brand-motto{gap:7px;max-width:145px}
+.brand-motto strong{font-size:26px}
+.brand-motto p{font-size:9px;max-width:145px;line-height:1.8}
+.main-navigation{grid-template-columns:repeat(4,minmax(0,1fr));padding:4px 3%;gap:2px 0}
+.main-navigation>a{font-size:10px;min-height:36px;padding:6px 3px}
+.main-navigation>a:nth-child(5):before{display:none}
+.main-navigation .catalog-link{background:#eaf0ff;border-radius:6px}
+}
+.hero{background:radial-gradient(ellipse at 22% 70%,#283865 0,transparent 55%),var(--dark);color:#fff;padding:75px 7% 0;overflow:hidden}
+.hero-content{min-height:540px;display:grid;grid-template-columns:1fr 1.1fr;gap:50px;align-items:center}
+.eyebrow{font-size:11px;color:#a5b4d5;letter-spacing:1px}
+.eyebrow:before{content:"";display:inline-block;width:6px;height:6px;background:#7c94ff;border-radius:50%;margin-left:10px;box-shadow:0 0 15px #7c94ff}
+h1{font-size:clamp(52px,6.6vw,88px);line-height:1.55;margin:24px 0;letter-spacing:-3px}
+em{font-style:normal;color:#899dff}
+.hero p{color:#a6b2cd;font-size:14px;line-height:2.4;max-width:430px}
+.actions{display:flex;gap:24px;align-items:center;flex-wrap:wrap;margin:30px 0}
+.button{display:inline-flex;align-items:center;justify-content:space-between;gap:24px;background:var(--blue);color:#fff;border:0;border-radius:5px;padding:14px 22px;font-size:12px;transition:background .2s,transform .2s}
+.button:hover{background:#3d5ae1;transform:translateY(-2px)}
+.secondary{font-size:12px;color:#c0cae1}
+.details{font-size:10px;color:#7888ab;display:flex;gap:18px;margin-top:35px}
+.visual{height:420px;position:relative;direction:ltr;perspective:1000px}
+.monitor{position:absolute;inset:20px 0 55px;border:6px solid #28334b;border-radius:9px;background:#111c3b;box-shadow:0 25px 65px #0007,0 0 80px #536dff25;transform:rotateY(12deg);overflow:hidden}
+.art{position:absolute;inset:0;background:radial-gradient(ellipse,#535ba9,#182440 65%,#10192d);overflow:hidden}
+.flower{position:absolute;width:300px;height:300px;top:50%;left:50%;transform:translate(-50%,-50%)}
+.petal{position:absolute;left:57px;top:65px;width:190px;height:170px;border-radius:15% 80% 15% 80%;background:radial-gradient(ellipse at 20% 20%,#f2fcff,#98d7ff 28%,#8672e9 60%,#dd8edb);mix-blend-mode:screen;box-shadow:inset 0 0 20px #d6f5ff80;transform:rotate(var(--r)) translateX(50px)}
+.core{position:absolute;inset:111px;border-radius:50%;background:repeating-conic-gradient(#ffc3db 0deg 3deg,#684195 4deg 10deg);box-shadow:0 0 25px #e6b2ef}
+.screen-text{position:absolute;bottom:12px;left:15px;right:15px;display:flex;justify-content:space-between;font:8px Arial;letter-spacing:2px;color:#e5eaff}
+.stand{position:absolute;bottom:20px;left:27%;width:50%;height:32px;clip-path:polygon(30% 0,70% 0,100% 100%,0 100%);background:linear-gradient(#2a374f,#10182a)}
+.badge{position:absolute;bottom:52px;left:-15px;direction:rtl;display:flex;align-items:center;gap:15px;padding:14px 20px;background:#17213bf2;border:1px solid #ffffff26;border-radius:8px;box-shadow:0 15px 35px #0004}
+.badge b{font:44px Arial;color:#91a7ff}
+.badge span{font-size:12px}
+.badge small{display:block;font-size:9px;color:#a3b2d0;margin-top:5px}
+.visual-note{position:absolute;bottom:-8px;left:0;color:#7787aa;font:8px Arial;letter-spacing:3px}
+.hero-bottom{border-top:1px solid #ffffff15;margin-top:50px;padding:22px 0;display:flex;justify-content:space-between;gap:20px;font-size:10px;color:#8391ae}
+section.content{padding:80px 8%}
+.section-head{display:flex;justify-content:space-between;align-items:end;gap:40px;margin-bottom:35px}
+.kicker{color:#7486bd;font-size:11px}
+h2{font-size:34px;line-height:1.8;margin:12px 0;letter-spacing:-1px}
+.section-head p{max-width:380px;font-size:12px;color:#7d879c;line-height:2.4}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+.card{background:#fff;border:1px solid #e5eaf3;border-radius:8px;padding:30px;transition:transform .2s,border-color .2s}
+.card:hover{transform:translateY(-5px);border-color:#99aaff}
+.icon{display:grid;place-items:center;width:48px;height:48px;border-radius:10px;background:#eef1ff;color:var(--blue);font:28px Arial}
+h3{font-size:17px;margin:25px 0 12px}
+.card p{font-size:12px;color:#8390a5;line-height:2.4;min-height:85px}
+.card a{display:block;border-top:1px solid #edf0f6;padding-top:18px;margin-top:22px;font-size:11px;color:#5f72aa}
+.experience{background:#edf0f8;display:grid;grid-template-columns:1fr 1fr;gap:8%;align-items:center}
+.experience p{font-size:13px;line-height:2.5;color:#7b879f}
+.experience h2 em{color:#5d78f1}
+.panels{height:330px;position:relative;overflow:hidden;background:#101a30;border-radius:7px;direction:ltr}
+.panel{position:absolute;top:0;height:450px;width:95px;transform:rotate(30deg);background:linear-gradient(90deg,#232b64,#5479f2,#b5cdff);box-shadow:15px 0 40px #607aff45}
+.panel:nth-child(1){left:5%;top:20px}
+.panel:nth-child(2){left:38%;top:-80px;background:linear-gradient(90deg,#372e66,#9b75df,#e3baff)}
+.panel:nth-child(3){left:72%;top:60px}
+.panels strong{position:absolute;bottom:45px;left:25px;color:#fff;font:700 29px/1.3 Arial;letter-spacing:1px}
+.panels small{position:absolute;bottom:18px;left:25px;color:#bcc9e7;font:8px Arial;letter-spacing:3px}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:40px;margin-top:40px}
+.step{border-top:1px solid #dce3f0;padding-top:20px}
+.step>span{font-size:28px;color:#7790ea}
+.step h3{margin-top:12px}
+.step p{font-size:12px;color:#8290a6;line-height:2.4}
+.contact{background:#111b30;color:#fff;display:grid;grid-template-columns:1fr 1fr;gap:10%}
+.contact p{font-size:12px;color:#a1afcb;line-height:2.4}
+.contact small{font-size:10px;color:#8393b3}
+form{display:flex;flex-direction:column;gap:10px}
+label{font-size:11px;color:#b0bdd6}
+input,textarea{width:100%;background:#ffffff05;border:1px solid #ffffff25;border-radius:5px;padding:13px;color:#fff;font-size:12px;resize:vertical;margin-bottom:12px}
+input::placeholder,textarea::placeholder{color:#7686a4}
+form .button{align-self:start}
+#result{white-space:pre-line;overflow-wrap:anywhere}
+#copy{border:1px solid #7284bb;color:#b4c4ff;background:transparent;border-radius:4px;padding:10px}
+footer{background:#fff;padding:30px 7%;display:flex;align-items:center;justify-content:space-between;gap:25px;flex-wrap:wrap}
+footer p,footer>a:last-child{font-size:11px;color:#8893a7}
+@media(max-width:850px){
+.hero{padding:50px 6% 0}
+.hero-content{gap:25px}
+.visual{height:340px}
+h1{font-size:62px}
+section.content{padding:60px 6%}
+.card{padding:22px}
+}
+@media(max-width:650px){
+.logo{font-size:30px}
+.outline{margin-right:auto;font-size:10px;padding:8px 12px}
+.hero-content{display:flex;flex-direction:column;align-items:stretch}
+.hero-copy{position:relative;z-index:1}
+h1{font-size:61px;margin:20px 0;line-height:1.5}
+.hero p{font-size:12px}
+.visual{height:320px;margin:15px 10px 0}
+.badge{left:-5px;padding:10px 15px}
+.hero-bottom{margin-top:25px;font-size:9px}
+.hero-bottom span:last-child{display:none}
+section.content{padding:50px 7%}
+.section-head{display:block;margin-bottom:25px}
+h2{font-size:28px}
+.cards,.steps,.experience,.contact{grid-template-columns:1fr}
+.cards{gap:16px}
+.card p{min-height:0}
+.experience{gap:30px}
+.panels{height:290px}
+.steps{gap:25px}
+.contact{gap:30px}
+footer{padding:25px 7%}
+}
+@media(prefers-reduced-motion:reduce){
+html{scroll-behavior:auto}
+*{transition:none!important}
+}
+
+<!--CMS_CSS-->
+</style>
+</head>
+<body>
+<div id="public-site">
+
+<header class="site-header">
+<div class="header-top">
+<a class="ava-brand" href="#" aria-label="گروه آوا، صفحه نخست">
+<svg class="ava-mark" viewBox="0 0 188 72" fill="none" aria-hidden="true">
+<defs><linearGradient id="ava-blue" x1="7" y1="10" x2="58" y2="62" gradientUnits="userSpaceOnUse"><stop stop-color="#7796ff"/><stop offset="1" stop-color="#3851dd"/></linearGradient></defs>
+<path d="M32 3 61 59H47L32 29 17 59H3L32 3Z" fill="url(#ava-blue)"/>
+<path d="M61 3H75L93 39 111 3H125L93 65 61 3Z" fill="#19294a"/>
+<path d="M32 3 61 59H47L32 29 17 59H3L32 3Z" transform="translate(122 0)" fill="url(#ava-blue)"/>
+<path d="m29 9 3-6 3 6" stroke="#b6c9ff" stroke-width="1.5" stroke-linecap="round"/>
+</svg>
+<span class="ava-wordmark"><span class="ava-name" dir="ltr">AVA GROUP</span><small>گروه آوا</small></span>
+</a>
+<div class="brand-motto"><strong dir="ltr">Just <span>Live.</span></strong><p>پیشرو در صنعت سینما و تلویزیون</p></div>
+</div>
+<div class="header-nav-bar"><div class="nav-shell">
+<button class="site-menu-toggle" type="button" aria-label="باز کردن منوی سایت" aria-haspopup="dialog" aria-controls="site-menu"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+<nav class="main-navigation" id="navigation" aria-label="منوی اصلی">
+<a href="#products">محصولات</a>
+<a href="#services">خدمات</a>
+<a href="#projects" data-dialog="projects" aria-haspopup="dialog">پروژه‌ها</a>
+<a href="#partners" data-dialog="partners" aria-haspopup="dialog">همکاران</a>
+<a href="#software" data-dialog="software" aria-haspopup="dialog">نرم‌افزار</a>
+<a href="#articles" data-dialog="articles" aria-haspopup="dialog">مقالات</a>
+<a href="#contact">تماس با ما</a>
+<a class="catalog-link" href="#catalog" data-dialog="catalog" aria-haspopup="dialog"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h7l4 4v6M14 3v5h5M5 3H4v18h7M17 13v8m-3-3 3 3 3-3"/></svg>کاتالوگ</a>
+</nav>
+</div></div>
+</header>
+
+<main id="home-content">
+<section class="hero hero-slider" id="hero" aria-roledescription="اسلایدر" aria-label="دنیای نمایشگرهای آوا">
+<div class="hero-viewport" id="hero-viewport" tabindex="0" aria-label="اسلایدهای هیرو؛ با کلیدهای چپ و راست جابه‌جا شوید"></div>
+<div class="hero-slider-footer">
+<div class="hero-slide-choices" id="hero-slide-choices" aria-label="انتخاب اسلاید"></div>
+<div class="hero-slide-tools">
+<span class="hero-image-caption" id="hero-image-caption">تصویر مفهومی</span>
+<span class="hero-slide-counter" id="hero-slide-counter" dir="ltr"></span>
+<div class="hero-arrow-group" dir="ltr">
+<button class="hero-control" id="hero-next" type="button" aria-label="اسلاید بعدی">←</button>
+<button class="hero-control" id="hero-previous" type="button" aria-label="اسلاید قبلی">→</button>
+<button class="hero-control hero-play" id="hero-play" type="button" aria-label="توقف پخش خودکار"></button>
+</div>
+</div>
+</div>
+<span class="sr-only" id="hero-status" aria-live="polite" aria-atomic="true"></span>
+</section>
+
+<div id="managed-sections"></div>
+
+<section class="content experience" id="vision">
+<div>
+<span class="kicker">نگاه آوا / ۰۲</span>
+<h2>فقط دیده نشوید.<br><em>در ذهن بمانید.</em></h2>
+<p>از ویترین فروشگاه تا صحنهٔ رویداد، نمایشگر بخشی از تجربهٔ مخاطب شماست. انتخاب خرید یا اجاره با توجه به محل استفاده، مدت نیاز و محتوایی که می‌خواهید نمایش دهید شکل می‌گیرد.</p>
+<a class="button" href="#contact">از پروژهٔ شما شروع کنیم ↖</a>
+</div>
+<div class="panels" aria-hidden="true">
+<div class="panel"></div><div class="panel"></div><div class="panel"></div>
+<strong>THE POWER<br>OF CONNECTION.</strong>
+<small>AVA / VISUAL CONCEPT</small>
+</div>
+</section>
+
+<section class="content" id="process">
+<div class="section-head">
+<div>
+<span class="kicker">مسیر همکاری / ۰۳</span>
+<h2>از گفتگو تا اجرا،<br>کنار شما.</h2>
+</div>
+<p>هر پروژه با شنیدن شروع می‌شود؛ با شناخت فضا، هدف و جزئیاتی که برای شما اهمیت دارند.</p>
+</div>
+<div class="steps">
+<article class="step">
+<span>۰۱</span>
+<h3>خرید یا اجاره؟</h3>
+<p>نوع نیاز، محل استفاده و زمان‌بندی پروژه‌تان را مشخص کنید.</p>
+</article>
+<article class="step">
+<span>۰۲</span>
+<h3>انتخاب نمایشگر</h3>
+<p>ابعاد، فاصلهٔ تماشا و شرایط محیط برای انتخاب گزینهٔ مناسب بررسی می‌شوند.</p>
+</article>
+<article class="step">
+<span>۰۳</span>
+<h3>هماهنگی سفارش</h3>
+<p>قیمت، موجودی، تحویل و شرایط اجرا پیش از نهایی‌شدن سفارش هماهنگ می‌شود.</p>
+</article>
+</div>
+</section>
+
+<section class="content contact" id="contact">
+<div>
+<span class="kicker">فصل بعدی، با شما</span>
+<h2>خرید یا اجارهٔ نمایشگر؟<br><em>از نیازتان بگویید.</em></h2>
+<p>نوع درخواست، ابعاد تقریبی، شهر و زمان موردنیازتان را بنویسید.</p>
+<small>این نسخهٔ نمایشی به سامانهٔ ارسال پیام متصل نیست. فرم فقط خلاصهٔ درخواست را آماده می‌کند.</small>
+</div>
+<form id="request-form">
+<label for="name">نام شما</label>
+<input id="name" name="customer" autocomplete="name" placeholder="نام و نام خانوادگی" maxlength="100" required>
+<label for="message">دربارهٔ پروژه</label>
+<textarea id="message" name="project" placeholder="خرید یا اجاره؟ چه ابعادی، در کدام شهر و برای چه زمانی؟" rows="4" maxlength="2000" required></textarea>
+<button class="button" type="submit">آماده‌کردن خلاصهٔ درخواست ↖</button>
+<p id="result" role="status"></p>
+<button id="copy" type="button" hidden>کپی خلاصهٔ درخواست</button>
+</form>
+</section>
+</main>
+<main id="catalog-page" hidden tabindex="-1"></main>
+
+<footer>
+<a class="logo" href="#">آوا<b>·</b><small>AVA</small></a>
+<p>آوا؛ فروش و اجارهٔ نمایشگر.</p>
+<a href="#">بازگشت به بالا ↑</a>
+</footer>
+</div>
+<!--CMS_SHELL-->
+
+<script>
+const form = document.querySelector('#request-form');
+const result = document.querySelector('#result');
+const copyButton = document.querySelector('#copy');
+let summary = '';
+
+form.addEventListener('submit', function (event) {
+  event.preventDefault();
+
+  const name = form.elements.customer.value.trim();
+  const project = form.elements.project.value.trim();
+
+  if (!name || !project) {
+    result.textContent = 'لطفاً نام و توضیح پروژه را وارد کنید.';
+    copyButton.hidden = true;
+    return;
+  }
+
+  summary = 'درخواست همکاری با آوا\nنام: ' + name +
+    '\nدربارهٔ پروژه: ' + project;
+
+  result.textContent = summary +
+    '\n\nخلاصه آماده است؛ هنوز پیامی ارسال نشده است.';
+  copyButton.hidden = false;
+  copyButton.textContent = 'کپی خلاصهٔ درخواست';
+});
+
+copyButton.addEventListener('click', async function () {
+  try {
+    await navigator.clipboard.writeText(summary);
+    copyButton.textContent = 'خلاصه کپی شد ✓';
+  } catch (error) {
+    const selection = window.getSelection();
+    const range = document.createRange();
+    range.selectNodeContents(result);
+    selection.removeAllRanges();
+    selection.addRange(range);
+    copyButton.textContent = 'متن انتخاب شد؛ آن را کپی کنید';
+  }
+});
+</script>
+<!--CMS_DATA-->
+<!--CMS_SCRIPT-->
+</body>
+</html>

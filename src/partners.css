@@ -1,0 +1,17 @@
+.partners-nav-item{position:relative;min-width:0}
+.partners-menu-trigger{position:relative;width:100%;height:100%;min-height:46px;display:flex;align-items:center;justify-content:center;gap:9px;padding:8px 12px;border:0;background:transparent;color:#52617d;font-size:12px;white-space:nowrap}
+.partners-menu-trigger:hover,.partners-menu-trigger[aria-expanded=true]{background:#edf1ff;color:#405de0}
+.partners-menu-trigger[aria-expanded=true] .dropdown-chevron{transform:rotate(180deg)}
+.partners-dropdown{position:absolute;top:calc(100% + 10px);right:0;z-index:35;width:350px;max-width:calc(100vw - 24px);padding:12px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#d0daf1 transparent;background:#fff;border:1px solid #e0e7f4;border-radius:14px;box-shadow:0 18px 60px #14213a29}
+.partners-dropdown>.equipment-category-trigger{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 11px;background:#f5f7fd;border:0;border-radius:8px;color:#4c6083;font-family:var(--font-fa);font-size:13px;line-height:1.9;text-align:right}
+.equipment-category-trigger>.equipment-chevron{font:18px Arial;color:#8ca0c7;transition:transform .2s}
+.equipment-category-trigger[aria-expanded=true]>.equipment-chevron{transform:rotate(180deg)}
+.equipment-submenu{margin:3px 11px 0 0;padding:5px 6px 5px 0;background:#f8faff;border-right:2px solid #dce6fa;border-radius:8px 0 0 8px}
+.equipment-submenu a{display:block;font-size:12px;color:#6b83a8;padding:10px 12px;border-radius:7px}
+.equipment-submenu a:hover,.equipment-submenu a:focus-visible{background:#edf2ff;color:#4a68da}
+.partners-directory-link{display:block;margin-top:12px;padding:12px;color:#7a8fae;border-top:1px solid #edf1f8;font-size:12px}
+.equipment-list{max-width:1240px;margin:auto;padding:35px 25px 65px}
+.equipment-list .card-action{text-align:right}
+@media(max-width:1000px){.partners-menu-trigger{font-size:11px;padding:8px 4px}}
+@media(max-width:700px){.equipment-list{grid-template-columns:repeat(2,minmax(0,1fr));padding:25px 5% 50px;gap:15px}.equipment-list .card{padding:22px}.equipment-list h3{font-size:15px}.equipment-list .card p{font-size:11px}}
+@media(max-width:600px){.partners-menu-trigger{min-height:36px;font-size:10px;gap:3px;padding:6px 2px}.partners-dropdown{top:calc(100% + 5px);padding:9px}.partners-dropdown>.equipment-category-trigger{font-size:12px}.equipment-submenu a{font-size:11px;padding:10px}.equipment-list{grid-template-columns:1fr}}

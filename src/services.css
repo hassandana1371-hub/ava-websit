@@ -1,0 +1,28 @@
+.services-nav-item{position:relative;min-width:0}
+.services-menu-trigger{position:relative;width:100%;height:100%;min-height:46px;display:flex;align-items:center;justify-content:center;gap:9px;padding:8px 12px;border:0;background:transparent;color:#52617d;font-size:12px;white-space:nowrap}
+.services-menu-trigger:hover,.services-menu-trigger[aria-expanded=true]{background:#edf1ff;color:#405de0}
+.services-menu-trigger[aria-expanded=true] .dropdown-chevron{transform:rotate(180deg)}
+.services-dropdown{position:absolute;top:calc(100% + 10px);right:0;z-index:35;width:350px;max-width:calc(100vw - 24px);padding:12px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#d0daf1 transparent;background:#fff;border:1px solid #e0e7f4;border-radius:14px;box-shadow:0 18px 60px #14213a29}
+.services-dropdown a{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:13px 12px;font-size:12px;color:#50607a;border-radius:8px}
+.services-dropdown a:hover,.services-dropdown a:focus-visible{background:#f1f5ff;color:#4664df}
+.service-menu-arrow{font-family:Arial;color:#91a3c9}
+.service-menu-empty{color:#91a1bb;font-size:12px;padding:12px}
+.service-page{max-width:1240px;padding:35px 25px 70px;margin:auto}
+.service-page-heading{border:1px solid #dfe7f5;border-radius:17px;background:radial-gradient(ellipse at 5% 5%,#e8edff,transparent 65%),#fff;padding:34px 38px;margin-bottom:28px}
+.service-page-heading h1{font-size:34px;line-height:1.8;letter-spacing:0;font-weight:750;color:#243a5b;margin:14px 0}
+.service-page-heading>p{font-size:14px;color:#7a8ba5;line-height:2.3;max-width:800px;margin:0 0 20px}
+.service-meta{display:inline-block;padding:4px 11px;background:#eff3ff;border-radius:6px;color:#7790bd;font-size:10px}
+.service-page-layout{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:26px;align-items:start}
+.service-page-body,.service-request-card{padding:28px;border:1px solid #e0e7f3;border-radius:14px;background:#fff;min-width:0}
+.service-page-body h2,.service-request-card h2{font-size:20px;letter-spacing:0;margin:0 0 20px;color:#425b7e}
+.service-page-body>img{width:100%;max-height:350px;object-fit:contain;border-radius:10px;margin-bottom:20px}
+.service-page-body .product-body{margin:0}
+.service-request-card{position:sticky;top:185px;background:#f0f4ff;border-color:#dce6fb}
+.service-request-card .catalog-kicker{font-family:var(--font-fa);letter-spacing:0;font-size:10px;color:#899cc5}
+.service-request-card h2{font-size:17px;margin-top:15px;line-height:2}
+.service-request-card p{font-size:12px;color:#7c90b0;line-height:2.3}
+.service-request-card .button{display:flex;margin:23px 0 15px;font-size:12px;padding:12px 15px;justify-content:center}
+.service-request-card small{display:block;font-size:10px;line-height:2;color:#8a9dbc}
+@media(max-width:1000px){.services-menu-trigger{font-size:11px;padding:8px 4px}.service-page-layout{grid-template-columns:minmax(0,1fr) 280px;gap:20px}}
+@media(max-width:700px){.service-page{padding:24px 5% 50px}.service-page-heading{padding:25px}.service-page-heading h1{font-size:27px}.service-page-heading>p{font-size:12px}.service-page-layout{grid-template-columns:1fr;gap:20px}.service-request-card{position:static}.service-page-body,.service-request-card{padding:24px}.service-page-body h2{font-size:18px}}
+@media(max-width:600px){.services-menu-trigger{min-height:36px;font-size:10px;gap:3px;padding:6px 2px}.services-dropdown{top:calc(100% + 5px);padding:9px}.services-dropdown a{font-size:12px;padding:12px 10px}.service-page-heading h1{font-size:25px}}

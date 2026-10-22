@@ -1,0 +1,527 @@
+{
+  "version": 1,
+  "siteId": "ava-group-cms-2026",
+  "updatedAt": 0,
+  "header": {
+    "logo": "",
+    "nameEn": "AVA GROUP",
+    "nameFa": "گروه آوا",
+    "sloganEn": "Just Live.",
+    "sloganFa": "پیشرو در صنعت سینما و تلویزیون",
+    "showLogo": true,
+    "showNameEn": true,
+    "showNameFa": true,
+    "showSloganEn": true,
+    "showSloganFa": true
+  },
+  "hero": {
+    "eyebrow": "فروش و اجارهٔ نمایشگر | آوا",
+    "title": "تصویر،",
+    "highlight": "فراتر از تصور.",
+    "description": "نمایشگر مناسب برای کسب‌وکار شما،\nتصویری چشمگیر برای رویداد شما؛ با فروش و اجارهٔ نمایشگرهای آوا.",
+    "image": "",
+    "imageAlt": "نمایشگر آوا",
+    "primaryLabel": "انتخاب نمایشگر",
+    "primaryTarget": "products",
+    "secondaryLabel": "تصویر در ابعاد تازه",
+    "secondaryTarget": "vision",
+    "show": true,
+    "slides": [
+      {
+        "eyebrow": "دنیای نمایشگرهای آوا",
+        "title": "تصویر،",
+        "highlight": "فراتر از تصور.",
+        "description": "نمایشگر مناسب برای کسب‌وکار شما،\nتصویری چشمگیر برای رویداد شما؛ با فروش و اجارهٔ نمایشگرهای آوا.",
+        "image": "",
+        "imageAlt": "تصویر مفهومی یک نمایشگر LED بزرگ در سالن مدرن",
+        "primaryLabel": "انتخاب نمایشگر",
+        "primaryTarget": "products",
+        "secondaryLabel": "مشاورهٔ انتخاب",
+        "secondaryTarget": "contact",
+        "id": "display-wall",
+        "asset": "wall",
+        "categoryId": ""
+      },
+      {
+        "id": "transparent-film",
+        "asset": "film",
+        "eyebrow": "TRANSPARENT LED FILM",
+        "title": "شیشه،",
+        "highlight": "روشن به تصویر.",
+        "description": "فیلم LED شفاف روی شیشه؛ ترکیبی از عبور نور و نمایش تصویر، برای ویترین‌ها و فضاهای معماری.",
+        "image": "",
+        "imageAlt": "تصویر مفهومی فیلم LED شفاف چسبیده به شیشهٔ یک فضای تجاری",
+        "primaryLabel": "نمایشگرهای شفاف",
+        "primaryTarget": "products",
+        "categoryId": "transparent",
+        "secondaryLabel": "مشاورهٔ پروژه",
+        "secondaryTarget": "contact"
+      },
+      {
+        "id": "flexible-display",
+        "asset": "flex",
+        "eyebrow": "FLEXIBLE LED",
+        "title": "تصویر،",
+        "highlight": "بدون مرزِ فرم.",
+        "description": "نمایشگرهای منعطف برای سطوح منحنی، ستون‌ها و اجراهایی که در یک قاب معمولی جا نمی‌شوند.",
+        "image": "",
+        "imageAlt": "تصویر مفهومی نمایشگر Flexible با نصب منحنی و یک ماژول منعطف",
+        "primaryLabel": "کشف Flexible",
+        "primaryTarget": "products",
+        "categoryId": "rental-flexible",
+        "secondaryLabel": "مشاورهٔ پروژه",
+        "secondaryTarget": "contact"
+      },
+      {
+        "id": "led-floor",
+        "asset": "floor",
+        "eyebrow": "LED FLOOR",
+        "title": "زیر قدم‌ها،",
+        "highlight": "دنیایی از نور.",
+        "description": "کف LED؛ تصویر را از دیوارها به زمین بیاورید و برای رویدادها و فضاهای نمایشی، تجربه‌ای تازه بسازید.",
+        "image": "",
+        "imageAlt": "تصویر مفهومی کف LED روشن در یک سالن نمایشگاهی",
+        "primaryLabel": "کف LED",
+        "primaryTarget": "products",
+        "categoryId": "led-floor",
+        "secondaryLabel": "مشاورهٔ پروژه",
+        "secondaryTarget": "contact"
+      }
+    ],
+    "autoplay": true,
+    "interval": 7000
+  },
+  "navigation": [
+    {
+      "id": "products",
+      "label": "محصولات",
+      "target": "products",
+      "visible": true,
+      "url": ""
+    },
+    {
+      "id": "services",
+      "label": "خدمات",
+      "target": "services",
+      "visible": true,
+      "url": ""
+    },
+    {
+      "id": "projects",
+      "label": "پروژه‌ها",
+      "target": "projects",
+      "visible": true,
+      "url": ""
+    },
+    {
+      "id": "partners",
+      "label": "همکاران",
+      "target": "partners",
+      "visible": true,
+      "url": ""
+    },
+    {
+      "id": "software",
+      "label": "نرم‌افزار",
+      "target": "software",
+      "visible": true,
+      "url": ""
+    },
+    {
+      "id": "articles",
+      "label": "مقالات",
+      "target": "articles",
+      "visible": true,
+      "url": ""
+    },
+    {
+      "id": "contact",
+      "label": "تماس با ما",
+      "target": "contact",
+      "visible": true,
+      "url": ""
+    },
+    {
+      "id": "catalog",
+      "label": "کاتالوگ",
+      "target": "catalog",
+      "visible": true,
+      "url": ""
+    }
+  ],
+  "modules": {
+    "products": {
+      "name": "محصولات",
+      "description": "نمایشگر مناسب برای فضای شما؛ از انتخاب تا هماهنگی سفارش.",
+      "items": [
+        {
+          "id": "initial-display",
+          "title": "فروش نمایشگر",
+          "summary": "انتخاب نمایشگر برای فروشگاه، فضای تجاری و نصب دائمی؛ متناسب با ابعاد، محیط و بودجهٔ شما.",
+          "body": "",
+          "image": "",
+          "url": "",
+          "meta": "",
+          "status": "published",
+          "categoryId": "displays",
+          "model": "",
+          "featured": true,
+          "specifications": [],
+          "datasheetUrl": "",
+          "manualUrl": ""
+        }
+      ]
+    },
+    "services": {
+      "name": "خدمات",
+      "description": "از انتخاب و اجارهٔ نمایشگر تا نصب، راه‌اندازی و نگهداری؛ خدمات متناسب با نیاز پروژهٔ شما.",
+      "items": [
+        {
+          "id": "initial-rental",
+          "title": "اجارهٔ تلویزیون‌های شهری",
+          "summary": "بررسی و هماهنگی اجارهٔ نمایشگر LED برای نمایشگاه، همایش و رویداد؛ متناسب با فضا و مدت اجرا.",
+          "body": "ابعاد تصویر، فاصلهٔ مخاطب، فضای داخلی یا خارجی، محل و تاریخ اجرا را مشخص کنید.\nپس از بررسی نیاز پروژه، دربارهٔ نمایشگر مناسب، تجهیزات کنترل تصویر و شرایط نصب و جمع‌آوری هماهنگی می‌شود.",
+          "meta": "اجاره / نمایشگاه و رویداد",
+          "image": "",
+          "url": "",
+          "file": "",
+          "status": "published"
+        },
+        {
+          "id": "initial-consulting",
+          "title": "مشاورهٔ پروژه‌ها",
+          "summary": "کمک به انتخاب نوع نمایشگر، ابعاد، وضوح و تجهیزات تصویر بر اساس هدف، محیط و بودجهٔ پروژه.",
+          "body": "نوع کاربری، فاصلهٔ تماشا، نور محیط و محل نصب بررسی می‌شود تا گزینه‌های خرید یا اجاره قابل مقایسه باشند.\nبرای شروع، نقشه یا عکس فضا و توضیحی دربارهٔ نیاز پروژه آماده کنید.",
+          "meta": "انتخاب تجهیزات / امکان‌سنجی",
+          "image": "",
+          "url": "",
+          "file": "",
+          "status": "published"
+        },
+        {
+          "id": "service-videowall",
+          "title": "طراحی و نصب ویدئووال",
+          "summary": "بررسی چیدمان ویدئووال، ساختار نصب و مسیرهای برق و سیگنال برای فضای موردنظر.",
+          "body": "با توجه به ابعاد فضا، محل قرارگیری مخاطب و نوع محتوا، چیدمان نمایشگر و تجهیزات کنترل تصویر بررسی می‌شود.\nامکان و شرایط نصب، سازهٔ موردنیاز و دسترسی برای سرویس، پیش از اجرا با مسئول پروژه هماهنگ می‌شود.",
+          "meta": "ویدئووال / نصب ثابت",
+          "image": "",
+          "url": "",
+          "file": "",
+          "status": "published"
+        },
+        {
+          "id": "service-commissioning",
+          "title": "راه‌اندازی تجهیزات تصویر",
+          "summary": "تنظیم نمایشگر، پردازشگر و کنترلر و بررسی هماهنگی ورودی‌ها و خروجی‌های تصویر.",
+          "body": "نوع نمایشگر، مدل کنترلر یا پردازشگر و منبع تصویر را معرفی کنید.\nتنظیم رزولوشن، چیدمان تصویر و بررسی عملکرد سیستم بر اساس مشخصات تجهیزات و شرایط پروژه انجام می‌شود.",
+          "meta": "کنترلر / پردازشگر / تنظیم تصویر",
+          "image": "",
+          "url": "",
+          "file": "",
+          "status": "published"
+        },
+        {
+          "id": "service-maintenance",
+          "title": "پشتیبانی و نگهداری نمایشگرها",
+          "summary": "بررسی خطاهای تصویر، نیازهای سرویس و امکان تعمیر یا تعویض قطعات تجهیزات نمایش.",
+          "body": "برای شروع، مدل تجهیزات، شرح خطا و در صورت امکان عکس یا فیلم مشکل را آماده کنید.\nامکان سرویس، موجودی قطعات و شرایط انجام کار پس از بررسی مشخص می‌شود؛ زمان و هزینه قبل از هماهنگی نهایی اعلام می‌شوند.",
+          "meta": "سرویس / عیب‌یابی",
+          "image": "",
+          "url": "",
+          "file": "",
+          "status": "published"
+        },
+        {
+          "id": "service-training",
+          "title": "آموزش و تحویل پروژه",
+          "summary": "آشنایی مسئول بهره‌برداری با کارکرد نمایشگر، مدیریت محتوا و تنظیم‌های موردنیاز روزمره.",
+          "body": "آموزش با توجه به تجهیزات نصب‌شده و نیاز مسئول سایت یا اپراتور برنامه‌ریزی می‌شود.\nنحوهٔ روشن و خاموش‌کردن، انتخاب ورودی، تغییر محتوا و نکات نگهداری در چارچوب پروژه مرور می‌شوند.",
+          "meta": "اپراتوری / مدیریت محتوا",
+          "image": "",
+          "url": "",
+          "file": "",
+          "status": "published"
+        }
+      ]
+    },
+    "projects": {
+      "name": "پروژه‌ها",
+      "description": "",
+      "items": []
+    },
+    "partners": {
+      "name": "همکاران",
+      "description": "",
+      "items": []
+    },
+    "software": {
+      "name": "نرم‌افزار",
+      "description": "",
+      "items": []
+    },
+    "articles": {
+      "name": "مقالات",
+      "description": "",
+      "items": []
+    },
+    "contact": {
+      "name": "تماس با ما",
+      "description": "",
+      "items": []
+    },
+    "catalog": {
+      "name": "کاتالوگ",
+      "description": "",
+      "items": []
+    },
+    "equipment": {
+      "name": "فروش تجهیزات تلویزیون",
+      "description": "تجهیزات و قطعات نمایشگرهای LED و ویدئووال؛ انتخاب بر اساس مدل، سازگاری و نیاز پروژه.",
+      "items": [
+        {
+          "id": "receiving-card",
+          "title": "رسیور کارت",
+          "summary": "کارت دریافت تصویر برای نمایشگر LED؛ انتخاب بر اساس نوع ماژول، هاب‌برد و سیستم کنترل.",
+          "body": "رسیور کارت دادهٔ تصویر را از سیستم ارسال دریافت و برای نمایش روی ماژول‌ها مدیریت می‌کند.\nبرای بررسی گزینهٔ مناسب، مدل ماژول، ابعاد کابینت، نوع هاب‌برد و برند سیستم کنترل را مشخص کنید.",
+          "meta": "Receiving Card",
+          "image": "",
+          "url": "",
+          "file": "",
+          "status": "published"
+        },
+        {
+          "id": "power-supply",
+          "title": "پاور (منبع تغذیه)",
+          "summary": "منبع تغذیهٔ ماژول و کابینت LED؛ متناسب با ولتاژ، جریان و فضای نصب.",
+          "body": "ولتاژ و جریان خروجی، ابعاد منبع تغذیه و نوع خنک‌کاری باید با ماژول و کابینت سازگار باشند.\nبرای استعلام، تصویر برچسب پاور فعلی یا مشخصات تغذیهٔ تجهیزات و تعداد موردنیاز را آماده کنید.",
+          "meta": "Power Supply",
+          "image": "",
+          "url": "",
+          "file": "",
+          "status": "published"
+        },
+        {
+          "id": "magnet",
+          "title": "مگنت",
+          "summary": "مگنت و متعلقات نصب ماژول؛ متناسب با نوع ماژول و روش دسترسی کابینت.",
+          "body": "انتخاب مگنت و اتصال نصب به ساختار ماژول و کابینت، ابعاد و روش سرویس بستگی دارد.\nبرای تطبیق، عکس قطعه، اندازه‌ها و نوع رزوه یا اتصال موردنیاز را مشخص کنید.",
+          "meta": "Magnet / Mounting",
+          "image": "",
+          "url": "",
+          "file": "",
+          "status": "published"
+        },
+        {
+          "id": "processor",
+          "title": "پروسسور",
+          "summary": "پردازشگر تصویر برای تنظیم ورودی‌ها، وضوح و چیدمان نمایشگر یا ویدئووال.",
+          "body": "نوع ورودی و خروجی، رزولوشن تصویر، تعداد منابع و روش چیدمان نمایشگر در انتخاب پروسسور مؤثر هستند.\nبرای بررسی، مدل نمایشگر، کنترلر موجود و نیازهای پروژه را معرفی کنید.",
+          "meta": "Video Processor",
+          "image": "",
+          "url": "",
+          "file": "",
+          "status": "published"
+        },
+        {
+          "id": "sending-card",
+          "title": "سندر کارت",
+          "summary": "کارت ارسال تصویر برای اتصال منبع تصویر به سیستم کنترل نمایشگر LED.",
+          "body": "سندر کارت باید با رسیور کارت، نرم‌افزار و ظرفیت موردنیاز نمایشگر سازگار باشد.\nابعاد کلی تصویر، مدل تجهیزات موجود و نوع ورودی تصویر را برای انتخاب مشخص کنید.",
+          "meta": "Sending Card",
+          "image": "",
+          "url": "",
+          "file": "",
+          "status": "published"
+        },
+        {
+          "id": "hub-board",
+          "title": "هاب‌برد",
+          "summary": "برد رابط بین رسیور کارت و ماژول‌ها؛ با توجه به نوع کانکتور و چیدمان اتصال.",
+          "body": "تعداد و نوع پورت‌ها، پین‌آوت و سازگاری برد با رسیور کارت و ماژول باید بررسی شوند.\nعکس برد فعلی، مدل کارت و مشخصات ماژول را برای تطبیق آماده کنید.",
+          "meta": "HUB Board",
+          "image": "",
+          "url": "",
+          "file": "",
+          "status": "published"
+        },
+        {
+          "id": "led-module",
+          "title": "ماژول LED",
+          "summary": "ماژول نمایشگر برای ساخت یا سرویس کابینت؛ متناسب با محیط و مشخصات فنی.",
+          "body": "گام پیکسل، ابعاد، نوع کاربری داخلی یا خارجی، تغذیه و سازگاری با سیستم کنترل در انتخاب ماژول اهمیت دارند.\nبرای جایگزینی، مشخصات ماژول فعلی و هماهنگی رنگ و روشنایی با نمایشگر موجود نیز بررسی می‌شوند.",
+          "meta": "LED Module",
+          "image": "",
+          "url": "",
+          "file": "",
+          "status": "published"
+        },
+        {
+          "id": "cables-connectors",
+          "title": "کابل و اتصالات",
+          "summary": "کابل‌های سیگنال و تغذیه و اتصالات موردنیاز ماژول، کابینت و تجهیزات کنترل.",
+          "body": "نوع سوکت، طول مسیر، پین‌آوت و مشخصات الکتریکی باید با تجهیزات سازگار باشند.\nبرای بررسی، عکس دو سر اتصال، طول و تعداد موردنیاز و مدل دستگاه را مشخص کنید.",
+          "meta": "Cables / Connectors",
+          "image": "",
+          "url": "",
+          "file": "",
+          "status": "published"
+        }
+      ]
+    }
+  },
+  "contact": {
+    "title": "خرید یا اجارهٔ نمایشگر؟\nاز نیازتان بگویید.",
+    "description": "نوع درخواست، ابعاد تقریبی، شهر و زمان موردنیازتان را بنویسید.",
+    "phone": "",
+    "email": "",
+    "address": ""
+  },
+  "productCategories": [
+    {
+      "id": "urban",
+      "name": "تلویزیون‌های شهری",
+      "parentId": "",
+      "description": "",
+      "visible": true,
+      "menu": true
+    },
+    {
+      "id": "urban-indoor",
+      "name": "فضای داخلی",
+      "parentId": "urban",
+      "description": "",
+      "visible": true,
+      "menu": true
+    },
+    {
+      "id": "urban-outdoor",
+      "name": "فضای خارجی",
+      "parentId": "urban",
+      "description": "",
+      "visible": true,
+      "menu": true
+    },
+    {
+      "id": "rental",
+      "name": "تلویزیون‌های رنتال",
+      "parentId": "",
+      "description": "",
+      "visible": true,
+      "menu": true
+    },
+    {
+      "id": "rental-outdoor",
+      "name": "خارجی",
+      "parentId": "rental",
+      "description": "",
+      "visible": true,
+      "menu": true
+    },
+    {
+      "id": "rental-indoor",
+      "name": "داخلی",
+      "parentId": "rental",
+      "description": "",
+      "visible": true,
+      "menu": true
+    },
+    {
+      "id": "rental-flexible",
+      "name": "Flexible",
+      "parentId": "rental",
+      "description": "",
+      "visible": true,
+      "menu": true
+    },
+    {
+      "id": "digital-stands",
+      "name": "استندهای دیجیتال",
+      "parentId": "",
+      "description": "",
+      "visible": true,
+      "menu": true
+    },
+    {
+      "id": "transparent",
+      "name": "نمایشگرهای شفاف (ترنسپرنت)",
+      "parentId": "",
+      "description": "",
+      "visible": true,
+      "menu": true
+    },
+    {
+      "id": "conference-home",
+      "name": "نمایشگرهای کنفرانسی ـ خانگی",
+      "parentId": "",
+      "description": "",
+      "visible": true,
+      "menu": true
+    },
+    {
+      "id": "conference-touch",
+      "name": "لمسی",
+      "parentId": "conference-home",
+      "description": "",
+      "visible": true,
+      "menu": true
+    },
+    {
+      "id": "conference-standard",
+      "name": "عادی",
+      "parentId": "conference-home",
+      "description": "",
+      "visible": true,
+      "menu": true
+    },
+    {
+      "id": "led-floor",
+      "name": "کف LED",
+      "parentId": "",
+      "description": "",
+      "visible": true,
+      "menu": true
+    },
+    {
+      "id": "decorative",
+      "name": "نمایشگرهای تزئینی",
+      "parentId": "",
+      "description": "",
+      "visible": true,
+      "menu": true
+    },
+    {
+      "id": "displays",
+      "name": "نمایشگرها",
+      "description": "نمایشگرهای مناسب فضاهای تجاری، نمایشگاه و رویدادها.",
+      "visible": true,
+      "parentId": "",
+      "menu": false
+    },
+    {
+      "id": "controllers",
+      "name": "کنترلرها و پردازشگرها",
+      "description": "تجهیزات کنترل و پردازش تصویر.",
+      "visible": true,
+      "parentId": "",
+      "menu": false
+    },
+    {
+      "id": "accessories",
+      "name": "تجهیزات جانبی",
+      "description": "تجهیزات تکمیلی نمایش و اجرای تصویر.",
+      "visible": true,
+      "parentId": "",
+      "menu": false
+    },
+    {
+      "id": "uncategorized",
+      "name": "دسته‌بندی‌نشده",
+      "description": "",
+      "visible": true,
+      "parentId": "",
+      "menu": false
+    }
+  ],
+  "taxonomyRevision": 2,
+  "servicesRevision": 1
+}
