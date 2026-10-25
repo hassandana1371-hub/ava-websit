@@ -9,8 +9,8 @@ const root=path.resolve(__dirname,'..');
  try{
   const page=await browser.newPage({viewport:{width:1440,height:900},acceptDownloads:true});page.on('pageerror',e=>errors.push(e.message));
   await page.goto(base);const frame=page.locator('.hero-motion-frame');await frame.waitFor();await page.waitForFunction(()=>document.querySelector('.hero-motion-frame')?.contentDocument?.getAnimations().length===12);
-  assert.equal(await page.locator('.hero-slide').count(),5);assert.equal(await page.locator('.hero-slide[aria-hidden=false]').getAttribute('class'),'hero-slide hero-motion-slide');
-  assert.equal(await page.locator('.hero-arrow').count(),2);assert.equal(await page.locator('.hero-dot').count(),5);assert.equal(await page.locator('#hero a,.hero-slider-footer').count(),0);assert.equal(await frame.getAttribute('sandbox'),'allow-same-origin');
+  assert.equal(await page.locator('.hero-slide').count(),6);assert.equal(await page.locator('.hero-slide[aria-hidden=false]').getAttribute('class'),'hero-slide hero-motion-slide');
+  assert.equal(await page.locator('.hero-arrow').count(),2);assert.equal(await page.locator('.hero-dot').count(),6);assert.equal(await page.locator('#hero a,.hero-slider-footer').count(),0);assert.equal(await frame.getAttribute('sandbox'),'allow-same-origin');
   const timings=await frame.evaluate(f=>f.contentDocument.getAnimations().map(a=>({duration:a.effect.getTiming().duration,iterations:a.effect.getTiming().iterations,end:a.effect.getComputedTiming().endTime})));
   assert(timings.every(t=>t.duration===7000&&t.iterations===2));assert.equal(Math.max(...timings.map(t=>t.end)),14120);
   await page.waitForFunction(()=>{const f=document.querySelector('.hero-motion-frame');return f.contentDocument.querySelector('.stage').getAnimations()[0].effect.getComputedTiming().currentIteration===1;},{},{timeout:9000});
@@ -24,10 +24,10 @@ const root=path.resolve(__dirname,'..');
   await page.waitForFunction(()=>document.querySelector('.hero-motion-frame').contentDocument.querySelector('.stage').getAnimations()[0].playState==='running');const restarted=await frame.evaluate(f=>f.contentDocument.querySelector('.stage').getAnimations()[0].currentTime);assert(restarted<1000);
   console.log('PASS carousel returns to the logo and restarts its two-iteration animation');
 
-  await page.goto(base+'#admin/hero');assert.equal(await page.locator('#hero-form [name=showMotionLogo]').isChecked(),true);await page.locator('#hero-form [name=showMotionLogo]').uncheck();await page.locator('#hero-form [type=submit]').click();await page.goto(base);assert.equal(await frame.count(),0);assert.equal(await page.locator('.hero-slide').count(),4);
+  await page.goto(base+'#admin/hero');assert.equal(await page.locator('#hero-form [name=showMotionLogo]').isChecked(),true);await page.locator('#hero-form [name=showMotionLogo]').uncheck();await page.locator('#hero-form [type=submit]').click();await page.goto(base);assert.equal(await frame.count(),0);assert.equal(await page.locator('.hero-slide').count(),5);
   await page.goto(base+'#admin/hero');await page.locator('#hero-form [name=showMotionLogo]').check();await page.locator('#hero-form [type=submit]').click();
   await page.goto(base+'#admin/backup');const downloading=page.waitForEvent('download');await page.locator('#export-site').click();const file='/tmp/ava-v16-motion-export.html';await(await downloading).saveAs(file);
-  const restored=await browser.newPage({reducedMotion:'reduce'});await restored.route('http://motion-export.test/',route=>route.fulfill({contentType:'text/html',body:fs.readFileSync(file,'utf8')}));await restored.goto('http://motion-export.test/');await restored.waitForFunction(()=>document.querySelector('.hero-motion-frame')?.contentDocument?.getAnimations().length===12);assert.equal(await restored.locator('.hero-scene').count(),4);
+  const restored=await browser.newPage({reducedMotion:'reduce'});await restored.route('http://motion-export.test/',route=>route.fulfill({contentType:'text/html',body:fs.readFileSync(file,'utf8')}));await restored.goto('http://motion-export.test/');await restored.waitForFunction(()=>document.querySelector('.hero-motion-frame')?.contentDocument?.getAnimations().length===12);assert.equal(await restored.locator('.hero-scene').count(),5);
   assert(await restored.locator('.hero-motion-frame').evaluate(f=>f.contentDocument.getAnimations().every(a=>a.playState==='paused'&&a.currentTime===3500)));
   console.log('PASS panel toggle, standalone HTML export with embedded SVG and static reduced-motion presentation');
   for(const width of [320,390]){

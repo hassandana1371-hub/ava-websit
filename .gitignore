@@ -4,3 +4,7 @@ node_modules/
 .DS_Store
 playwright-report/
 test-results/
+
+private-data/
+*.sqlite3*
+.env

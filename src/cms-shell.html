@@ -5,10 +5,11 @@
   <button type="button" class="manage-link" id="open-admin">مدیریت سایت <span aria-hidden="true">←</span></button>
 </dialog>
 
+<div id="admin-login" hidden></div>
 <div id="admin-app" hidden>
   <header class="admin-topbar">
     <a class="admin-brand" href="#admin/dashboard"><span class="admin-brand-mark" aria-hidden="true">A</span><span><strong>گروه آوا</strong><small>مدیریت سایت</small></span></a>
-    <div class="admin-top-actions"><span class="local-badge">نسخهٔ محلی</span><button type="button" class="admin-button secondary" id="view-site">مشاهدهٔ سایت ↗</button></div>
+    <div class="admin-top-actions"><span class="local-badge">نسخهٔ آفلاین</span><button type="button" class="admin-button secondary" id="admin-logout" hidden>خروج</button><button type="button" class="admin-button secondary" id="view-site">مشاهدهٔ سایت ↗</button></div>
   </header>
   <div class="admin-layout">
     <aside class="admin-sidebar" aria-label="بخش‌های مدیریت">
@@ -16,6 +17,8 @@
       <a href="#admin/dashboard" data-page="dashboard"><span aria-hidden="true">◫</span>پیشخوان</a>
       <a href="#admin/header" data-page="header"><span aria-hidden="true">◈</span>لوگو و هدر</a>
       <a href="#admin/hero" data-page="hero"><span aria-hidden="true">▣</span>هیرو / تصویر اصلی</a>
+      <a href="#admin/banners" data-page="banners"><span aria-hidden="true">▧</span>بنر اختصاصی صفحات</a>
+      <a href="#admin/security" data-page="security"><span aria-hidden="true">⌘</span>رمز و ورود</a>
       <a href="#admin/navigation" data-page="navigation"><span aria-hidden="true">☷</span>منوها و اتصال‌ها</a>
       <p class="sidebar-label">محتوای سایت</p>
       <div id="module-sidebar"></div>
@@ -53,6 +56,7 @@
       <div class="admin-form-grid"><label>پیوند برگهٔ مشخصات<input name="datasheetUrl" type="url" dir="ltr" maxlength="2000" placeholder="https://…"></label><label>پیوند راهنمای کاربر<input name="manualUrl" type="url" dir="ltr" maxlength="2000" placeholder="https://…"></label></div>
     </div>
     <div id="catalog-upload-row" hidden><h3 id="product-file-heading">فایل‌های محصول</h3><p class="product-file-help">فایل PDF معرفی یا دیتاشیت را اینجا بارگذاری کنید؛ پس از ذخیره، در تب «فایل‌ها و دانلودها» نمایش داده می‌شود.</p><label>نام فایل در بخش دانلود<input name="fileName" maxlength="160" placeholder="مثلاً کاتالوگ این محصول"></label><label class="upload-button"><span id="entry-pdf-label">انتخاب فایل PDF کاتالوگ</span><input id="entry-pdf" type="file" accept="application/pdf"></label><small id="pdf-filename">حداکثر ۲ مگابایت؛ فایل در بخش دانلودها نمایش داده می‌شود.</small><button class="text-button" type="button" id="entry-pdf-remove">حذف فایل PDF</button></div>
+    <details><summary>بنر و اسلایدر اختصاصی این صفحه</summary><div id="entry-banner-fields" class="banner-editor-fields"></div></details>
     <label>وضعیت<select name="status"><option value="draft">پیش‌نویس — در سایت دیده نشود</option><option value="published">منتشرشده — در سایت دیده شود</option></select></label>
     <p id="entry-error" class="form-error" role="alert"></p>
     <div class="form-actions"><button type="submit" class="admin-button">ذخیرهٔ محتوا</button><button type="button" class="admin-button secondary" id="cancel-entry">انصراف</button></div>

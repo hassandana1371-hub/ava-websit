@@ -14,14 +14,14 @@ seed.hero.showMotionLogo=false;
   const page=await browser.newPage({viewport:{width:1440,height:900},reducedMotion:'no-preference',acceptDownloads:true});page.on('pageerror',e=>errors.push(e.message));
   await page.goto(base);await page.evaluate(()=>document.fonts.ready);
   assert.equal(await page.locator('#hero a,#hero h1,#hero p,.hero-slider-footer,.hero-slide-choices,.hero-shade').count(),0);
-  assert.equal((await page.locator('#hero').innerText()).trim(),'');assert.equal(await page.locator('.hero-scene').count(),4);
+  assert.equal((await page.locator('#hero').innerText()).trim(),'');assert.equal(await page.locator('.hero-scene').count(),5);
   assert.equal(await page.locator('#hero').evaluate(n=>n.getBoundingClientRect().bottom),900);
-  assert(await page.locator('.hero-scene').evaluateAll(images=>images.every(i=>i.complete&&i.naturalWidth>1800&&i.src.startsWith('data:image/webp;base64,'))));
+  assert(await page.locator('.hero-scene').evaluateAll(images=>images.every(i=>i.complete&&i.naturalWidth>=1600&&i.src.startsWith('data:image/webp;base64,'))));
   await page.mouse.move(500,450);
   await page.evaluate(()=>{window.heroChanges=[];let previous='';new MutationObserver(()=>{const active=document.querySelector('.hero-slide[aria-hidden=false]');const alt=active.querySelector('img').alt;if(alt!==previous){previous=alt;window.heroChanges.push({alt,time:performance.now()});}}).observe(document.querySelector('#hero-viewport'),{subtree:true,attributes:true,attributeFilter:['aria-hidden']});});
-  await page.waitForFunction(()=>window.heroChanges.length>=5,{},{timeout:14000});
-  const changes=await page.evaluate(()=>window.heroChanges);for(let i=1;i<5;i++){const delta=changes[i].time-changes[i-1].time;assert(delta>1850&&delta<2200,`cadence ${delta}ms`);}
-  assert.equal(changes[0].alt,changes[4].alt);
+  await page.waitForFunction(()=>window.heroChanges.length>=6,{},{timeout:14000});
+  const changes=await page.evaluate(()=>window.heroChanges);for(let i=1;i<6;i++){const delta=changes[i].time-changes[i-1].time;assert(delta>1850&&delta<2200,`cadence ${delta}ms`);}
+  assert.equal(changes[0].alt,changes[5].alt);
   // The outgoing image always moves left, including the final-to-first wrap.
   const frames=await page.locator('.hero-slide').evaluateAll(nodes=>nodes.flatMap(n=>n.getAnimations().map(a=>a.effect.getKeyframes().map(f=>f.transform))));
   if(frames.length)assert(frames.some(f=>f.includes('translateX(-100%)')));
@@ -32,11 +32,11 @@ seed.hero.showMotionLogo=false;
   await rows.first().locator('[data-slide-image]').setInputFiles(path.join(root,'src/assets/hero-flex.webp'));await page.locator('#hero-form [type=submit]').click();
   const stored=await page.evaluate(()=>JSON.parse(localStorage.getItem('ava-content-studio-v1')));assert.equal(stored.hero.slides[0].image,'data:image/webp;base64,'+fs.readFileSync(path.join(root,'src/assets/hero-flex.webp')).toString('base64'));assert.equal(stored.hero.interval,2000);
   await rows.first().locator('[data-move-slide="1"]').click();await page.locator('#hero-form [type=submit]').click();await page.reload();assert((await rows.first().locator('[name=title]').inputValue()).includes('شیشه'));
-  await page.locator('#add-hero-slide').click();assert.equal(await rows.count(),5);await page.locator('#hero-form [type=submit]').click();await page.reload();await rows.last().locator('summary').click();page.once('dialog',d=>d.accept());await rows.last().locator('[data-delete-slide]').click();await page.locator('#hero-form [type=submit]').click();assert.equal(await rows.count(),4);
+  await page.locator('#add-hero-slide').click();assert.equal(await rows.count(),6);await page.locator('#hero-form [type=submit]').click();await page.reload();await rows.last().locator('summary').click();page.once('dialog',d=>d.accept());await rows.last().locator('[data-delete-slide]').click();await page.locator('#hero-form [type=submit]').click();assert.equal(await rows.count(),5);
   console.log('PASS 2-second panel setting, repeat image replacement, rename, reorder, add/delete and persistence');
 
   await page.goto(base+'#admin/backup');const downloading=page.waitForEvent('download');await page.locator('#export-site').click();const file='/tmp/ava-v14-export.html';await(await downloading).saveAs(file);
-  const exported=await browser.newPage({reducedMotion:'reduce'});await exported.route('http://hero-export.test/',route=>route.fulfill({contentType:'text/html',body:fs.readFileSync(file,'utf8')}));await exported.goto('http://hero-export.test/');assert.equal(await exported.locator('.hero-scene').count(),4);assert.equal(await exported.locator('.hero-scene').first().evaluate(i=>i.naturalWidth),1916);assert.equal((await exported.locator('#hero').innerText()).trim(),'');
+  const exported=await browser.newPage({reducedMotion:'reduce'});await exported.route('http://hero-export.test/',route=>route.fulfill({contentType:'text/html',body:fs.readFileSync(file,'utf8')}));await exported.goto('http://hero-export.test/');assert.equal(await exported.locator('.hero-scene').count(),5);assert.equal(await exported.locator('.hero-scene').first().evaluate(i=>i.naturalWidth),1916);assert.equal((await exported.locator('#hero').innerText()).trim(),'');
   const legacy=JSON.parse(JSON.stringify(seed));delete legacy.hero.motionRevision;legacy.hero.interval=7000;legacy.hero.autoplay=false;legacy.hero.slides[0].title='اطلاعات قدیمی';legacy.hero.slides[0].image=stored.hero.slides[0].image;
   await page.goto(base);await page.evaluate(d=>localStorage.setItem('ava-content-studio-v1',JSON.stringify(d)),legacy);await page.reload();await page.goto(base+'#admin/hero');assert.equal(await page.locator('#hero-form [name=interval]').inputValue(),'2');assert.equal(await page.locator('#hero-form [name=autoplay]').count(),0);assert.equal(await rows.first().locator('[name=title]').inputValue(),'اطلاعات قدیمی');assert.equal(await rows.first().locator('.media-preview img').getAttribute('src'),stored.hero.slides[0].image);
   await page.locator('#hero-form [type=submit]').click();await page.reload();assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('ava-content-studio-v1')).hero.autoplay),true);

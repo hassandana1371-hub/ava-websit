@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const root = path.resolve(__dirname,'..');
 const seed = JSON.parse(fs.readFileSync(path.join(root,'src/defaults.json'),'utf8'));
-const labels = ['اجارهٔ تلویزیون‌های شهری','مشاورهٔ پروژه‌ها','طراحی و نصب ویدئووال','راه‌اندازی تجهیزات تصویر','پشتیبانی و نگهداری نمایشگرها','آموزش و تحویل پروژه'];
+const labels = ['اجارهٔ تریلر LED سیار','اجارهٔ تلویزیون‌های شهری','مشاورهٔ پروژه‌ها','طراحی و نصب ویدئووال','راه‌اندازی تجهیزات تصویر','پشتیبانی و نگهداری نمایشگرها','آموزش و تحویل پروژه'];
 
 (async()=>{
   const html = fs.readFileSync(path.join(root,'index.html'));
@@ -24,10 +24,10 @@ const labels = ['اجارهٔ تلویزیون‌های شهری','مشاوره�
     await page.locator('.products-menu-trigger').click();assert.equal(await page.locator('.services-dropdown').isVisible(),false);
     await page.locator('.services-menu-trigger').click();assert.equal(await page.locator('.products-dropdown').isVisible(),false);
     await page.locator('.services-dropdown a[href="#service/initial-rental"]').click();
-    await page.locator('.service-page-heading h1').filter({hasText:labels[0]}).waitFor();assert.equal(await page.locator('#home-content').isVisible(),false);
-    await page.reload();assert.equal(await page.locator('.service-page-heading h1').textContent(),labels[0]);
+    await page.locator('.service-page-heading h1').filter({hasText:labels[1]}).waitFor();assert.equal(await page.locator('#home-content').isVisible(),false);
+    await page.reload();assert.equal(await page.locator('.service-page-heading h1').textContent(),labels[1]);
     await page.getByRole('link',{name:'درخواست این خدمت',exact:true}).click();await page.locator('#home-content').waitFor({state:'visible'});
-    assert((await page.locator('#message').inputValue()).includes(labels[0]));
+    assert((await page.locator('#message').inputValue()).includes(labels[1]));
     await page.goto(base+'#services');await page.locator('#services .card-action').first().click();await page.locator('.service-page').waitFor();
     assert.equal(await page.locator('#content-detail').isVisible(),false);
     console.log('PASS services menu labels, click-only behavior, mutually exclusive menus, detail page, reload and request prefill');
@@ -41,7 +41,7 @@ const labels = ['اجارهٔ تلویزیون‌های شهری','مشاوره�
     assert((await page.locator('.service-page-body').textContent()).includes('متن ویرایش‌شدهٔ خدمت از داخل پنل'));
     await page.goto(base+'#admin/services');await page.locator('[data-entry-id=initial-rental]').getByRole('button',{name:'پیش‌نویس',exact:true}).click();
     await page.goto(base+'#service/initial-rental');await page.locator('.product-not-found h1').filter({hasText:'این خدمت در دسترس نیست.'}).waitFor();
-    await page.locator('.services-menu-trigger').click();assert.equal(await page.locator('.services-dropdown a').count(),5);
+    await page.locator('.services-menu-trigger').click();assert.equal(await page.locator('.services-dropdown a').count(),6);
     await page.goto(base+'#admin/services');await page.locator('[data-entry-id=initial-rental]').getByRole('button',{name:'انتشار',exact:true}).click();
     await page.goto(base+'#admin/backup');const wait = page.waitForEvent('download');await page.locator('#export-site').click();const download = await wait;
     const exportedPath = '/tmp/ava-v11-services-export.html';await download.saveAs(exportedPath);
@@ -51,14 +51,14 @@ const labels = ['اجارهٔ تلویزیون‌های شهری','مشاوره�
 
     const old = JSON.parse(JSON.stringify(seed));delete old.servicesRevision;old.updatedAt=Date.now();
     old.modules.services.items = [
-      {...seed.modules.services.items[0],title:'اجارهٔ نمایشگر',body:'توضیح قبلی حفظ شود'},
-      {...seed.modules.services.items[1],title:'مشاورهٔ انتخاب'},
-      {...seed.modules.services.items[0],id:'custom-service',title:'خدمت اختصاصی قبلی',body:'اطلاعات اختصاصی'}
+      {...seed.modules.services.items.find(i=>i.id==='initial-rental'),title:'اجارهٔ نمایشگر',body:'توضیح قبلی حفظ شود'},
+      {...seed.modules.services.items.find(i=>i.id==='initial-consulting'),title:'مشاورهٔ انتخاب'},
+      {...seed.modules.services.items.find(i=>i.id==='initial-rental'),id:'custom-service',title:'خدمت اختصاصی قبلی',body:'اطلاعات اختصاصی'}
     ];
     await page.goto(base);await page.evaluate(value=>localStorage.setItem('ava-content-studio-v1',JSON.stringify(value)),old);await page.reload();
-    await page.locator('.services-menu-trigger').click();assert.equal(await page.locator('.services-dropdown a').count(),7);
+    await page.locator('.services-menu-trigger').click();assert.equal(await page.locator('.services-dropdown a').count(),8);
     await page.locator('.services-dropdown a[href="#service/initial-rental"]').click();await page.locator('.service-page').waitFor();
-    assert.equal(await page.locator('.service-page-heading h1').textContent(),labels[0]);assert((await page.locator('.service-page-body').textContent()).includes('توضیح قبلی حفظ شود'));
+    assert.equal(await page.locator('.service-page-heading h1').textContent(),labels[1]);assert((await page.locator('.service-page-body').textContent()).includes('توضیح قبلی حفظ شود'));
     await page.goto(base+'#service/custom-service');assert.equal(await page.locator('.service-page-heading h1').textContent(),'خدمت اختصاصی قبلی');
     console.log('PASS previous services migrate once while preserving custom records and descriptions');
 

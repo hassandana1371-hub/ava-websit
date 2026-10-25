@@ -15,7 +15,7 @@ const svg = Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="160" hei
     page.on('pageerror',error => errors.push(error.message));
     await page.goto(base);
     await page.locator('.products-menu-trigger').click();
-    assert.equal(await page.locator('.products-dropdown>.product-category-group').count(),7);
+    assert.equal(await page.locator('.products-dropdown>.product-category-group').count(),8);
     await page.keyboard.press('Escape');assert.equal(await page.locator('.products-menu-trigger').getAttribute('aria-expanded'),'false');
     await page.locator('.products-menu-trigger').click();
     await page.goto(base + '#category/urban-indoor');

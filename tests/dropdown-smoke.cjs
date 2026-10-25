@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const http = require('node:http');
 const root = path.resolve(__dirname,'..');
-const labels = ['تلویزیون‌های شهری','تلویزیون‌های رنتال','استندهای دیجیتال','نمایشگرهای شفاف (ترنسپرنت)','نمایشگرهای کنفرانسی ـ خانگی','کف LED','نمایشگرهای تزئینی'];
+const labels = ['تلویزیون‌های شهری','تلویزیون‌های رنتال','تریلر LED سیار','استندهای دیجیتال','نمایشگرهای شفاف (ترنسپرنت)','نمایشگرهای کنفرانسی ـ خانگی','کف LED','نمایشگرهای تزئینی'];
 const sublabels = {urban:['فضای داخلی','فضای خارجی','Flexible'],rental:['خارجی','داخلی','Flexible'],'conference-home':['لمسی','عادی']};
 const state = JSON.parse(fs.readFileSync(path.join(root,'src/defaults.json'),'utf8'));
 const template = state.modules.products.items[0];state.modules.products.items=[];

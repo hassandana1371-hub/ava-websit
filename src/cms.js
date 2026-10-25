@@ -19,7 +19,7 @@
   const KEYS = ['products','services','projects','partners','software','articles','contact','catalog'];
   const CONTENT_KEYS = [...KEYS,'equipment'];
   const LABELS = {products:'محصولات',services:'خدمات',projects:'پروژه‌ها',partners:'همکاران',equipment:'فروش تجهیزات تلویزیون',software:'نرم‌افزار',articles:'مقالات',contact:'تماس با ما',catalog:'کاتالوگ'};
-  const TITLES = {dashboard:'پیشخوان',header:'لوگو و هدر',hero:'هیرو / تصویر اصلی',navigation:'منوها و اتصال‌ها',categories:'دسته‌بندی محصولات',backup:'نسخهٔ پشتیبان و خروجی'};
+  const TITLES = {dashboard:'پیشخوان',header:'لوگو و هدر',hero:'هیرو / تصویر اصلی',navigation:'منوها و اتصال‌ها',categories:'دسته‌بندی محصولات',banners:'بنر اختصاصی صفحات',security:'رمز و ورود',backup:'نسخهٔ پشتیبان و خروجی'};
   const DESCRIPTIONS = {
     dashboard:'از اینجا ظاهر سایت را تنظیم کن و محتوای هر بخش را مدیریت کن.',
     header:'لوگو، نام فارسی و انگلیسی و شعارهای بالای سایت را جداگانه ویرایش کن.',
@@ -34,10 +34,14 @@
   const defaultLogo = $('.ava-mark').outerHTML;
   const previewLogo = name => defaultLogo.replaceAll('ava-blue', 'ava-blue-' + name);
   const heroImages = JSON.parse($('#ava-hero-images').textContent);
-  const productImages = JSON.parse($('#ava-product-images').textContent);
+  const productImages = {...JSON.parse($('#ava-product-images').textContent),...Object.fromEntries(Object.entries(heroImages).filter(([name])=>name.startsWith('trailer-')))};
   const legacyProductVisuals = JSON.parse($('#ava-product-visual-history').textContent);
   const heroMotionDocument = JSON.parse($('#ava-hero-motion').textContent);
   let heroController;
+  const serverMode = !!$('#ava-server-mode');
+  let authenticated = !serverMode, csrf = '', serverRevision = 0, serverReady = !serverMode, saving = false;
+  let pageBannerControllers = [];
+  let entryBannerEditor;
   let data = clone(seed);
   let persistence = true;
   let loadWarning = '';
@@ -52,6 +56,84 @@
   let entryImageStyle = '';
   let categoryBannerEditor;
   let entryFile = '';
+
+  async function api(path, payload) {
+    const response = await fetch(path,{method:payload === undefined ? 'GET' : 'POST',credentials:'same-origin',headers:payload === undefined ? {} : {'Content-Type':'application/json','X-CSRF-Token':csrf},...(payload === undefined ? {} : {body:JSON.stringify(payload)})});
+    let result;try {result = await response.json();}catch {throw new Error('پاسخ سرور قابل خواندن نیست؛ تغییرات ذخیره نشد.');}
+    if (!response.ok) {if(response.status===401) authenticated=false;throw new Error(result.error || 'ارتباط با سرور انجام نشد.');}return result;
+  }
+  async function boot() {
+    if(serverMode && location.pathname==='/admin' && !location.hash) history.replaceState(null,'','#admin/dashboard');
+    if (serverMode) {
+      try {const session = await api('/api/session');authenticated=session.authenticated;csrf=session.csrf;serverReady=true;const result=await api('/api/content');data=validate(result.data);serverRevision=result.revision;
+        $('.local-badge').textContent='متصل به سرور';$('.sidebar-note').textContent='تغییرات پس از ذخیره روی سرور نگهداری می‌شوند. از بخش پشتیبان خروجی بگیرید.';
+        $('#admin-logout').hidden=false;
+      } catch(error) {renderLogin(error.message);return;}
+    }
+    renderPublic();renderSidebar();route();document.documentElement.dataset.avaRoute=location.hash || '#home';
+  }
+  function renderLogin(error = '') {
+    adminVisible=false;$('#public-site').hidden=true;$('#admin-app').hidden=true;
+    const root=$('#admin-login');root.hidden=false;
+    root.innerHTML=`<div class="login-card"><a href="#home" class="login-back">گروه آوا ↗</a><span class="admin-eyebrow">AVA GROUP / CONTENT STUDIO</span><h1>ورود به مدیریت سایت</h1><p>برای مدیریت محصولات، خدمات و بنرهای سایت وارد شوید.</p><form id="login-form" class="admin-form"><label>رمز مدیر<input type="password" name="password" autocomplete="current-password" required maxlength="256"></label><p role="alert" class="form-error" id="login-error">${escapeHTML(error)}</p><button class="admin-button" type="submit">ورود به پنل</button></form><small>رمز اولیه را هنگام راه‌اندازی سرور تعیین کنید؛ پس از ورود از بخش «رمز و ورود» قابل تغییر است.</small></div>`;
+    $('#login-form').onsubmit=async event=>{event.preventDefault();const button=$('button[type=submit]',event.currentTarget);button.disabled=true;try {const session=await api('/api/login',{password:event.currentTarget.elements.password.value});csrf=session.csrf;authenticated=true;serverReady=true;const result=await api('/api/content');data=validate(result.data);serverRevision=result.revision;root.hidden=true;dirty=false;renderPublic();route();}catch(e){$('#login-error').textContent=e.message;}finally{button.disabled=false;}};
+  }
+  function renderSecurity(root) {
+    if (!serverMode) {root.innerHTML='<div class="notice">ورود با رمز در نسخهٔ سروری فعال می‌شود. برای راه‌اندازی، بستهٔ سرور و راهنمای نصب را استفاده کنید؛ فایل HTML مستقل برای پیش‌نمایش و خروجی آفلاین است.</div>';return;}
+    root.innerHTML='<div class="admin-panel"><form id="password-form" class="admin-form"><h2>تغییر رمز مدیر</h2><label>رمز فعلی<input type="password" name="currentPassword" autocomplete="current-password" required maxlength="256"></label><label>رمز جدید<input type="password" name="password" autocomplete="new-password" required minlength="12" maxlength="256"></label><label>تکرار رمز جدید<input type="password" name="confirmation" autocomplete="new-password" required minlength="12" maxlength="256"></label><small>حداقل ۱۲ نویسه؛ پس از تغییر رمز، همهٔ نشست‌ها بسته می‌شوند.</small><p class="form-error" role="alert" id="password-error"></p><button class="admin-button" type="submit">ذخیرهٔ رمز جدید</button></form></div>';
+    $('#password-form').onsubmit=async event=>{event.preventDefault();const form=event.currentTarget;const values=formValues(form);if(values.password!==values.confirmation){$('#password-error').textContent='تکرار رمز یکسان نیست.';return;}const button=$('button',form);button.disabled=true;try{await api('/api/password',values);authenticated=false;csrf='';renderLogin('رمز تغییر کرد؛ با رمز جدید وارد شوید.');}catch(e){$('#password-error').textContent=e.message;}finally{button.disabled=false;}};
+  }
+  function disposePageBanners() {for(const dispose of pageBannerControllers)dispose();pageBannerControllers=[];}
+  function fillPageBanner(hero, initial, heading) {
+    const banner=validateBanner(initial || {show:true,image:'',asset:'wall'}),slides=banner.slides;
+    let active=0,timer,visible=true,disposed=false,pointer;
+    if(slides.some(s=>s.asset.startsWith('trailer-')))hero.dataset.photo='true';
+    const images=slides.map((slide,index)=>{const image=el('img',{class:'catalog-banner-image page-banner-frame'+(index===0?' is-active':''),src:slide.image || heroImages[slide.asset],alt:slide.imageAlt || banner.title || 'نمایشگر آوا','aria-hidden':String(index!==0),draggable:'false',...(index===0?{fetchpriority:'high'}:{loading:'lazy'})});hero.append(image);return image;});
+    hero.append(el('div',{class:'catalog-banner-shade','aria-hidden':'true'}),heading);
+    const abort=new AbortController(),options={signal:abort.signal};
+    function schedule(){clearTimeout(timer);if(!disposed&&visible&&!document.hidden&&!matchMedia('(prefers-reduced-motion: reduce)').matches&&slides.length>1)timer=setTimeout(()=>go(active+1),banner.interval);}
+    function go(index){active=(index+slides.length)%slides.length;images.forEach((image,i)=>{image.classList.toggle('is-active',i===active);image.setAttribute('aria-hidden',String(i!==active));});$$('.page-banner-dot',hero).forEach((dot,i)=>dot.setAttribute('aria-current',String(i===active)));schedule();}
+    if(slides.length>1){const controls=el('div',{class:'page-banner-controls'}),dots=el('div',{class:'page-banner-dots','aria-label':'انتخاب عکس بنر'});
+      for(const [step,label,symbol] of [[1,'عکس بعدی','›'],[-1,'عکس قبلی','‹']]){const arrow=el('button',{type:'button',class:'page-banner-arrow '+(step===1?'next':'previous'),'aria-label':label},symbol);arrow.addEventListener('click',()=>go(active+step),options);controls.append(arrow);}
+      slides.forEach((slide,i)=>{const dot=el('button',{type:'button',class:'page-banner-dot','aria-label':'عکس ' + (i+1),'aria-current':String(i===0)});dot.addEventListener('click',()=>go(i),options);dots.append(dot);});controls.append(dots);hero.append(controls);
+      hero.addEventListener('pointerdown',event=>{if(event.target.closest('a,button,input')||event.button!==0)return;pointer={x:event.clientX,y:event.clientY,id:event.pointerId};},options);
+      hero.addEventListener('pointerup',event=>{if(!pointer||event.pointerId!==pointer.id)return;const dx=event.clientX-pointer.x,dy=event.clientY-pointer.y;if(Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)*1.3)go(active+(dx<0?1:-1));pointer=null;schedule();},options);
+      hero.addEventListener('pointercancel',()=>{pointer=null;schedule();},options);
+    }
+    const observer=new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;schedule();});observer.observe(hero);
+    document.addEventListener('visibilitychange',schedule,options);const motion=matchMedia('(prefers-reduced-motion: reduce)');motion.addEventListener('change',schedule,options);schedule();
+    pageBannerControllers.push(()=>{disposed=true;clearTimeout(timer);observer.disconnect();abort.abort();});
+  }
+  function appendPageBanner(root,banner,title) {
+    const hero=el('section',{class:'catalog-banner page-banner','aria-label':'بنر '+title}),heading=el('section',{class:'catalog-heading'},el('span',{class:'catalog-kicker'},'AVA GROUP'),el('h1',{},banner.title || title),el('p',{},banner.description || ''));
+    fillPageBanner(hero,banner,heading);root.append(hero);
+  }
+  function trailerServiceFeature(item) {
+    const feature=el('article',{class:'trailer-service-feature'}),visual=el('div',{class:'trailer-feature-visual'},el('img',{src:productImage(item),alt:'نمونهٔ تریلر LED سیار در فضای باز',loading:'lazy'}));
+    const copy=el('div',{class:'trailer-feature-copy'},el('span',{class:'catalog-kicker'},'AVA / MOBILE LED'),el('h3',{},item.title),el('p',{},item.summary),el('span',{class:'trailer-feature-meta'},item.meta),el('div',{class:'trailer-feature-actions'},el('a',{href:'#service/'+item.id,class:'button'},'معرفی و استعلام اجاره ←'),el('a',{href:'#category/led-trailers',class:'trailer-model-link'},'بررسی مدل‌های تریلر')));
+    feature.append(visual,copy);return feature;
+  }
+  function bannerDestinations() {
+    return [{id:'products',name:'همهٔ محصولات'},...data.productCategories.map(c=>({id:'category:'+c.id,name:'دسته: '+categoryLabel(c)})),...CONTENT_KEYS.filter(k=>k!=='products').map(k=>({id:k,name:'بخش '+data.modules[k].name})),...['products','services','equipment'].flatMap(k=>data.modules[k].items.map(i=>({id:(k==='products'?'product':k==='services'?'service':'equipment')+':'+i.id,name:(k==='products'?'محصول: ':'صفحه: ')+i.title})))];
+  }
+  function readPageBanner(id) {
+    if(id==='products')return data.modules.products.banner;
+    if(id.startsWith('category:'))return data.productCategories.find(c=>c.id===id.slice(9))?.banner;
+    const [prefix,itemId]=id.split(':'),module=prefix==='product'?'products':prefix==='service'?'services':prefix;
+    return data.pageBanners[id] || data.modules[module]?.items.find(i=>i.id===itemId)?.banner || {show:false,image:'',asset:'wall',title:'',description:'',imageAlt:'',slides:[],interval:3000};
+  }
+  function writePageBanner(next,id,banner) {
+    if(id==='products')next.modules.products.banner=banner;
+    else if(id.startsWith('category:'))next.productCategories.find(c=>c.id===id.slice(9)).banner=banner;
+    else next.pageBanners[id]=banner;
+  }
+  function renderBannersEditor(root) {
+    root.innerHTML='<div class="notice">هر صفحه اسلایدر مستقل دارد؛ تا ۸ عکس، زمان نمایش و ترتیب دلخواه. عکس اول را در بالای ویرایشگر انتخاب کنید و عکس‌های بعدی را با دکمهٔ افزودن اضافه کنید.</div><div class="admin-panel"><label class="banner-page-picker">صفحهٔ موردنظر<select id="banner-page-select"></select></label><form class="admin-form" id="page-banner-form"><div id="page-banner-fields"></div><button class="admin-button" type="submit">ذخیرهٔ بنر این صفحه</button></form></div>';
+    const select=$('#banner-page-select');select.replaceChildren(...bannerDestinations().map(page=>el('option',{value:page.id},page.name)));let id=select.value,editor;
+    const paint=()=>{editor=mountBannerEditor($('#page-banner-fields'),readPageBanner(id));};paint();
+    select.onchange=()=>{if(!discardAllowed()){select.value=id;return;}dirty=false;id=select.value;paint();};
+    const form=$('#page-banner-form');watchForm(form);form.onsubmit=async event=>{event.preventDefault();const next=clone(data);writePageBanner(next,id,editor.read());if(await commit(next,'بنر این صفحه روی سایت ذخیره شد.'))paint();};
+  }
 
   function isObject(value) { return value !== null && typeof value === 'object' && !Array.isArray(value); }
   function text(value, max = 2000) {
@@ -78,11 +160,28 @@
   }
   function validateBanner(value) {
     if (!isObject(value)) throw new Error('تنظیم بنر معتبر نیست.');
-    return {show:value.show !== false,image:imageData(value.image),asset:Object.hasOwn(heroImages,value.asset) ? value.asset : 'wall',title:text(value.title || '',160),description:text(value.description || '',1000),imageAlt:text(value.imageAlt || '',200)};
+    const frame = row => ({image:imageData(row.image),asset:Object.hasOwn(heroImages,row.asset) ? row.asset : 'wall',imageAlt:text(row.imageAlt || '',200)});
+    const result = {show:value.show !== false,...frame(value),title:text(value.title || '',160),description:text(value.description || '',1000),interval:Number(value.interval || 3000)};
+    if (!Number.isInteger(result.interval) || result.interval < 1000 || result.interval > 15000) throw new Error('زمان بنر باید بین ۱ تا ۱۵ ثانیه باشد.');
+    if (value.slides !== undefined && (!Array.isArray(value.slides) || value.slides.length > 8)) throw new Error('حداکثر هشت عکس برای بنر هر صفحه مجاز است.');
+    result.slides = (value.slides?.length ? value.slides : [result]).map(frame);
+    return result;
   }
   function validate(raw) {
     if (!isObject(raw) || raw.version !== 1 || !isObject(raw.header) || !isObject(raw.hero) || !isObject(raw.modules) || !isObject(raw.contact) || !Array.isArray(raw.navigation)) throw new Error('ساختار فایل پشتیبان معتبر نیست.');
     const out = clone(seed);
+    if (raw.trailerRevision !== 1) {
+      raw = clone(raw);
+      raw.productCategories = raw.productCategories || clone(seed.productCategories);
+      if (!raw.productCategories.some(c => c.id === 'led-trailers')) raw.productCategories.push(clone(seed.productCategories.find(c => c.id === 'led-trailers')));
+      for (const key of ['products','services']) for (const item of seed.modules[key].items.filter(i => i.id.startsWith('trailer-') || i.id === 'led-trailer-rental')) if (!raw.modules[key].items.some(i => i.id === item.id)) raw.modules[key].items.push(clone(item));
+      if (!raw.hero.slides?.some(i => i.id === 'mobile-led-trailer') && raw.hero.slides?.length < 8) raw.hero.slides.push(clone(seed.hero.slides.find(i => i.id === 'mobile-led-trailer')));
+      raw.pageBanners = {...clone(seed.pageBanners),...raw.pageBanners};
+    }
+    out.trailerRevision = 1;
+    out.pageBanners = {};
+    if (raw.pageBanners !== undefined && (!isObject(raw.pageBanners) || Object.keys(raw.pageBanners).length > 600)) throw new Error('بنر صفحات معتبر نیست.');
+    for (const [key,value] of Object.entries(raw.pageBanners || {})) {if (!/^[a-zA-Z0-9_:-]{1,170}$/.test(key)) throw new Error('شناسهٔ صفحه معتبر نیست.');out.pageBanners[key] = validateBanner(value);}
     let categories = raw.productCategories === undefined ? clone(seed.productCategories) : clone(raw.productCategories);
     if (!Array.isArray(categories) || categories.length > 100) throw new Error('دسته‌بندی محصولات معتبر نیست.');
     if (raw.taxonomyRevision !== 2) {
@@ -179,7 +278,8 @@
         ids.add(item.id);
         const title = text(item.title, 160).trim();
         if (!title) throw new Error('عنوان محتوا را وارد کن.');
-        const result = {id:item.id,title,summary:text(item.summary,700),body:text(item.body,20000),meta:text(item.meta,200),image:imageData(item.image),url:httpURL(item.url),file:pdfData(item.file || ''),fileName:text(item.fileName || '',160),status:item.status};
+        const result = {id:item.id,title,summary:text(item.summary,700),body:text(item.body,20000),meta:text(item.meta,200),image:imageData(item.image),url:httpURL(item.url),file:pdfData(item.file || ''),fileName:text(item.fileName || '',160),status:item.status,imageAsset:Object.hasOwn(productImages,item.imageAsset) ? item.imageAsset : ''};
+        if (item.banner) result.banner = validateBanner(item.banner);
         if (key === 'products') {
           if (item.categoryId !== undefined && !categoryIds.has(item.categoryId)) throw new Error('دستهٔ یکی از محصولات وجود ندارد.');
           result.categoryId = item.categoryId || 'uncategorized';
@@ -189,7 +289,7 @@
           result.manualUrl = httpURL(item.manualUrl || '');
           result.imageAsset = Object.hasOwn(productImages,item.imageAsset) ? item.imageAsset : '';
           result.imageCaption = text(item.imageCaption || '',200);
-          result.imageStyle = ['datasheet','illustration'].includes(item.imageStyle) ? item.imageStyle : '';
+          result.imageStyle = ['datasheet','illustration','photo'].includes(item.imageStyle) ? item.imageStyle : '';
           if (raw.productVisualRevision !== 3 && !result.image) {
             const latest = seed.modules.products.items.find(p => p.id === item.id);
             if (latest && result.imageAsset === latest.imageAsset) {
@@ -238,8 +338,8 @@
   }
 
   try {
-    const stored = localStorage.getItem(storageKey);
-    if (stored) {
+    const stored = serverMode ? null : localStorage.getItem(storageKey);
+    if (stored && !serverMode) {
       const parsed = validate(JSON.parse(stored));
       if (parsed.updatedAt >= seed.updatedAt) data = parsed;
     }
@@ -260,11 +360,17 @@
     node.hidden = false;
     toastTimer = setTimeout(() => { node.hidden = true; }, 6500);
   }
-  function commit(next, message = 'تغییرات ذخیره شد.') {
+  async function commit(next, message = 'تغییرات ذخیره شد.') {
+    if (saving) {toast('ذخیرهٔ قبلی در حال انجام است.',true);return false;}
+    saving = true;
+    const locked = $$('#admin-app input,#admin-app button,#admin-app select,#admin-app textarea,#entry-editor input,#entry-editor button,#entry-editor select,#entry-editor textarea,#category-editor input,#category-editor button,#category-editor select,#category-editor textarea').filter(node=>!node.disabled);
+    locked.forEach(node=>node.disabled=true);
+    $('#save-state').textContent=serverMode?'در حال ذخیره روی سرور…':'در حال ذخیره…';
     try {
       const checked = validate(next);
       checked.updatedAt = Date.now();
-      if (persistence) localStorage.setItem(storageKey, JSON.stringify(checked));
+      if (serverMode) {const result = await api('/api/content',{data:checked,revision:serverRevision});serverRevision = result.revision;}
+      else if (persistence) localStorage.setItem(storageKey, JSON.stringify(checked));
       data = checked;
       dirty = false;
       $('#save-state').textContent = persistence ? 'ذخیره شد ✓' : 'ذخیرهٔ موقت؛ خروجی بگیر';
@@ -273,12 +379,13 @@
       toast(persistence ? message : 'تغییرات موقت اعمال شد؛ برای نگهداری، خروجی بگیر.');
       return true;
     } catch (error) {
+      $('#save-state').textContent='ذخیره انجام نشد؛ تغییرات فرم حفظ شده‌اند';
       toast(error.name === 'QuotaExceededError' ? 'فضای ذخیرهٔ مرورگر کافی نیست؛ تصویرها یا PDFهای بزرگ را کم کن و دوباره ذخیره کن. تغییرات قبلی حفظ شده‌اند.' : error.message, true);
       return false;
-    }
+    } finally {saving = false;locked.forEach(node=>{if(node.isConnected)node.disabled=false;});}
   }
   function markDirty() { dirty = true; $('#save-state').textContent = 'تغییرات ذخیره‌نشده'; }
-  function discardAllowed() { return !dirty || confirm('تغییرات این فرم هنوز ذخیره نشده‌اند. بدون ذخیره ادامه می‌دهی؟'); }
+  function discardAllowed() { if(saving){toast('ذخیره در حال انجام است؛ چند لحظه صبر کنید.',true);return false;}return !dirty || confirm('تغییرات این فرم هنوز ذخیره نشده‌اند. بدون ذخیره ادامه می‌دهی؟'); }
   function download(name, contents, type) {
     const url = URL.createObjectURL(new Blob([contents], {type}));
     const a = el('a', {href:url,download:name});
@@ -288,7 +395,7 @@
   function exportSite() {
     if (!discardAllowed()) return;
     const json = JSON.stringify(data).replace(/</g, '\\u003c');
-    const output = bootHTML.replace(/(<script id="ava-initial-data" type="application\/json">)[\s\S]*?(<\/script>)/, (_, open, close) => open + json + close);
+    const output = bootHTML.replace(/<script id="ava-server-mode" type="application\/json">[\s\S]*?<\/script>/,'').replace(/(<script id="ava-initial-data" type="application\/json">)[\s\S]*?(<\/script>)/, (_, open, close) => open + json + close);
     download('ava-site-and-panel.html', output, 'text/html;charset=utf-8');
     toast('نسخهٔ کامل سایت و پنل، همراه با محتوای ذخیره‌شده، آماده شد.');
   }
@@ -477,7 +584,7 @@
     heading.append(el('span',{class:'catalog-total'},count.toLocaleString('fa-IR') + ' محصول برای بررسی'));
     if (banner?.show !== false) {
       const hero = el('section',{class:'catalog-banner','aria-label':'بنر ' + (category?.name || data.modules.products.name)});
-      hero.append(el('img',{class:'catalog-banner-image',src:banner?.image || heroImages[banner?.asset || 'wall'],alt:banner?.imageAlt || category?.name || 'نمایشگرهای آوا',fetchpriority:'high'}),el('div',{class:'catalog-banner-shade','aria-hidden':'true'}),heading);
+      fillPageBanner(hero,banner,heading);
       const browse = el('button',{type:'button',class:'catalog-browse'},'مشاهدهٔ محصولات',el('span',{'aria-hidden':'true'},'↓'));
       browse.addEventListener('click',() => $('.catalog-layout',root).scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',block:'start'}));
       heading.append(browse);root.append(hero);
@@ -531,6 +638,8 @@
     const item = publicProducts().find(product => product.id === id);
     if (!item) {renderCatalogueNotFound();return;}
     const category = categoryFor(item);const root = $('#catalog-page');root.replaceChildren();
+    const pageBanner = data.pageBanners['product:' + id] || item.banner;
+    if (pageBanner?.show !== false && pageBanner) appendPageBanner(root,pageBanner,item.title);
     const container = el('div',{class:'product-page'});
     container.append(breadcrumbs([{label:'خانه',href:'#home'},{label:data.modules.products.name,href:'#products'},...categoryCrumbs(category),{label:item.title}]));
     const hero = el('section',{class:'product-hero'});
@@ -607,13 +716,15 @@
       root.append(el('div',{class:'product-not-found'},el('span',{class:'catalog-kicker'},'AVA GROUP / ' + (equipment ? 'EQUIPMENT' : 'SERVICES')),el('h1',{},equipment ? 'این تجهیز در دسترس نیست.' : 'این خدمت در دسترس نیست.'),el('p',{},'ممکن است این مورد حذف شده یا هنوز منتشر نشده باشد.'),el('a',{href:'#' + key,class:'button'},equipment ? 'بازگشت به تجهیزات' : 'بازگشت به خدمات')));
       document.title = 'صفحه در دسترس نیست | آوا';return;
     }
+    const pageBanner = data.pageBanners[(equipment ? 'equipment:' : 'service:') + id] || item.banner;
+    if (pageBanner?.show !== false && pageBanner) appendPageBanner(root,pageBanner,item.title);
     const container = el('div',{class:'service-page' + (equipment ? ' equipment-page' : '')});
     container.append(breadcrumbs([{label:'خانه',href:'#home'},...(equipment ? [{label:data.modules.partners.name}] : []),{label:data.modules[key].name,href:'#' + key},{label:item.title}]));
     const heading = el('section',{class:'service-page-heading'},el('span',{class:'catalog-kicker'},'AVA GROUP / ' + (equipment ? 'EQUIPMENT' : 'SERVICES')),el('h1',{},item.title),el('p',{},item.summary));
     if (item.meta) heading.append(el('span',{class:'service-meta'},item.meta));
     const layout = el('div',{class:'service-page-layout'});
     const body = el('section',{class:'service-page-body'},el('h2',{},equipment ? 'معرفی و نکات انتخاب تجهیز' : 'دربارهٔ این خدمت'));
-    if (item.image) body.append(el('img',{src:item.image,alt:item.title}));
+    if (productImage(item) && (!pageBanner || pageBanner.show === false)) body.append(el('img',{src:productImage(item),alt:item.title}));
     body.append(el('p',{class:'product-body'},item.body || item.summary));
     if (item.url) body.append(visibleLink('اطلاعات بیشتر',item.url));
     const aside = el('aside',{class:'service-request-card'},el('span',{class:'catalog-kicker'},equipment ? 'انتخاب بر اساس سازگاری' : 'از نیاز پروژه شروع کنیم'),el('h2',{},(equipment ? 'استعلام ' : 'درخواست ') + item.title),el('p',{},equipment ? 'مدل یا برند، تعداد و مشخصات تجهیزات فعلی را بنویسید تا سازگاری و شرایط تأمین بررسی شوند.' : 'محل اجرا، زمان موردنیاز و توضیح کوتاهی از پروژه را آماده کنید تا دربارهٔ شرایط انجام کار هماهنگی شود.'));
@@ -625,6 +736,7 @@
   function renderEquipmentList() {
     const module = data.modules.equipment;const root = $('#catalog-page');root.replaceChildren();
     const heading = el('section',{class:'catalog-heading'},breadcrumbs([{label:'خانه',href:'#home'},{label:data.modules.partners.name},{label:module.name}]),el('span',{class:'catalog-kicker'},'AVA GROUP / EQUIPMENT'),el('h1',{},module.name),el('p',{},module.description));
+    const overviewBanner=data.pageBanners.equipment;if(overviewBanner && overviewBanner.show!==false)appendPageBanner(root,overviewBanner,module.name);
     const list = el('div',{class:'equipment-list cards'});
     for (const item of published('equipment')) {
       const card = el('article',{class:'card managed-card'});
@@ -768,6 +880,7 @@
     paint();
   }
   function renderPublic() {
+    disposePageBanners();
     const h = data.header;
     let logo = $('.ava-brand .ava-mark');
     const replacement = h.logo ? el('img',{class:'ava-mark uploaded-logo',src:h.logo,alt:'لوگوی ' + h.nameFa}) : (() => {const t = document.createElement('template');t.innerHTML = defaultLogo;return t.content.firstElementChild;})();
@@ -807,12 +920,14 @@
       const m = data.modules[key];
       const section = el('section',{class:'content managed-module',id:key === 'products' ? 'featured-products' : key});
       const heading = el('div',{class:'section-head'},el('div',{},el('span',{class:'kicker'},'گروه آوا / ' + LABELS[key]),el('h2',{},m.name + (key === 'products' ? ' منتخب' : ''))),el('p',{},m.description));
+      const sectionBanner = data.pageBanners[key];if (sectionBanner?.show !== false && sectionBanner) appendPageBanner(section,sectionBanner,m.name);
       const cards = el('div',{class:'cards'});
       if (key === 'products') {
         cards.className = 'product-grid';cards.append(...items.map(productCard));
         section.append(heading,cards,el('a',{href:'#products',class:'all-products-link'},'مشاهدهٔ همهٔ محصولات ←'));sections.append(section);continue;
       }
       for (const item of items) {
+        if (key === 'services' && item.id === 'led-trailer-rental') {section.append(trailerServiceFeature(item));continue;}
         const card = el('article',{class:'card managed-card'});
         if (item.image) card.append(el('img',{src:item.image,alt:item.title,loading:'lazy'}));
         else card.append(el('div',{class:'icon','aria-hidden':'true'},key === 'products' ? '▦' : '◈'));
@@ -821,7 +936,7 @@
         const button = el('button',{type:'button',class:'card-action'},'مشاهدهٔ جزئیات ↖');
         button.addEventListener('click',() => openDetail(key,item));card.append(button);cards.append(card);
       }
-      section.append(heading,cards);sections.append(section);
+      section.prepend(heading);section.append(cards);sections.append(section);
     }
     $('.contact h2').textContent = data.contact.title;
     $('.contact>div>p').textContent = data.contact.description;
@@ -830,6 +945,8 @@
     if (data.contact.phone) contacts.append(el('span',{},'تلفن: ',data.contact.phone));
     if (data.contact.email) contacts.append(el('span',{},'ایمیل: ',data.contact.email));
     if (data.contact.address) contacts.append(el('span',{},'نشانی: ',data.contact.address));
+    $('.contact>.contact-page-banner')?.remove();
+    if(data.pageBanners.contact?.show) {const holder=el('section',{class:'contact-page-banner'});appendPageBanner(holder,data.pageBanners.contact,data.modules.contact.name);$('.contact').prepend(holder);}
     if (!adminVisible) renderCatalogRoute();
   }
 
@@ -855,7 +972,7 @@
     }
     $$('.admin-sidebar a').forEach(a => a.classList.toggle('active',a.dataset.page === currentPage));
   }
-  function notice() {return '<div class="notice">این پنل نسخهٔ محلی و بدون ورود است؛ اطلاعات در همین مرورگر نگهداری می‌شوند. برای استفادهٔ عمومی و دسترسی چند نفر، اتصال به سرور و ورود امن لازم است.</div>';}
+  function notice() {if (serverMode) return '<div class="notice">ورود مدیر فعال است؛ تغییرات پس از ذخیره روی سرور برای همهٔ کاربران منتشر می‌شوند.</div>';return '<div class="notice">این پنل نسخهٔ محلی و بدون ورود است؛ اطلاعات در همین مرورگر نگهداری می‌شوند. برای استفادهٔ عمومی و دسترسی چند نفر، اتصال به سرور و ورود امن لازم است.</div>';}
   function renderDashboard(root) {
     const all = CONTENT_KEYS.flatMap(key => data.modules[key].items);
     root.innerHTML = notice() + (loadWarning ? `<div class="notice">${escapeHTML(loadWarning)}</div>` : '') + `
@@ -891,13 +1008,29 @@
     node.replaceChildren(image ? el('img',{src:image,alt:'پیش‌نمایش تصویر انتخاب‌شده'}) : document.createTextNode(fallback));
   }
   function mountBannerEditor(root, initial) {
-    const banner = clone(initial || {show:true,image:'',asset:'wall',title:'',description:'',imageAlt:''});let image = banner.image;
-    root.innerHTML = `<h3 class="banner-editor-title">بنر اختصاصی این صفحه</h3>${checkbox('نمایش بنر بالای صفحه','bannerShow',banner.show !== false)}<div class="banner-media-editor"><div class="media-preview"></div><div><label class="upload-button">انتخاب عکس بنر<input data-banner-upload type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"></label><button type="button" class="text-button" data-banner-reset>بازگشت به تصویر پیش‌فرض</button><small>عکس افقی و باکیفیت؛ حداکثر ۵ مگابایت.</small></div></div><label>تصویر پیش‌فرض<select name="bannerAsset">${[['wall','نمایشگر LED'],['flex','نمایشگر Flexible'],['film','نمایشگر شفاف'],['floor','کف LED']].map(([id,name])=>`<option value="${id}" ${banner.asset===id?'selected':''}>${name}</option>`).join('')}</select></label>${field('عنوان روی بنر','bannerTitle',banner.title,{max:160})}${field('توضیح بنر','bannerDescription',banner.description,{multiline:true,max:1000})}${field('توضیح تصویر برای دسترس‌پذیری','bannerImageAlt',banner.imageAlt,{max:200})}`;
+    const banner = clone(initial || {show:true,image:'',asset:'wall',title:'',description:'',imageAlt:''});if (banner.slides?.length) Object.assign(banner,banner.slides[0]);let image = banner.image;let extras = clone(banner.slides?.slice(1) || []);
+    root.innerHTML = `<h3 class="banner-editor-title">بنر اختصاصی این صفحه</h3>${checkbox('نمایش بنر بالای صفحه','bannerShow',banner.show !== false)}<div class="banner-media-editor"><div class="media-preview"></div><div><label class="upload-button">انتخاب عکس بنر<input data-banner-upload type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"></label><button type="button" class="text-button" data-banner-reset>بازگشت به تصویر پیش‌فرض</button><small>عکس افقی و باکیفیت؛ حداکثر ۵ مگابایت.</small></div></div><label>تصویر پیش‌فرض<select name="bannerAsset">${[['wall','نمایشگر LED'],['flex','نمایشگر Flexible'],['film','نمایشگر شفاف'],['floor','کف LED'],...Object.keys(heroImages).filter(k=>k.startsWith('trailer-')).map(k=>[k,'تریلر ' + k.slice(-2)])].map(([id,name])=>`<option value="${id}" ${banner.asset===id?'selected':''}>${name}</option>`).join('')}</select></label>${field('عنوان روی بنر','bannerTitle',banner.title,{max:160})}${field('توضیح بنر','bannerDescription',banner.description,{multiline:true,max:1000})}${field('توضیح تصویر برای دسترس‌پذیری','bannerImageAlt',banner.imageAlt,{max:200})}`;
     const preview = () => imagePreview($('.media-preview',root),image || heroImages[$('[name=bannerAsset]',root).value]);preview();
     $('[data-banner-upload]',root).addEventListener('change',async event => {try {const selected = await readImage(event.target.files[0]);if(!selected) return;image = selected;markDirty();preview();}catch(error){toast(error.message,true);}event.target.value = '';});
     $('[data-banner-reset]',root).addEventListener('click',() => {image = '';markDirty();preview();});
     $('[name=bannerAsset]',root).addEventListener('change',() => {image = '';markDirty();preview();});
-    return {read:() => ({show:$('[name=bannerShow]',root).checked,image,asset:$('[name=bannerAsset]',root).value,title:$('[name=bannerTitle]',root).value,description:$('[name=bannerDescription]',root).value,imageAlt:$('[name=bannerImageAlt]',root).value})};
+    const extraRoot = el('div',{class:'banner-slide-list'}), add = el('button',{type:'button',class:'admin-button secondary','data-add-banner-slide':''},'＋ افزودن عکس به اسلایدر این صفحه');
+    const timing = el('label',{},'زمان نمایش هر عکس (ثانیه)',el('input',{type:'number',name:'bannerInterval',min:'1',max:'15',step:'0.1',value:String((banner.interval || 3000)/1000),required:''}));root.append(timing,extraRoot,add);
+    function paintExtras() {
+      extraRoot.replaceChildren();
+      extras.forEach((frame,index)=>{
+        const row = el('div',{class:'banner-extra-slide'}), preview = el('div',{class:'media-preview'});imagePreview(preview,frame.image || heroImages[frame.asset]);
+        const caption = el('input',{value:frame.imageAlt || '',maxlength:'200','aria-label':'توضیح عکس ' + (index+2)});caption.addEventListener('input',()=>{frame.imageAlt=caption.value;markDirty();});
+        const upload = el('input',{type:'file',accept:'image/png,image/jpeg,image/webp,image/gif,image/svg+xml','aria-label':'عکس اسلاید ' + (index+2)});
+        upload.addEventListener('change',async()=>{try {const selected=await readImage(upload.files[0]);if(!selected)return;frame.image=selected;imagePreview(preview,selected);markDirty();}catch(e){toast(e.message,true);}upload.value='';});
+        row.append(el('strong',{},'عکس ' + (index+2).toLocaleString('fa-IR')),preview,upload,caption);
+        for(const [step,label] of [[-1,'↑'],[1,'↓']]) {const button=el('button',{type:'button',class:'admin-button secondary','aria-label':label==='↑'?'انتقال عکس به بالا':'انتقال عکس به پایین'},label);button.disabled=index+step<0 || index+step>=extras.length;button.onclick=()=>{[extras[index],extras[index+step]]=[extras[index+step],extras[index]];markDirty();paintExtras();};row.append(button);}
+        const remove=el('button',{type:'button',class:'admin-button danger'},'حذف عکس');remove.onclick=()=>{extras.splice(index,1);markDirty();paintExtras();};row.append(remove);extraRoot.append(row);
+      });add.disabled=extras.length>=7;
+    }
+    add.onclick=()=>{if(extras.length>=7)return;extras.push({image:'',asset:$('[name=bannerAsset]',root).value,imageAlt:''});markDirty();paintExtras();};paintExtras();
+    return {read:() => {const first={image,asset:$('[name=bannerAsset]',root).value,imageAlt:$('[name=bannerImageAlt]',root).value};return {show:$('[name=bannerShow]',root).checked,...first,title:$('[name=bannerTitle]',root).value,description:$('[name=bannerDescription]',root).value,interval:Math.round(Number($('[name=bannerInterval]',root).value)*1000),slides:[first,...extras]};}};
+
   }
   function renderHeaderEditor(root) {
     const h = data.header;let logo = h.logo;
@@ -920,7 +1053,7 @@
     form.addEventListener('input',preview);
     $('#logo-input').addEventListener('change',async event => {try {const image = await readImage(event.target.files[0]);if (!image) return;logo = image;markDirty();preview();} catch(error) {toast(error.message,true);}event.target.value = '';});
     $('#reset-logo').addEventListener('click',() => {logo = '';markDirty();preview();});
-    form.addEventListener('submit',event => {event.preventDefault();const next = clone(data);const v = formValues(form);for (const key of ['nameEn','nameFa','sloganEn','sloganFa']) next.header[key] = v[key];for (const key of ['showLogo','showNameEn','showNameFa','showSloganEn','showSloganFa']) next.header[key] = form.elements[key].checked;next.header.logo = logo;commit(next);});
+    form.addEventListener('submit',async event => {event.preventDefault();const next = clone(data);const v = formValues(form);for (const key of ['nameEn','nameFa','sloganEn','sloganFa']) next.header[key] = v[key];for (const key of ['showLogo','showNameEn','showNameFa','showSloganEn','showSloganFa']) next.header[key] = form.elements[key].checked;next.header.logo = logo;await commit(next);});
     preview();
   }
   function renderHeroEditor(root) {
@@ -951,7 +1084,7 @@
       $('#add-hero-slide').disabled = slides.length >= 8;
     }
     $('#add-hero-slide').addEventListener('click',() => {if(slides.length >= 8) return;collect();slides.push({...clone(seed.hero.slides[0]),id:'slide-' + (typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : Date.now()),title:'اسلاید تازه',highlight:'',image:'',categoryId:''});markDirty();paint();const last = $('.hero-editor-slide:last-child',form);last.open = true;last.scrollIntoView({block:'center',behavior:'instant'});});
-    form.addEventListener('submit',event => {event.preventDefault();collect();const next = clone(data);next.hero.slides = slides;next.hero.show = form.elements.show.checked;next.hero.showMotionLogo = form.elements.showMotionLogo.checked;next.hero.autoplay = true;next.hero.interval = Number(form.elements.interval.value)*1000;for (const key of ['eyebrow','title','highlight','description','image','imageAlt','primaryLabel','primaryTarget','secondaryLabel','secondaryTarget']) next.hero[key] = slides[0][key];if(commit(next,'اسلایدر ذخیره شد.')) {slides = clone(data.hero.slides);paint();}});
+    form.addEventListener('submit',async event => {event.preventDefault();collect();const next = clone(data);next.hero.slides = slides;next.hero.show = form.elements.show.checked;next.hero.showMotionLogo = form.elements.showMotionLogo.checked;next.hero.autoplay = true;next.hero.interval = Number(form.elements.interval.value)*1000;for (const key of ['eyebrow','title','highlight','description','image','imageAlt','primaryLabel','primaryTarget','secondaryLabel','secondaryTarget']) next.hero[key] = slides[0][key];if(await commit(next,'اسلایدر ذخیره شد.')) {slides = clone(data.hero.slides);paint();}});
     paint();
   }
   function renderNavigationEditor(root) {
@@ -966,13 +1099,13 @@
         $$('[data-move]',node).forEach(button => button.addEventListener('click',() => {collect();const index = rows.findIndex(row => row.id === node.dataset.navId);const next = index + Number(button.dataset.move);if (next < 0 || next >= rows.length) return;[rows[index],rows[next]] = [rows[next],rows[index]];markDirty();paint();}));
       });
     }
-    form.addEventListener('submit',event => {event.preventDefault();collect();const next = clone(data);next.navigation = rows;if (commit(next)) rows = clone(data.navigation);});paint();
+    form.addEventListener('submit',async event => {event.preventDefault();collect();const next = clone(data);next.navigation = rows;if (await commit(next)) rows = clone(data.navigation);});paint();
   }
   function renderContactEditor(root) {
     const c = data.contact;
     root.innerHTML = `<div class="admin-panel"><form class="admin-form" id="contact-form"><h2>اطلاعات تماس</h2>${field('نام بخش','moduleName',data.modules.contact.name,{max:80})}${field('عنوان بخش تماس','title',c.title,{multiline:true,max:500,rows:2})}${field('توضیحات','description',c.description,{multiline:true})}<div class="admin-form-grid">${field('شمارهٔ تماس','phone',c.phone,{ltr:true,max:500})}${field('ایمیل','email',c.email,{type:'email',ltr:true,max:500})}</div>${field('نشانی','address',c.address,{multiline:true,max:500,rows:2})}${saveButton()}</form></div><div class="notice">فرم عمومی سایت در این نسخه خلاصهٔ درخواست را آماده می‌کند؛ هنوز به سامانهٔ دریافت پیام متصل نیست.</div>`;
     const form = $('#contact-form');watchForm(form);
-    form.addEventListener('submit',event => {event.preventDefault();const v = formValues(form);const next = clone(data);next.modules.contact.name = v.moduleName;for (const key of ['title','description','phone','email','address']) next.contact[key] = v[key];commit(next);});
+    form.addEventListener('submit',async event => {event.preventDefault();const v = formValues(form);const next = clone(data);next.modules.contact.name = v.moduleName;for (const key of ['title','description','phone','email','address']) next.contact[key] = v[key];await commit(next);});
   }
   function renderModule(root, key) {
     const module = data.modules[key];
@@ -980,7 +1113,7 @@
       <div class="module-tools"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><input type="search" id="entry-search" aria-label="جستجو در محتوا" placeholder="جستجو در عنوان محتوا…"><select id="entry-filter" aria-label="فیلتر وضعیت" style="font:inherit;border:1px solid #dce4f1;background:white;color:#657692;padding:9px;border-radius:8px"><option value="all">همهٔ وضعیت‌ها</option><option value="published">منتشرشده</option><option value="draft">پیش‌نویس</option></select></div><button type="button" class="admin-button" id="add-entry">＋ افزودن ${escapeHTML(LABELS[key])}</button></div><div class="admin-entry-list" id="entry-list"></div>`;
     const form = $('#module-settings');watchForm(form);
     const bannerEditor = key === 'products' ? mountBannerEditor($('#products-banner-fields'),module.banner) : null;
-    form.addEventListener('submit',event => {event.preventDefault();const v = formValues(form);const next = clone(data);next.modules[key].name = v.name.trim();next.modules[key].description = v.description;if (bannerEditor) next.modules[key].banner = bannerEditor.read();commit(next);});
+    form.addEventListener('submit',async event => {event.preventDefault();const v = formValues(form);const next = clone(data);next.modules[key].name = v.name.trim();next.modules[key].description = v.description;if (bannerEditor) next.modules[key].banner = bannerEditor.read();await commit(next);});
     if (key === 'products') {
       const tools = $('.module-tools');const categoryLink = el('a',{href:'#admin/categories',class:'admin-button secondary'},'مدیریت دسته‌بندی‌ها');tools.append(categoryLink);
       const categoryFilter = el('select',{id:'entry-category-filter','aria-label':'فیلتر دستهٔ محصول'},el('option',{value:''},'همهٔ دسته‌ها'),data.productCategories.map(category => el('option',{value:category.id},categoryLabel(category))));
@@ -1009,8 +1142,8 @@
         }
         const actions = el('div',{class:'entry-actions'});
         const edit = el('button',{type:'button',class:'admin-button secondary'},'ویرایش');edit.addEventListener('click',() => openEditor(key,item));
-        const toggle = el('button',{type:'button',class:'admin-button secondary'},item.status === 'published' ? 'پیش‌نویس' : 'انتشار');toggle.addEventListener('click',() => {if (!discardAllowed()) return;const next = clone(data);const target = next.modules[key].items.find(i => i.id === item.id);target.status = target.status === 'published' ? 'draft' : 'published';if (commit(next)) paintList();});
-        const remove = el('button',{type:'button',class:'admin-button danger'},'حذف');remove.addEventListener('click',() => {if (!discardAllowed() || !confirm('«' + item.title + '» حذف شود؟')) return;const next = clone(data);next.modules[key].items = next.modules[key].items.filter(i => i.id !== item.id);if (commit(next,'محتوا حذف شد.')) paintList();});
+        const toggle = el('button',{type:'button',class:'admin-button secondary'},item.status === 'published' ? 'پیش‌نویس' : 'انتشار');toggle.addEventListener('click',async () => {if (!discardAllowed()) return;const next = clone(data);const target = next.modules[key].items.find(i => i.id === item.id);target.status = target.status === 'published' ? 'draft' : 'published';if (await commit(next)) paintList();});
+        const remove = el('button',{type:'button',class:'admin-button danger'},'حذف');remove.addEventListener('click',async () => {if (!discardAllowed() || !confirm('«' + item.title + '» حذف شود؟')) return;const next = clone(data);next.modules[key].items = next.modules[key].items.filter(i => i.id !== item.id);if (await commit(next,'محتوا حذف شد.')) paintList();});
         actions.append(edit,toggle,remove);row.append(actions);list.append(row);
       });
     }
@@ -1046,6 +1179,7 @@
     $('#pdf-filename').textContent = entryFile ? 'یک فایل PDF به این محتوا پیوست شده است.' : 'حداکثر ۲ مگابایت؛ فایل در بخش دانلودها نمایش داده می‌شود.';
     $('#entry-error').textContent = '';
     imagePreview($('#entry-image-preview'),entryImage || (key === 'products' ? productImages[entryImageAsset] : ''),'تصویر محتوا');
+    entryBannerEditor = mountBannerEditor($('#entry-banner-fields'),data.pageBanners[(key==='products'?'product':key==='services'?'service':key)+':'+item?.id] || item?.banner || {show:false,image:'',asset:'wall',title:'',description:'',imageAlt:''});
     $('#entry-editor').showModal();
   }
   function renderCategories(root) {
@@ -1062,11 +1196,11 @@
       const edit = el('button',{type:'button',class:'admin-button secondary'},'ویرایش');edit.addEventListener('click',() => openCategory(category));actions.append(edit);
       for (const [step,label] of [[-1,'بالاتر'],[1,'پایین‌تر']]) {
         const move = el('button',{type:'button',class:'admin-button secondary','aria-label':label + ' بردن ' + category.name},step === -1 ? '↑' : '↓');move.disabled = index + step < 0 || index + step >= data.productCategories.length;
-        move.addEventListener('click',() => {const next = clone(data);[next.productCategories[index],next.productCategories[index+step]] = [next.productCategories[index+step],next.productCategories[index]];if (commit(next)) renderPage('categories');});actions.append(move);
+        move.addEventListener('click',async () => {const next = clone(data);[next.productCategories[index],next.productCategories[index+step]] = [next.productCategories[index+step],next.productCategories[index]];if (await commit(next)) renderPage('categories');});actions.append(move);
       }
       if (category.id !== 'uncategorized') {
         const remove = el('button',{type:'button',class:'admin-button danger'},'حذف');
-        remove.addEventListener('click',() => {const ids = new Set([category.id,...data.productCategories.filter(child => child.parentId === category.id).map(child => child.id)]);if (!confirm('دستهٔ «' + category.name + '»' + (ids.size > 1 ? ' و زیرگروه‌هایش' : '') + ' حذف شود؟ ' + count.toLocaleString('fa-IR') + ' محصول به «دسته‌بندی‌نشده» منتقل می‌شوند.')) return;const next = clone(data);next.productCategories = next.productCategories.filter(c => !ids.has(c.id));for (const item of next.modules.products.items) if (ids.has(item.categoryId)) item.categoryId = 'uncategorized';if (commit(next,'دسته حذف شد؛ محصولات حفظ شدند.')) renderPage('categories');});actions.append(remove);
+        remove.addEventListener('click',async () => {const ids = new Set([category.id,...data.productCategories.filter(child => child.parentId === category.id).map(child => child.id)]);if (!confirm('دستهٔ «' + category.name + '»' + (ids.size > 1 ? ' و زیرگروه‌هایش' : '') + ' حذف شود؟ ' + count.toLocaleString('fa-IR') + ' محصول به «دسته‌بندی‌نشده» منتقل می‌شوند.')) return;const next = clone(data);next.productCategories = next.productCategories.filter(c => !ids.has(c.id));for (const item of next.modules.products.items) if (ids.has(item.categoryId)) item.categoryId = 'uncategorized';if (await commit(next,'دسته حذف شد؛ محصولات حفظ شدند.')) renderPage('categories');});actions.append(remove);
       }
       row.append(info,actions);list.append(row);
     });
@@ -1089,7 +1223,7 @@
     $('#export-backup').addEventListener('click',() => download('ava-content-backup.json',JSON.stringify(data,null,2),'application/json;charset=utf-8'));
     $('#import-backup').addEventListener('change',async event => {
       const file = event.target.files[0];if (!file) return;
-      try {if (file.size > 32 * 1024 * 1024) throw new Error('حجم فایل پشتیبان بیش از حد مجاز است.');const next = validate(JSON.parse(await file.text()));if (!confirm('اطلاعات این پشتیبان جایگزین همهٔ اطلاعات فعلی شود؟')) return;if (commit(next,'پشتیبان با موفقیت بازیابی شد.')) {renderPage('backup');}}
+      try {if (file.size > 32 * 1024 * 1024) throw new Error('حجم فایل پشتیبان بیش از حد مجاز است.');const next = validate(JSON.parse(await file.text()));if (!confirm('اطلاعات این پشتیبان جایگزین همهٔ اطلاعات فعلی شود؟')) return;if (await commit(next,'پشتیبان با موفقیت بازیابی شد.')) {renderPage('backup');}}
       catch (error) {toast(error instanceof SyntaxError ? 'فایل انتخاب‌شده JSON معتبر نیست.' : error.message,true);}
       finally {event.target.value = '';}
     });
@@ -1105,6 +1239,8 @@
     else if (page === 'header') renderHeaderEditor(root);
     else if (page === 'hero') renderHeroEditor(root);
     else if (page === 'navigation') renderNavigationEditor(root);
+    else if (page === 'banners') renderBannersEditor(root);
+    else if (page === 'security') renderSecurity(root);
     else if (page === 'backup') renderBackup(root);
     else if (page === 'contact') renderContactEditor(root);
     else if (page === 'categories') renderCategories(root);
@@ -1113,10 +1249,13 @@
   function route() {
     const nextHash = location.hash;
     if (!discardAllowed()) {history.replaceState(null,'',lastHash || location.pathname + location.search);return;}
+    if (!$('#catalog-page').hidden || /^#(products|category|product|service|equipment)(\/|$)/.test(nextHash) || nextHash.startsWith('#admin')) disposePageBanners();
     closeNavigationMenus();
     for (const dialog of [$('#entry-editor'),$('#category-editor'),$('#product-image-dialog')]) if (dialog.open) dialog.close();
     lastHash = nextHash;dirty = false;
+    $('#admin-login').hidden=true;
     const requested = nextHash.startsWith('#admin') ? (nextHash.split('/')[1] || 'dashboard') : '';
+    if (requested && serverMode && (!serverReady || !authenticated)) {renderLogin();return;}
     if (requested) {
       adminVisible = true;
       $('#public-site').hidden = true;$('#admin-app').hidden = false;
@@ -1125,7 +1264,7 @@
     } else {
       const wasAdmin = adminVisible;const wasCatalog = !$('#catalog-page').hidden;
       adminVisible = false;$('#public-site').hidden = false;$('#admin-app').hidden = true;
-      if (wasAdmin) renderPublic();
+      if (wasAdmin || wasCatalog) renderPublic();
       if (renderCatalogRoute()) {window.scrollTo(0,0);$('#catalog-page').focus({preventScroll:true});}
       else {
         document.title = (data.header.nameFa || 'آوا') + ' | دنیای تصویر و نور';
@@ -1153,6 +1292,7 @@
   $('.site-menu-toggle').addEventListener('click',() => $('#site-menu').showModal());
   document.addEventListener('click',event => {if (!event.target.closest('.header-menu-item')) closeNavigationMenus();});
   $('#open-admin').addEventListener('click',() => {$('#site-menu').close();location.hash = 'admin/dashboard';});
+  $('#admin-logout').addEventListener('click',async()=>{if(!discardAllowed())return;try{await api('/api/logout',{});authenticated=false;csrf='';dirty=false;const result=await api('/api/content');data=validate(result.data);serverRevision=result.revision;renderLogin();}catch(e){toast(e.message,true);}});
   $('#view-site').addEventListener('click',() => {location.hash = 'home';});
   $$('[data-close]').forEach(button => button.addEventListener('click',() => document.getElementById(button.dataset.close).close()));
   for (const dialog of [$('#site-menu'),$('#content-detail'),$('#product-image-dialog')]) dialog.addEventListener('click',event => {const rect = dialog.getBoundingClientRect();if (event.target === dialog && (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom)) dialog.close();});
@@ -1168,14 +1308,14 @@
   function closeCategory() {if (!discardAllowed()) return;dirty = false;$('#category-editor').close();$('#save-state').textContent = 'آمادهٔ ویرایش';}
   $('#close-category').addEventListener('click',closeCategory);$('#cancel-category').addEventListener('click',closeCategory);
   $('#category-editor').addEventListener('cancel',event => {event.preventDefault();closeCategory();});
-  $('#category-form').addEventListener('submit',event => {
+  $('#category-form').addEventListener('submit',async event => {
     event.preventDefault();const values = formValues(event.currentTarget);const category = {id:values.id || 'cat-' + (typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2,9)),name:values.name.trim(),description:values.description,visible:event.currentTarget.elements.visible.checked,parentId:event.currentTarget.elements.parentId.value,menu:event.currentTarget.elements.menu.checked,banner:categoryBannerEditor.read()};
     const next = clone(data);const index = next.productCategories.findIndex(c => c.id === category.id);if (index < 0) next.productCategories.splice(Math.max(0,next.productCategories.length-1),0,category);else next.productCategories[index] = category;
-    if (commit(next,'دسته ذخیره شد.')) {$('#category-editor').close();renderPage('categories');}else $('#category-error').textContent = 'دسته ذخیره نشد؛ نام و اطلاعات را بررسی کن.';
+    if (await commit(next,'دسته ذخیره شد.')) {$('#category-editor').close();renderPage('categories');}else $('#category-error').textContent = 'دسته ذخیره نشد؛ نام و اطلاعات را بررسی کن.';
   });
-  $('#entry-form').addEventListener('submit',event => {
+  $('#entry-form').addEventListener('submit',async event => {
     event.preventDefault();const values = formValues(event.currentTarget);
-    const item = {id:values.id || (typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : 'entry-' + Date.now() + '-' + Math.random().toString(36).slice(2,9)),title:values.title.trim(),summary:values.summary,body:values.body,meta:values.meta,url:values.url.trim(),status:values.status,image:entryImage,file:['catalog','products'].includes(editingModule) ? entryFile : '',fileName:['catalog','products'].includes(editingModule) ? values.fileName : ''};
+    const item = {id:values.id || (typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : 'entry-' + Date.now() + '-' + Math.random().toString(36).slice(2,9)),title:values.title.trim(),summary:values.summary,body:values.body,meta:values.meta,url:values.url.trim(),status:values.status,image:entryImage,imageAsset:entryImageAsset,banner:entryBannerEditor.read(),file:['catalog','products'].includes(editingModule) ? entryFile : '',fileName:['catalog','products'].includes(editingModule) ? values.fileName : ''};
     if (editingModule === 'products') {
       const specifications = [];
       for (const line of values.specifications.split('\n').map(line => line.trim()).filter(Boolean)) {
@@ -1185,13 +1325,15 @@
       }
       Object.assign(item,{imageAsset:entryImageAsset,imageStyle:entryImageStyle,imageCaption:values.imageCaption,priceAmount:values.priceAmount === '' ? null : Number(values.priceAmount),priceKind:values.priceKind,priceUnit:values.priceUnit,priceDate:values.priceDate,categoryId:values.categoryId,model:values.model.trim(),featured:event.currentTarget.elements.featured.checked,specifications,datasheetUrl:values.datasheetUrl.trim(),manualUrl:values.manualUrl.trim()});
     }
-    const next = clone(data);const index = next.modules[editingModule].items.findIndex(i => i.id === item.id);
+    const next = clone(data);
+    if (['products','services','equipment'].includes(editingModule)) writePageBanner(next,(editingModule==='products'?'product':editingModule==='services'?'service':'equipment')+':'+item.id,item.banner);
+    const index = next.modules[editingModule].items.findIndex(i => i.id === item.id);
     if (index < 0) next.modules[editingModule].items.unshift(item);else next.modules[editingModule].items[index] = item;
-    if (commit(next,'محتوا ذخیره شد.')) {$('#entry-editor').close();renderPage(editingModule);}
+    if (await commit(next,'محتوا ذخیره شد.')) {$('#entry-editor').close();renderPage(editingModule);}
     else $('#entry-error').textContent = 'ذخیره انجام نشد؛ پیام خطا را بررسی کن. فرم و تغییراتت حفظ شده‌اند.';
   });
   window.addEventListener('hashchange',transitionRoute);
   window.addEventListener('beforeunload',event => {if (dirty) {event.preventDefault();event.returnValue = '';}});
   window.addEventListener('resize',() => {closeNavigationMenus();const nav = $('#navigation');nav.style.gridTemplateColumns = 'repeat(' + Math.max(1,Math.min(innerWidth <= 600 ? 4 : 8,nav.children.length)) + ',minmax(0,1fr))';});
-  renderPublic();renderSidebar();route();document.documentElement.dataset.avaRoute = location.hash || '#home';
+  boot();
 })();

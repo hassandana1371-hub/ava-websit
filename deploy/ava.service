@@ -1,0 +1,22 @@
+[Unit]
+Description=AVA website and content studio
+After=network.target
+
+[Service]
+Type=simple
+User=ava
+Group=ava
+WorkingDirectory=/srv/ava
+Environment=AVA_DATA_DIR=/var/lib/ava
+Environment=AVA_PUBLIC_ORIGIN=https://avagroups.ir
+ExecStart=/usr/bin/python3 /srv/ava/server.py --port 8000
+Restart=on-failure
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/ava
+
+[Install]
+WantedBy=multi-user.target

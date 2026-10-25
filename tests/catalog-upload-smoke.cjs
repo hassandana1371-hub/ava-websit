@@ -20,7 +20,7 @@ const supplied=JSON.parse(fs.readFileSync(path.join(root,'src/assets/products/SO
    await page.goto(base+'#category/'+id);assert.equal(await page.locator('.catalog-layout .product-card').count(),count);assert.equal(await page.locator('.catalog-banner-image').evaluate(i=>i.complete&&i.naturalWidth>0),true);
    await page.locator('.catalog-browse').click();const card=page.locator('.catalog-layout .product-card').first();await card.scrollIntoViewIfNeeded();await card.locator('img').evaluate(i=>i.decode());assert(await card.locator('img').evaluate(i=>i.naturalWidth>0));
   }
-  await page.goto(base+'#products');assert.equal(await page.locator('.catalog-layout .product-card').count(),21);
+  await page.goto(base+'#products');assert.equal(await page.locator('.catalog-layout .product-card').count(),24);
   for(const item of supplied.products){
    const card=page.locator('.catalog-layout .product-card[href="#product/'+item.id+'"]');assert.equal(await card.locator('h3').textContent(),item.title);const price=await card.locator('.product-price-value').textContent();
    if(item.priceToman===null)assert.equal(price,'استعلام قیمت');else{assert(price.includes(item.priceToman.toLocaleString('fa-IR')));assert((await card.locator('.product-price-label').textContent()).includes('قیمت مرجع هر ماژول'));}
@@ -51,7 +51,7 @@ const supplied=JSON.parse(fs.readFileSync(path.join(root,'src/assets/products/SO
   console.log('PASS independent standalone HTML export contains banners and product images; invalid prices do not overwrite saved data');
 
   const legacy=JSON.parse(JSON.stringify(seed));delete legacy.catalogRevision;delete legacy.modules.products.banner;legacy.productCategories=legacy.productCategories.filter(c=>c.id!=='urban-flexible').map(({banner,...c})=>c);legacy.header.nameFa='نام قبلی حفظ شود';legacy.modules.products.items=[{...legacy.modules.products.items[0],id:'previous-custom',title:'محصول قبلی مسئول سایت',status:'draft'}];legacy.updatedAt=Date.now();
-  await page.evaluate(d=>localStorage.setItem('ava-content-studio-v1',JSON.stringify(d)),legacy);await page.goto(base);await page.reload();assert.equal(await page.locator('.ava-wordmark small').textContent(),'نام قبلی حفظ شود');await page.goto(base+'#admin/products');assert.equal(await page.locator('#entry-list .admin-entry').count(),22);assert.equal(await page.locator('[data-entry-id=previous-custom] .entry-status').textContent(),'پیش‌نویس');await page.locator('#module-settings [type=submit]').click();
+  await page.evaluate(d=>localStorage.setItem('ava-content-studio-v1',JSON.stringify(d)),legacy);await page.goto(base);await page.reload();assert.equal(await page.locator('.ava-wordmark small').textContent(),'نام قبلی حفظ شود');await page.goto(base+'#admin/products');assert.equal(await page.locator('#entry-list .admin-entry').count(),25);assert.equal(await page.locator('[data-entry-id=previous-custom] .entry-status').textContent(),'پیش‌نویس');await page.locator('#module-settings [type=submit]').click();
   page.once('dialog',d=>d.accept());await page.locator('[data-entry-id=outdoor-5]').getByRole('button',{name:'حذف',exact:true}).click();await page.reload();assert.equal(await page.locator('[data-entry-id=outdoor-5]').count(),0);assert.equal(await page.locator('[data-entry-id=previous-custom]').count(),1);
   console.log('PASS one-time legacy import adds products and Flexible category, retains custom draft/header, and respects later deletion');
 
