@@ -10,7 +10,7 @@ const root=path.resolve(__dirname,'..');
   const page=await browser.newPage({viewport:{width:1440,height:900},acceptDownloads:true});page.on('pageerror',e=>errors.push(e.message));
   await page.goto(base);const frame=page.locator('.hero-motion-frame');await frame.waitFor();await page.waitForFunction(()=>document.querySelector('.hero-motion-frame')?.contentDocument?.getAnimations().length===12);
   assert.equal(await page.locator('.hero-slide').count(),5);assert.equal(await page.locator('.hero-slide[aria-hidden=false]').getAttribute('class'),'hero-slide hero-motion-slide');
-  assert.equal(await page.locator('#hero button,#hero a,.hero-slider-footer').count(),0);assert.equal(await frame.getAttribute('sandbox'),'allow-same-origin');
+  assert.equal(await page.locator('.hero-arrow').count(),2);assert.equal(await page.locator('.hero-dot').count(),5);assert.equal(await page.locator('#hero a,.hero-slider-footer').count(),0);assert.equal(await frame.getAttribute('sandbox'),'allow-same-origin');
   const timings=await frame.evaluate(f=>f.contentDocument.getAnimations().map(a=>({duration:a.effect.getTiming().duration,iterations:a.effect.getTiming().iterations,end:a.effect.getComputedTiming().endTime})));
   assert(timings.every(t=>t.duration===7000&&t.iterations===2));assert.equal(Math.max(...timings.map(t=>t.end)),14120);
   await page.waitForFunction(()=>{const f=document.querySelector('.hero-motion-frame');return f.contentDocument.querySelector('.stage').getAnimations()[0].effect.getComputedTiming().currentIteration===1;},{},{timeout:9000});
@@ -21,7 +21,7 @@ const root=path.resolve(__dirname,'..');
   console.log('PASS original SVG plays two real 7-second loops, then transitions to photos with their 2-second interval');
   // Return to the logo after the full photo sequence; its animation must restart.
   await page.waitForFunction(()=>document.querySelector('.hero-motion-slide').getAttribute('aria-hidden')==='false',{},{timeout:8000});
-  const restarted=await frame.evaluate(f=>f.contentDocument.querySelector('.stage').getAnimations()[0].currentTime);assert(restarted<1000);
+  await page.waitForFunction(()=>document.querySelector('.hero-motion-frame').contentDocument.querySelector('.stage').getAnimations()[0].playState==='running');const restarted=await frame.evaluate(f=>f.contentDocument.querySelector('.stage').getAnimations()[0].currentTime);assert(restarted<1000);
   console.log('PASS carousel returns to the logo and restarts its two-iteration animation');
 
   await page.goto(base+'#admin/hero');assert.equal(await page.locator('#hero-form [name=showMotionLogo]').isChecked(),true);await page.locator('#hero-form [name=showMotionLogo]').uncheck();await page.locator('#hero-form [type=submit]').click();await page.goto(base);assert.equal(await frame.count(),0);assert.equal(await page.locator('.hero-slide').count(),4);

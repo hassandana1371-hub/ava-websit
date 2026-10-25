@@ -13,7 +13,7 @@ seed.hero.showMotionLogo=false;
  try{
   const page=await browser.newPage({viewport:{width:1440,height:900},reducedMotion:'no-preference',acceptDownloads:true});page.on('pageerror',e=>errors.push(e.message));
   await page.goto(base);await page.evaluate(()=>document.fonts.ready);
-  assert.equal(await page.locator('#hero button,#hero a,#hero h1,#hero p,.hero-slider-footer,.hero-slide-choices,.hero-shade').count(),0);
+  assert.equal(await page.locator('#hero a,#hero h1,#hero p,.hero-slider-footer,.hero-slide-choices,.hero-shade').count(),0);
   assert.equal((await page.locator('#hero').innerText()).trim(),'');assert.equal(await page.locator('.hero-scene').count(),4);
   assert.equal(await page.locator('#hero').evaluate(n=>n.getBoundingClientRect().bottom),900);
   assert(await page.locator('.hero-scene').evaluateAll(images=>images.every(i=>i.complete&&i.naturalWidth>1800&&i.src.startsWith('data:image/webp;base64,'))));

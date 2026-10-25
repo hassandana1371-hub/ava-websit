@@ -13,7 +13,7 @@ const names = ['رسیور کارت','پاور (منبع تغذیه)','مگنت'
   const base = `http://127.0.0.1:${server.address().port}/`;
   const browser = await chromium.launch({executablePath:process.env.AVA_TEST_CHROMIUM || '/usr/bin/chromium',headless:true,args:['--no-sandbox']});const errors=[];
   try{
-    const page = await browser.newPage({viewport:{width:1440,height:1000},acceptDownloads:true});page.on('pageerror',e=>errors.push(e.message));
+    const page = await browser.newPage({viewport:{width:1440,height:1000},reducedMotion:'reduce',acceptDownloads:true});page.on('pageerror',e=>errors.push(e.message));
     await page.goto(base);await page.evaluate(()=>document.fonts.ready);
     await page.locator('.partners-menu-trigger').hover();await page.waitForTimeout(180);assert.equal(await page.locator('.partners-dropdown').isVisible(),false);
     await page.locator('.partners-menu-trigger').click();await page.locator('.partners-dropdown').waitFor({state:'visible'});
@@ -37,16 +37,16 @@ const names = ['رسیور کارت','پاور (منبع تغذیه)','مگنت'
     console.log('PASS editable equipment module, draft protection, add/delete persistence and equipment overview');
 
     await page.goto(base+'#admin/backup');const waiting=page.waitForEvent('download');await page.locator('#export-site').click();const file='/tmp/ava-v12-export.html';await(await waiting).saveAs(file);
-    const restored=await browser.newPage();await restored.route('http://equipment-restored.test/',route=>route.fulfill({contentType:'text/html',body:fs.readFileSync(file,'utf8')}));await restored.goto('http://equipment-restored.test/#equipment/receiving-card');assert.equal(await restored.locator('.equipment-page h1').textContent(),'رسیور کارت حرفه‌ای');
+    const restored=await browser.newPage({reducedMotion:'reduce'});await restored.route('http://equipment-restored.test/',route=>route.fulfill({contentType:'text/html',body:fs.readFileSync(file,'utf8')}));await restored.goto('http://equipment-restored.test/#equipment/receiving-card');assert.equal(await restored.locator('.equipment-page h1').textContent(),'رسیور کارت حرفه‌ای');
     const legacy=JSON.parse(JSON.stringify(seed));delete legacy.modules.equipment;legacy.updatedAt=Date.now();legacy.modules.partners.items=[{...seed.modules.services.items[0],id:'existing-partner',title:'همکار قبلی',body:'اطلاعات همکار حفظ شود'}];
     await page.goto(base);await page.evaluate(value=>localStorage.setItem('ava-content-studio-v1',JSON.stringify(value)),legacy);await page.reload();
     await page.locator('.partners-menu-trigger').click();assert.equal(await page.locator('.partners-directory-link').textContent(),'معرفی همکاران');await page.locator('.equipment-category-trigger').click();assert.equal(await page.locator('.equipment-submenu a').count(),8);
     await page.locator('.partners-directory-link').click();await page.locator('#partners').waitFor({state:'visible'});assert.equal(await page.locator('#partners h3').textContent(),'همکار قبلی');
-    await page.goto(base+'#admin/partners');assert.equal(await page.locator('#entry-list .admin-entry').count(),1);await page.locator('.admin-sidebar [data-page=equipment]').click();assert.equal(await page.locator('#entry-list .admin-entry').count(),8);
+    await page.goto(base+'#admin/partners');assert.equal(await page.locator('#entry-list .admin-entry').count(),1);await page.locator('.admin-sidebar [data-page=equipment]').click();await page.waitForFunction(()=>document.documentElement.dataset.avaRoute==='#admin/equipment');assert.equal(await page.locator('#entry-list .admin-entry').count(),8);
     console.log('PASS standalone export and old data migration preserve collaborator records separately from equipment');
 
     for(const width of [390,320]){
-      const context=await browser.newContext({viewport:{width,height:800},hasTouch:true,isMobile:true});const mobile=await context.newPage();mobile.on('pageerror',e=>errors.push(e.message));
+      const context=await browser.newContext({viewport:{width,height:800},hasTouch:true,isMobile:true,reducedMotion:'reduce'});const mobile=await context.newPage();mobile.on('pageerror',e=>errors.push(e.message));
       await mobile.goto(base);await mobile.evaluate(()=>document.fonts.ready);await mobile.locator('.partners-menu-trigger').tap();await mobile.locator('.equipment-category-trigger').tap();
       assert.equal(await mobile.locator('.equipment-submenu a:visible').count(),8);const box=await mobile.locator('.partners-dropdown').boundingBox();assert(box.x>=0&&box.x+box.width<=width+1&&box.y+box.height<=800);
       assert.equal(await mobile.evaluate(()=>document.documentElement.scrollWidth),width);assert.equal(await mobile.evaluate(()=>scrollX),0);

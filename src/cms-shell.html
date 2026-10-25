@@ -52,7 +52,7 @@
       <small>فقط مشخصات تأییدشدهٔ محصول را وارد کن؛ هر خط یک ردیف در جدول مشخصات می‌شود.</small>
       <div class="admin-form-grid"><label>پیوند برگهٔ مشخصات<input name="datasheetUrl" type="url" dir="ltr" maxlength="2000" placeholder="https://…"></label><label>پیوند راهنمای کاربر<input name="manualUrl" type="url" dir="ltr" maxlength="2000" placeholder="https://…"></label></div>
     </div>
-    <div id="catalog-upload-row" hidden><label class="upload-button"><span id="entry-pdf-label">انتخاب فایل PDF کاتالوگ</span><input id="entry-pdf" type="file" accept="application/pdf"></label><small id="pdf-filename">حداکثر ۲ مگابایت؛ فایل در بخش دانلودها نمایش داده می‌شود.</small><button class="text-button" type="button" id="entry-pdf-remove">حذف فایل PDF</button></div>
+    <div id="catalog-upload-row" hidden><h3 id="product-file-heading">فایل‌های محصول</h3><p class="product-file-help">فایل PDF معرفی یا دیتاشیت را اینجا بارگذاری کنید؛ پس از ذخیره، در تب «فایل‌ها و دانلودها» نمایش داده می‌شود.</p><label>نام فایل در بخش دانلود<input name="fileName" maxlength="160" placeholder="مثلاً کاتالوگ این محصول"></label><label class="upload-button"><span id="entry-pdf-label">انتخاب فایل PDF کاتالوگ</span><input id="entry-pdf" type="file" accept="application/pdf"></label><small id="pdf-filename">حداکثر ۲ مگابایت؛ فایل در بخش دانلودها نمایش داده می‌شود.</small><button class="text-button" type="button" id="entry-pdf-remove">حذف فایل PDF</button></div>
     <label>وضعیت<select name="status"><option value="draft">پیش‌نویس — در سایت دیده نشود</option><option value="published">منتشرشده — در سایت دیده شود</option></select></label>
     <p id="entry-error" class="form-error" role="alert"></p>
     <div class="form-actions"><button type="submit" class="admin-button">ذخیرهٔ محتوا</button><button type="button" class="admin-button secondary" id="cancel-entry">انصراف</button></div>
@@ -66,3 +66,5 @@
 
 <dialog id="content-detail" class="section-dialog content-detail" aria-labelledby="detail-title"><button type="button" class="icon-button" data-close="content-detail" aria-label="بستن محتوا">×</button><div id="detail-body"></div></dialog>
 <div id="cms-toast" class="cms-toast" role="status" hidden></div>
+
+<dialog id="product-image-dialog" class="product-image-dialog" aria-label="نمایش بزرگ تصویر محصول"><button type="button" class="product-image-close" data-close="product-image-dialog" aria-label="بستن تصویر">×</button><img id="product-image-full" alt=""></dialog>

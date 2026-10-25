@@ -20,7 +20,7 @@ state.updatedAt = Date.now();
   const browser = await chromium.launch({executablePath:process.env.AVA_TEST_CHROMIUM || '/usr/bin/chromium',headless:true,args:['--no-sandbox']});
   const errors = [];
   try {
-    const page = await browser.newPage({viewport:{width:1440,height:1000}});page.on('pageerror',e => errors.push(e.message));
+    const page = await browser.newPage({viewport:{width:1440,height:1000},reducedMotion:'reduce'});page.on('pageerror',e => errors.push(e.message));
     await page.goto(base);await page.evaluate(()=>document.fonts.ready);
     await page.locator('.products-menu-trigger').hover();await page.waitForTimeout(250);
     assert.equal(await page.locator('.products-dropdown').isVisible(),false,'Hover must not open products');
@@ -81,7 +81,7 @@ state.updatedAt = Date.now();
     console.log('PASS version 7/8 data migration adds requested menu without losing existing content');
 
     for (const width of [390,320]) {
-      const touch = await browser.newContext({viewport:{width,height:700},hasTouch:true,isMobile:true});const mobile = await touch.newPage();mobile.on('pageerror',e => errors.push(e.message));
+      const touch = await browser.newContext({viewport:{width,height:700},hasTouch:true,isMobile:true,reducedMotion:'reduce'});const mobile = await touch.newPage();mobile.on('pageerror',e => errors.push(e.message));
       await mobile.goto(base);await mobile.evaluate(()=>document.fonts.ready);await mobile.locator('.products-menu-trigger').tap();await mobile.locator('.products-dropdown').waitFor({state:'visible'});
       for (const id of ['urban','rental','conference-home']) {
         const group = mobile.locator(`[data-category-group="${id}"]`);await group.locator('.subcategory-toggle').tap();

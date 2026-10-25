@@ -35,6 +35,7 @@
   const previewLogo = name => defaultLogo.replaceAll('ava-blue', 'ava-blue-' + name);
   const heroImages = JSON.parse($('#ava-hero-images').textContent);
   const productImages = JSON.parse($('#ava-product-images').textContent);
+  const legacyProductVisuals = JSON.parse($('#ava-product-visual-history').textContent);
   const heroMotionDocument = JSON.parse($('#ava-hero-motion').textContent);
   let heroController;
   let data = clone(seed);
@@ -48,6 +49,7 @@
   let editingModule = '';
   let entryImage = '';
   let entryImageAsset = '';
+  let entryImageStyle = '';
   let categoryBannerEditor;
   let entryFile = '';
 
@@ -177,7 +179,7 @@
         ids.add(item.id);
         const title = text(item.title, 160).trim();
         if (!title) throw new Error('عنوان محتوا را وارد کن.');
-        const result = {id:item.id,title,summary:text(item.summary,700),body:text(item.body,20000),meta:text(item.meta,200),image:imageData(item.image),url:httpURL(item.url),file:pdfData(item.file || ''),status:item.status};
+        const result = {id:item.id,title,summary:text(item.summary,700),body:text(item.body,20000),meta:text(item.meta,200),image:imageData(item.image),url:httpURL(item.url),file:pdfData(item.file || ''),fileName:text(item.fileName || '',160),status:item.status};
         if (key === 'products') {
           if (item.categoryId !== undefined && !categoryIds.has(item.categoryId)) throw new Error('دستهٔ یکی از محصولات وجود ندارد.');
           result.categoryId = item.categoryId || 'uncategorized';
@@ -187,6 +189,15 @@
           result.manualUrl = httpURL(item.manualUrl || '');
           result.imageAsset = Object.hasOwn(productImages,item.imageAsset) ? item.imageAsset : '';
           result.imageCaption = text(item.imageCaption || '',200);
+          result.imageStyle = ['datasheet','illustration'].includes(item.imageStyle) ? item.imageStyle : '';
+          if (raw.productVisualRevision !== 3 && !result.image) {
+            const latest = seed.modules.products.items.find(p => p.id === item.id);
+            if (latest && result.imageAsset === latest.imageAsset) {
+              if (['تصویر مرجع','تصویر دیتاشیت'].includes(result.imageCaption)) result.imageCaption = latest.imageCaption;
+              if (result.body === legacyProductVisuals[item.id]?.body) result.body = latest.body;
+              result.imageStyle = latest.imageStyle;
+            }
+          }
           result.priceAmount = item.priceAmount === undefined || item.priceAmount === null || item.priceAmount === '' ? null : item.priceAmount;
           if (result.priceAmount !== null && (!Number.isSafeInteger(result.priceAmount) || result.priceAmount < 0 || result.priceAmount > 9000000000000)) throw new Error('قیمت باید یک عدد صحیح معتبر به تومان باشد.');
           result.priceKind = item.priceKind || (result.priceAmount === null ? 'quote' : 'reference');
@@ -221,6 +232,7 @@
     }
     out.servicesRevision = 1;
     out.catalogRevision = 1;
+    out.productVisualRevision = 3;
     for (const key of ['title','description','phone','email','address']) out.contact[key] = text(raw.contact[key], key === 'description' ? 2500 : 500);
     return out;
   }
@@ -291,7 +303,7 @@
   function categoryCrumbs(category) {const parent = data.productCategories.find(item => item.id === category.parentId);return [...(parent ? [{label:parent.name,href:'#category/' + parent.id}] : []),{label:category.name,href:'#category/' + category.id}];}
   function categoryFor(item) {return data.productCategories.find(category => category.id === item.categoryId);}
   function visibleLink(name, url, downloadName = '') {
-    const link = el('a',{class:'button',href:url},name,' ↗');
+    const link = el('a',{class:'button',href:url},name,el('span',{'aria-hidden':'true'},' ↗'));
     if (downloadName) link.download = downloadName;
     else {link.target = '_blank';link.rel = 'noopener noreferrer';}
     return link;
@@ -437,7 +449,7 @@
   function productCard(item) {
     const category = categoryFor(item);
     const link = el('a',{class:'product-card',href:'#product/' + item.id});
-    const media = el('div',{class:'product-card-media'});
+    const media = el('div',{class:'product-card-media','data-image-style':item.imageStyle || ''});
     if (productImage(item)) media.append(el('img',{src:productImage(item),alt:item.title,loading:'lazy'}));
     else media.append(el('div',{class:'product-no-image','aria-hidden':'true'},el('span',{},'▦'),el('small',{},'تصویر محصول')));
     const content = el('div',{class:'product-card-content'},el('span',{class:'product-category-label'},category?.name || ''),el('h3',{},item.title));
@@ -523,7 +535,11 @@
     container.append(breadcrumbs([{label:'خانه',href:'#home'},{label:data.modules.products.name,href:'#products'},...categoryCrumbs(category),{label:item.title}]));
     const hero = el('section',{class:'product-hero'});
     const media = el('div',{class:'product-main-image'});
-    if (productImage(item)) media.append(el('img',{src:productImage(item),alt:item.title}));
+    if (productImage(item)) {
+      const openImage = el('button',{type:'button',class:'product-image-open','aria-label':'بزرگ‌نمایی تصویر ' + item.title},el('img',{src:productImage(item),alt:item.title}));
+      openImage.append(el('span',{class:'product-zoom-hint','aria-hidden':'true'},'＋'));
+      openImage.addEventListener('click',() => {$('#product-image-full').src = productImage(item);$('#product-image-full').alt = item.title;$('#product-image-dialog').showModal();});media.append(openImage);
+    }
     else media.append(el('div',{class:'product-no-image'},el('span',{'aria-hidden':'true'},'▦'),el('small',{},'تصویر این محصول هنوز اضافه نشده است.')));
     if (item.imageCaption) media.append(el('span',{class:'product-image-caption'},item.imageCaption));
     const info = el('div',{class:'product-introduction'},el('a',{class:'product-category-label',href:'#category/' + category.id},category.name),el('h1',{},item.title));
@@ -534,18 +550,11 @@
     if (item.priceDate) info.append(el('p',{class:'product-price-date'},'تاریخ لیست قیمت: ' + item.priceDate.replace(/\d/g,n => '۰۱۲۳۴۵۶۷۸۹'[n])));
     if (item.meta) info.append(el('p',{class:'product-extra'},item.meta));
     const actions = el('div',{class:'product-main-actions'});
-    const consult = el('a',{href:'#contact',class:'button'},'درخواست مشاوره دربارهٔ این محصول');
+    const consult = el('a',{href:'#contact',class:'button'},'استعلام این محصول');
     consult.addEventListener('click',() => {
       $('#request-form').elements.project.value = 'درخواست مشاوره دربارهٔ محصول «' + item.title + '»' + (item.model ? ' — ' + item.model : '');
     });
-    const share = el('button',{type:'button',class:'product-share'},'کپی لینک محصول');
-    const shareInput = el('input',{class:'product-share-input',readonly:'',hidden:'','aria-label':'لینک مستقیم محصول',dir:'ltr'});
-    share.addEventListener('click',async () => {
-      const link = new URL('#product/' + item.id,location.href).href;
-      try {await navigator.clipboard.writeText(link);toast('لینک محصول کپی شد.');}
-      catch {shareInput.value = link;shareInput.hidden = false;shareInput.focus();shareInput.select();toast('لینک نمایش داده شد؛ آن را کپی کن.');}
-    });
-    actions.append(consult,share);info.append(actions,shareInput);hero.append(media,info);container.append(hero);
+    actions.append(consult);info.append(actions);hero.append(media,info);container.append(hero);
     const tablist = el('div',{class:'product-tabs',role:'tablist','aria-label':'اطلاعات محصول'});
     const panels = el('div',{class:'product-tab-panels'});
     const names = [['overview','معرفی محصول'],['specs','مشخصات فنی'],['downloads','فایل‌ها و دانلودها']];
@@ -569,7 +578,7 @@
       }
       if (key === 'downloads') {
         panel.append(el('h2',{},'فایل‌ها و دانلودها'));const files = el('div',{class:'product-downloads'});
-        if (item.file) files.append(visibleLink('دریافت PDF محصول',item.file,item.id + '.pdf'));
+        if (item.file) files.append(visibleLink(item.fileName || 'دریافت PDF محصول',item.file,item.id + '.pdf'));
         if (item.datasheetUrl) files.append(visibleLink('برگهٔ مشخصات',item.datasheetUrl));
         if (item.manualUrl) files.append(visibleLink('راهنمای کاربر',item.manualUrl));
         if (item.url) files.append(visibleLink('پیوند مرتبط',item.url));
@@ -627,84 +636,149 @@
   }
   function renderHero() {
     heroController?.dispose();
-    const hero = data.hero;
-    const root = $('#hero');root.hidden = !hero.show;
-    const viewport = $('#hero-viewport');viewport.replaceChildren();
-    const signalController = new AbortController();const signal = signalController.signal;
+    const hero = data.hero,root = $('#hero'),viewport = $('#hero-viewport');
+    root.hidden = !hero.show;root.classList.remove('is-dragging');
+    viewport.replaceChildren();$('.hero-controls',root)?.remove();
+    viewport.tabIndex = 0;viewport.setAttribute('aria-label','اسلایدهای آوا؛ با کشیدن تصویر یا کلیدهای جهت جابه‌جا شوید');
+    const signalController = new AbortController(),signal = signalController.signal;
     const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
-    let index = 0,timer,animations = [],busy = false,inView = false,disposed = false;
-    let motionAnimations = [],motionReady = false,motionWaiting = false,motionVisit = 0;
-    const hasMotion = hero.showMotionLogo !== false;
-    const nodes = [];
-    const count = hero.slides.length + Number(hasMotion);
+    let index = 0,timer,animations = [],inView = false,disposed = false,focused = false;
+    let userPaused = !hero.autoplay,transitionVisit = 0,pointer = null,previewIndex = null;
+    let motionAnimations = [],motionReady = false,motionWaiting = false,motionVisit = 0,motionFrame;
+    const hasMotion = hero.showMotionLogo !== false,nodes = [],count = hero.slides.length + Number(hasMotion);
     function slideNode(number,motion = false) {
       const node = el('div',{class:'hero-slide' + (motion ? ' hero-motion-slide' : ''),role:'group','aria-roledescription':'اسلاید','aria-label':motion ? 'موشن‌لوگوی آوا؛ دو بار پخش' : (number+1) + ' از ' + count,'aria-hidden':String(number !== 0)});
       node.hidden = number !== 0;node.inert = number !== 0;nodes.push(node);viewport.append(node);return node;
     }
     if (hasMotion) {
       const frame = el('iframe',{class:'hero-motion-frame',title:'موشن‌لوگوی آوا',sandbox:'allow-same-origin',tabindex:'-1'});
+      motionFrame = frame;
       frame.addEventListener('load',() => {
         if (disposed) return;
-        motionAnimations = frame.contentDocument.getAnimations();
-        motionReady = motionAnimations.length > 0;
-        for (const animation of motionAnimations) {animation.pause();animation.currentTime = reducedMotion.matches || !hero.autoplay ? 3500 : 0;}
+        refreshMotion(reducedMotion.matches || userPaused ? 3500 : 0);
         schedule();
       },{signal});
       frame.srcdoc = heroMotionDocument;slideNode(0,true).append(frame);
     }
-    hero.slides.forEach((slide,number) => {
-      const image = el('img',{class:'hero-scene',src:slide.image || heroImages[slide.asset],alt:slide.imageAlt,draggable:'false',decoding:'async','fetchpriority':number === 0 ? 'high' : 'low'});
-      slideNode(number + Number(hasMotion)).append(image);
+    hero.slides.forEach((slide,number) => slideNode(number+Number(hasMotion)).append(el('img',{class:'hero-scene',src:slide.image || heroImages[slide.asset],alt:slide.imageAlt,draggable:'false',decoding:'async',fetchpriority:number === 0 ? 'high' : 'low'})));
+    const controls = el('div',{class:'hero-controls'});
+    const previous = el('button',{type:'button',class:'hero-arrow hero-previous','aria-label':'اسلاید قبلی'});
+    const next = el('button',{type:'button',class:'hero-arrow hero-next','aria-label':'اسلاید بعدی'});
+    previous.innerHTML = '<svg viewBox="0 0 32 64" aria-hidden="true"><path d="M25 7 7 32l18 25"/></svg>';
+    next.innerHTML = '<svg viewBox="0 0 32 64" aria-hidden="true"><path d="m7 7 18 25L7 57"/></svg>';
+    const pagination = el('div',{class:'hero-pagination','aria-label':'انتخاب اسلاید'}),dots = el('div',{class:'hero-dots',dir:'ltr'});
+    const dotButtons = nodes.map((node,number) => {
+      const name = hasMotion && number === 0 ? 'موشن‌لوگوی آوا' : hero.slides[number-Number(hasMotion)].imageAlt;
+      const button = el('button',{type:'button',class:'hero-dot','aria-label':'اسلاید ' + (number+1) + ': ' + name});
+      button.addEventListener('click',() => go(number,number > index ? 1 : -1,true),{signal});dots.append(button);return button;
     });
+    const play = el('button',{type:'button',class:'hero-play'}),status = el('span',{class:'sr-only','aria-live':'polite','aria-atomic':'true'});
+    pagination.append(dots,play);controls.append(previous,next,pagination,status);controls.hidden = count < 2;root.append(controls);
+    function paint(manual = false) {
+      dotButtons.forEach((button,number) => button.setAttribute('aria-current',String(number === index)));
+      play.hidden = reducedMotion.matches;
+      play.setAttribute('aria-label',userPaused ? 'شروع پخش خودکار' : 'توقف پخش خودکار');play.setAttribute('aria-pressed',String(!userPaused));
+      play.innerHTML = userPaused ? '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="m6 3.5 10 6.5-10 6.5Z" fill="currentColor"/></svg>' : '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M6 4v12M14 4v12" stroke="currentColor" stroke-width="2.5"/></svg>';
+      if (manual) status.textContent = 'اسلاید ' + (index+1).toLocaleString('fa-IR') + ' از ' + count.toLocaleString('fa-IR');
+    }
     const stop = () => clearTimeout(timer);
-    function canPlay() {return !disposed && nodes.length > 1 && hero.autoplay && !reducedMotion.matches && inView && !document.hidden && !root.hidden && !$('#home-content').hidden && !$('#public-site').hidden;}
+    function refreshMotion(time) {
+      if (!motionFrame?.contentDocument) return;
+      // Showing a previously hidden frame can recreate its CSS animations.
+      // Read the visible frame before seeking/playing, rather than stale handles.
+      motionFrame.getBoundingClientRect();
+      const current = motionFrame.contentDocument.getAnimations();
+      if (current.length !== motionAnimations.length || current.some((animation,n) => animation !== motionAnimations[n])) {
+        motionAnimations = current;motionReady = current.length > 0;motionVisit++;motionWaiting = false;
+      }
+      if (time !== undefined) for(const animation of motionAnimations){animation.pause();animation.currentTime = time;}
+    }
+    function canPlay() {return !disposed && count > 1 && !userPaused && !focused && !pointer && !reducedMotion.matches && inView && !document.hidden && !root.hidden && !$('#home-content').hidden && !$('#public-site').hidden;}
     function schedule() {
-      stop();
-      const playing = canPlay();
+      stop();const playing = canPlay();
+      if (playing && hasMotion && index === 0) refreshMotion();
       for (const animation of motionAnimations) {
-        if (playing && hasMotion && index === 0) {
-          if (animation.currentTime < animation.effect.getComputedTiming().endTime) animation.play();
-        } else animation.pause();
+        if (playing && hasMotion && index === 0) {if (animation.currentTime < animation.effect.getComputedTiming().endTime) animation.play();}
+        else animation.pause();
       }
       if (!playing) return;
       if (hasMotion && index === 0) {
         if (!motionReady || motionWaiting) return;
         motionWaiting = true;const visit = motionVisit;
-        // Completion is driven by the SVG's own two animation iterations,
-        // including its 120ms delayed accent, rather than the photo timer.
         Promise.all(motionAnimations.map(animation => animation.finished)).then(() => {
           if (disposed || visit !== motionVisit || index !== 0) return;
-          motionWaiting = false;advance();schedule();
+          motionWaiting = false;if (canPlay()) go((index+1)%count,1,false);
         }).catch(() => {});
-      } else timer = setTimeout(() => {advance();schedule();},hero.interval);
+      } else timer = setTimeout(() => go((index+1)%count,1,false),hero.interval);
     }
-    function advance() {
-      if (busy) return;
-      const old = nodes[index];index = (index+1)%nodes.length;const incoming = nodes[index];
-      if (hasMotion && index === 0) {
-        motionVisit++;motionWaiting = false;
-        for (const animation of motionAnimations) {animation.pause();animation.currentTime = 0;}
-      }
-      old.inert = true;old.setAttribute('aria-hidden','true');incoming.hidden = false;incoming.inert = false;incoming.setAttribute('aria-hidden','false');
-      busy = true;
-      const options = {duration:600,easing:'cubic-bezier(.22,.7,.2,1)'};
-      animations = [old.animate([{transform:'translateX(0)'},{transform:'translateX(-100%)'}],options),incoming.animate([{transform:'translateX(100%)'},{transform:'translateX(0)'}],options)];
-      Promise.all(animations.map(animation => animation.finished)).then(() => {old.hidden = true;animations = [];busy = false;}).catch(() => {});
+    function normalize() {
+      transitionVisit++;animations.forEach(animation => animation.cancel());animations = [];
+      nodes.forEach((node,number) => {node.style.transform = '';node.hidden = number !== index;node.inert = number !== index;node.setAttribute('aria-hidden',String(number !== index));});previewIndex = null;
     }
-    document.addEventListener('visibilitychange',schedule,{signal});
-    window.addEventListener('hashchange',schedule,{signal});
-    const motionChange = () => {
-      if (reducedMotion.matches) {
-        stop();animations.forEach(animation => animation.cancel());animations = [];busy = false;
-        for (const animation of motionAnimations) {animation.pause();if (index === 0) animation.currentTime = 3500;}
-        nodes.forEach((node,number) => {node.hidden = number !== index;});
-      } else schedule();
-    };
+    function go(nextIndex,direction,manual,offset = 0) {
+      if (manual) userPaused = true;
+      normalize();
+      if (nextIndex === index) {paint(manual);schedule();return;}
+      motionVisit++;motionWaiting = false;
+      const old = nodes[index];index = (nextIndex+count)%count;const incoming = nodes[index];
+      old.inert = true;old.setAttribute('aria-hidden','true');incoming.hidden = false;incoming.inert = false;incoming.setAttribute('aria-hidden','false');paint(manual);
+      if (hasMotion && index === 0) refreshMotion(reducedMotion.matches || userPaused ? 3500 : 0);
+      if (reducedMotion.matches) {old.hidden = true;schedule();return;}
+      const visit = transitionVisit,width = viewport.clientWidth,options = {duration:500,easing:'cubic-bezier(.22,.7,.2,1)'};
+      animations = [old.animate([{transform:'translateX('+offset+'px)'},{transform:'translateX('+(-direction*100)+'%)'}],options),incoming.animate([{transform:'translateX('+(direction*width+offset)+'px)'},{transform:'translateX(0)'}],options)];
+      Promise.all(animations.map(animation => animation.finished)).then(() => {if(disposed || visit !== transitionVisit) return;old.hidden = true;animations = [];}).catch(() => {});
+      schedule();
+    }
+    previous.addEventListener('click',() => go((index+count-1)%count,-1,true),{signal});next.addEventListener('click',() => go((index+1)%count,1,true),{signal});
+    function togglePlay() {
+      userPaused = !userPaused;focused = false;
+      if (!userPaused && hasMotion && index === 0) {motionVisit++;motionWaiting = false;refreshMotion(0);}
+      paint();schedule();
+    }
+    play.addEventListener('click',togglePlay,{signal});
+    root.addEventListener('keydown',event => {
+      if (event.target !== viewport) return;
+      if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') {event.preventDefault();const direction = event.key === 'ArrowRight' ? 1 : -1;go((index+count+direction)%count,direction,true);}
+      if(event.key === 'Home' || event.key === 'End'){event.preventDefault();go(event.key === 'Home' ? 0 : count-1,event.key === 'Home' ? -1 : 1,true);}
+      if(event.code === 'Space' && !reducedMotion.matches){event.preventDefault();togglePlay();}
+    },{signal});
+    root.addEventListener('focusin',() => {focused = true;schedule();},{signal});
+    root.addEventListener('focusout',event => {if(!root.contains(event.relatedTarget)){focused = false;schedule();}},{signal});
+    function clearDrag() {root.classList.remove('is-dragging');nodes[index].style.transform = '';if(previewIndex !== null && previewIndex !== index){nodes[previewIndex].style.transform = '';nodes[previewIndex].hidden = true;}previewIndex = null;}
+    viewport.addEventListener('pointerdown',event => {
+      if (count < 2 || !event.isPrimary || (event.pointerType === 'mouse' && event.button !== 0)) return;
+      normalize();pointer = {id:event.pointerId,x:event.clientX,y:event.clientY,dx:0,dy:0,horizontal:false};schedule();
+      if(event.pointerType === 'mouse') try{viewport.setPointerCapture(event.pointerId);}catch{}
+    },{signal});
+    viewport.addEventListener('pointermove',event => {
+      if(!pointer || pointer.id !== event.pointerId) return;
+      pointer.dx = event.clientX-pointer.x;pointer.dy = event.clientY-pointer.y;
+      if(!pointer.horizontal && Math.abs(pointer.dx)>12 && Math.abs(pointer.dx)>Math.abs(pointer.dy)*1.3){pointer.horizontal = true;root.classList.add('is-dragging');try{viewport.setPointerCapture(event.pointerId);}catch{}}
+      if(!pointer.horizontal) return;
+      event.preventDefault();const direction = pointer.dx < 0 ? 1 : -1,newPreview = (index+count+direction)%count;
+      if(previewIndex !== null && previewIndex !== newPreview){nodes[previewIndex].hidden = true;nodes[previewIndex].style.transform = '';}
+      const previousPreview = previewIndex;previewIndex = newPreview;nodes[index].style.transform = 'translateX('+pointer.dx+'px)';nodes[previewIndex].hidden = false;
+      if(hasMotion && newPreview === 0 && previousPreview !== 0) refreshMotion(3500);
+      nodes[previewIndex].style.transform = 'translateX('+(direction*viewport.clientWidth+pointer.dx)+'px)';
+    },{signal,passive:false});
+    viewport.addEventListener('pointerup',event => {
+      if(!pointer || pointer.id !== event.pointerId) return;
+      const drag = pointer;pointer = null;clearDrag();
+      if(viewport.hasPointerCapture(event.pointerId)) viewport.releasePointerCapture(event.pointerId);
+      if(drag.horizontal && Math.abs(drag.dx)>Math.min(100,viewport.clientWidth*.16)){const direction = drag.dx < 0 ? 1 : -1;go((index+count+direction)%count,direction,true,drag.dx);}else schedule();
+    },{signal});
+    function cancelDrag(){if(!pointer)return;pointer = null;clearDrag();schedule();}
+    viewport.addEventListener('pointercancel',cancelDrag,{signal});
+    viewport.addEventListener('lostpointercapture',event => {if(pointer?.id === event.pointerId && event.target === viewport && !viewport.hasPointerCapture(event.pointerId)) cancelDrag();},{signal});
+    window.addEventListener('resize',cancelDrag,{signal});
+    document.addEventListener('visibilitychange',schedule,{signal});window.addEventListener('hashchange',schedule,{signal});
+    const motionChange = () => {normalize();if(reducedMotion.matches){for(const animation of motionAnimations){animation.pause();if(index===0)animation.currentTime=3500;}}paint();schedule();};
     reducedMotion.addEventListener('change',motionChange);
     const observer = new IntersectionObserver(entries => {inView = entries[0].isIntersecting;schedule();},{threshold:.15});observer.observe(root);
-    const measureHeader = () => {const height = Math.ceil($('.site-header').getBoundingClientRect().height) + 'px';root.style.setProperty('--header-height',height);document.documentElement.style.setProperty('--site-header-height',height);};
+    const measureHeader = () => {const height = Math.ceil($('.site-header').getBoundingClientRect().height)+'px';root.style.setProperty('--header-height',height);document.documentElement.style.setProperty('--site-header-height',height);};
     const headerObserver = new ResizeObserver(measureHeader);headerObserver.observe($('.site-header'));measureHeader();
-    heroController = {dispose:() => {disposed = true;stop();signalController.abort();observer.disconnect();headerObserver.disconnect();reducedMotion.removeEventListener('change',motionChange);animations.forEach(animation => animation.cancel());motionAnimations.forEach(animation => animation.cancel());}};
+    heroController = {dispose:() => {disposed=true;stop();signalController.abort();observer.disconnect();headerObserver.disconnect();reducedMotion.removeEventListener('change',motionChange);animations.forEach(animation=>animation.cancel());motionAnimations.forEach(animation=>animation.cancel());}};
+    paint();
   }
   function renderPublic() {
     const h = data.header;
@@ -943,7 +1017,7 @@
     if (!discardAllowed()) return;
     if (dirty) renderPage(currentPage);
     dirty = false;
-    editingModule = key;entryImage = item?.image || '';entryImageAsset = item?.imageAsset || '';entryFile = item?.file || '';
+    editingModule = key;entryImage = item?.image || '';entryImageAsset = item?.imageAsset || '';entryImageStyle = item?.imageStyle || '';entryFile = item?.file || '';
     const form = $('#entry-form');form.reset();
     for (const name of ['id','title','summary','body','meta','url','status']) form.elements[name].value = item ? item[name] : name === 'status' ? 'draft' : '';
     $('#entry-editor-title').textContent = item ? 'ویرایش محتوا' : 'افزودن محتوا';
@@ -954,6 +1028,7 @@
     $('#entry-category').replaceChildren(...data.productCategories.map(category => el('option',{value:category.id},categoryLabel(category) + (categoryVisible(category) ? '' : ' — پنهان'))));
     form.elements.categoryId.value = item?.categoryId || 'uncategorized';
     form.elements.model.value = item?.model || '';
+    form.elements.fileName.value = item?.fileName || '';
     form.elements.priceAmount.value = item?.priceAmount ?? '';
     form.elements.priceKind.value = item?.priceKind || 'quote';
     form.elements.priceUnit.value = item?.priceUnit || 'هر ماژول';
@@ -963,7 +1038,8 @@
     form.elements.specifications.value = (item?.specifications || []).map(spec => spec.label + ': ' + spec.value).join('\n');
     form.elements.datasheetUrl.value = item?.datasheetUrl || '';form.elements.manualUrl.value = item?.manualUrl || '';
     $('#catalog-upload-row').hidden = !['catalog','products'].includes(key);
-    $('#entry-pdf-label').textContent = isProduct ? 'انتخاب PDF مشخصات محصول' : 'انتخاب فایل PDF کاتالوگ';
+    $('#entry-pdf-label').textContent = isProduct ? 'بارگذاری PDF محصول' : 'انتخاب فایل PDF کاتالوگ';
+    $('#product-file-heading').textContent = isProduct ? 'فایل‌های این محصول' : 'فایل کاتالوگ';
     $('#pdf-filename').textContent = entryFile ? 'یک فایل PDF به این محتوا پیوست شده است.' : 'حداکثر ۲ مگابایت؛ فایل در بخش دانلودها نمایش داده می‌شود.';
     $('#entry-error').textContent = '';
     imagePreview($('#entry-image-preview'),entryImage || (key === 'products' ? productImages[entryImageAsset] : ''),'تصویر محتوا');
@@ -1035,7 +1111,7 @@
     const nextHash = location.hash;
     if (!discardAllowed()) {history.replaceState(null,'',lastHash || location.pathname + location.search);return;}
     closeNavigationMenus();
-    for (const dialog of [$('#entry-editor'),$('#category-editor')]) if (dialog.open) dialog.close();
+    for (const dialog of [$('#entry-editor'),$('#category-editor'),$('#product-image-dialog')]) if (dialog.open) dialog.close();
     lastHash = nextHash;dirty = false;
     const requested = nextHash.startsWith('#admin') ? (nextHash.split('/')[1] || 'dashboard') : '';
     if (requested) {
@@ -1056,20 +1132,35 @@
       }
     }
   }
+  let pageTransition;
+  function transitionRoute() {
+    const update = () => {route();document.documentElement.dataset.avaRoute = location.hash || '#home';};
+    const publicRoute = !adminVisible && !location.hash.startsWith('#admin') && !dirty;
+    if (!publicRoute || matchMedia('(prefers-reduced-motion: reduce)').matches) {pageTransition?.skipTransition();update();return;}
+    const finish = () => $('#public-site').removeAttribute('aria-busy');
+    if (document.startViewTransition) {
+      pageTransition?.skipTransition();$('#public-site').setAttribute('aria-busy','true');
+      const transition = document.startViewTransition(update);pageTransition = transition;
+      transition.finished.then(() => {if(pageTransition === transition){pageTransition = null;finish();}},() => {if(pageTransition === transition){pageTransition = null;finish();}});
+    } else {
+      update();const content = $('#catalog-page').hidden ? $('#home-content') : $('#catalog-page');
+      content.animate([{opacity:0},{opacity:1}],{duration:420,easing:'ease-out'});
+    }
+  }
   $('.site-menu-toggle').addEventListener('click',() => $('#site-menu').showModal());
   document.addEventListener('click',event => {if (!event.target.closest('.header-menu-item')) closeNavigationMenus();});
   $('#open-admin').addEventListener('click',() => {$('#site-menu').close();location.hash = 'admin/dashboard';});
   $('#view-site').addEventListener('click',() => {location.hash = 'home';});
   $$('[data-close]').forEach(button => button.addEventListener('click',() => document.getElementById(button.dataset.close).close()));
-  for (const dialog of [$('#site-menu'),$('#content-detail')]) dialog.addEventListener('click',event => {const rect = dialog.getBoundingClientRect();if (event.target === dialog && (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom)) dialog.close();});
+  for (const dialog of [$('#site-menu'),$('#content-detail'),$('#product-image-dialog')]) dialog.addEventListener('click',event => {const rect = dialog.getBoundingClientRect();if (event.target === dialog && (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom)) dialog.close();});
   function closeEditor() {if (!discardAllowed()) return;dirty = false;$('#entry-editor').close();$('#save-state').textContent = 'آمادهٔ ویرایش';}
   $('#close-entry').addEventListener('click',closeEditor);$('#cancel-entry').addEventListener('click',closeEditor);
   $('#entry-editor').addEventListener('cancel',event => {event.preventDefault();closeEditor();});
   watchForm($('#entry-form'));
-  $('#entry-image').addEventListener('change',async event => {try {const result = await readImage(event.target.files[0]);if (!result) return;entryImage = result;entryImageAsset = '';$('#entry-form').elements.imageCaption.value = '';imagePreview($('#entry-image-preview'),entryImage);markDirty();} catch(error) {$('#entry-error').textContent = error.message;}event.target.value = '';});
-  $('#entry-image-remove').addEventListener('click',() => {entryImage = '';entryImageAsset = '';$('#entry-form').elements.imageCaption.value = '';imagePreview($('#entry-image-preview'),'','تصویر محتوا');markDirty();});
-  $('#entry-pdf').addEventListener('change',async event => {try {const file = event.target.files[0];if (!file) return;if (file.size > 2 * 1024 * 1024) throw new Error('حجم PDF باید حداکثر ۲ مگابایت باشد.');if (new TextDecoder().decode(await file.slice(0,5).arrayBuffer()) !== '%PDF-') throw new Error('یک فایل PDF معتبر انتخاب کن.');entryFile = await new Promise((resolve,reject) => {const reader = new FileReader();reader.onload = () => resolve(reader.result);reader.onerror = () => reject(new Error('خواندن PDF ممکن نشد.'));reader.readAsDataURL(new Blob([file],{type:'application/pdf'}));});pdfData(entryFile);$('#pdf-filename').textContent = file.name;markDirty();} catch(error) {$('#entry-error').textContent = error.message;}event.target.value = '';});
-  $('#entry-pdf-remove').addEventListener('click',() => {entryFile = '';$('#pdf-filename').textContent = 'فایل PDF حذف شد.';markDirty();});
+  $('#entry-image').addEventListener('change',async event => {try {const result = await readImage(event.target.files[0]);if (!result) return;entryImage = result;entryImageAsset = '';entryImageStyle = '';$('#entry-form').elements.imageCaption.value = '';imagePreview($('#entry-image-preview'),entryImage);markDirty();} catch(error) {$('#entry-error').textContent = error.message;}event.target.value = '';});
+  $('#entry-image-remove').addEventListener('click',() => {entryImage = '';entryImageAsset = '';entryImageStyle = '';$('#entry-form').elements.imageCaption.value = '';imagePreview($('#entry-image-preview'),'','تصویر محتوا');markDirty();});
+  $('#entry-pdf').addEventListener('change',async event => {try {const file = event.target.files[0];if (!file) return;if (file.size > 2 * 1024 * 1024) throw new Error('حجم PDF باید حداکثر ۲ مگابایت باشد.');if (new TextDecoder().decode(await file.slice(0,5).arrayBuffer()) !== '%PDF-') throw new Error('یک فایل PDF معتبر انتخاب کن.');entryFile = await new Promise((resolve,reject) => {const reader = new FileReader();reader.onload = () => resolve(reader.result);reader.onerror = () => reject(new Error('خواندن PDF ممکن نشد.'));reader.readAsDataURL(new Blob([file],{type:'application/pdf'}));});pdfData(entryFile);$('#entry-form').elements.fileName.value = file.name.slice(0,160);$('#pdf-filename').textContent = file.name;markDirty();} catch(error) {$('#entry-error').textContent = error.message;}event.target.value = '';});
+  $('#entry-pdf-remove').addEventListener('click',() => {entryFile = '';$('#entry-form').elements.fileName.value = '';$('#pdf-filename').textContent = 'فایل PDF حذف شد.';markDirty();});
   watchForm($('#category-form'));
   function closeCategory() {if (!discardAllowed()) return;dirty = false;$('#category-editor').close();$('#save-state').textContent = 'آمادهٔ ویرایش';}
   $('#close-category').addEventListener('click',closeCategory);$('#cancel-category').addEventListener('click',closeCategory);
@@ -1081,7 +1172,7 @@
   });
   $('#entry-form').addEventListener('submit',event => {
     event.preventDefault();const values = formValues(event.currentTarget);
-    const item = {id:values.id || (typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : 'entry-' + Date.now() + '-' + Math.random().toString(36).slice(2,9)),title:values.title.trim(),summary:values.summary,body:values.body,meta:values.meta,url:values.url.trim(),status:values.status,image:entryImage,file:['catalog','products'].includes(editingModule) ? entryFile : ''};
+    const item = {id:values.id || (typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : 'entry-' + Date.now() + '-' + Math.random().toString(36).slice(2,9)),title:values.title.trim(),summary:values.summary,body:values.body,meta:values.meta,url:values.url.trim(),status:values.status,image:entryImage,file:['catalog','products'].includes(editingModule) ? entryFile : '',fileName:['catalog','products'].includes(editingModule) ? values.fileName : ''};
     if (editingModule === 'products') {
       const specifications = [];
       for (const line of values.specifications.split('\n').map(line => line.trim()).filter(Boolean)) {
@@ -1089,15 +1180,15 @@
         if (separator <= 0 || !line.slice(separator+1).trim()) {$('#entry-error').textContent = 'هر مشخصه را در یک خط به شکل «نام: مقدار» وارد کن.';return;}
         specifications.push({label:line.slice(0,separator).trim(),value:line.slice(separator+1).trim()});
       }
-      Object.assign(item,{imageAsset:entryImageAsset,imageCaption:values.imageCaption,priceAmount:values.priceAmount === '' ? null : Number(values.priceAmount),priceKind:values.priceKind,priceUnit:values.priceUnit,priceDate:values.priceDate,categoryId:values.categoryId,model:values.model.trim(),featured:event.currentTarget.elements.featured.checked,specifications,datasheetUrl:values.datasheetUrl.trim(),manualUrl:values.manualUrl.trim()});
+      Object.assign(item,{imageAsset:entryImageAsset,imageStyle:entryImageStyle,imageCaption:values.imageCaption,priceAmount:values.priceAmount === '' ? null : Number(values.priceAmount),priceKind:values.priceKind,priceUnit:values.priceUnit,priceDate:values.priceDate,categoryId:values.categoryId,model:values.model.trim(),featured:event.currentTarget.elements.featured.checked,specifications,datasheetUrl:values.datasheetUrl.trim(),manualUrl:values.manualUrl.trim()});
     }
     const next = clone(data);const index = next.modules[editingModule].items.findIndex(i => i.id === item.id);
     if (index < 0) next.modules[editingModule].items.unshift(item);else next.modules[editingModule].items[index] = item;
     if (commit(next,'محتوا ذخیره شد.')) {$('#entry-editor').close();renderPage(editingModule);}
     else $('#entry-error').textContent = 'ذخیره انجام نشد؛ پیام خطا را بررسی کن. فرم و تغییراتت حفظ شده‌اند.';
   });
-  window.addEventListener('hashchange',route);
+  window.addEventListener('hashchange',transitionRoute);
   window.addEventListener('beforeunload',event => {if (dirty) {event.preventDefault();event.returnValue = '';}});
   window.addEventListener('resize',() => {closeNavigationMenus();const nav = $('#navigation');nav.style.gridTemplateColumns = 'repeat(' + Math.max(1,Math.min(innerWidth <= 600 ? 4 : 8,nav.children.length)) + ',minmax(0,1fr))';});
-  renderPublic();renderSidebar();route();
+  renderPublic();renderSidebar();route();document.documentElement.dataset.avaRoute = location.hash || '#home';
 })();

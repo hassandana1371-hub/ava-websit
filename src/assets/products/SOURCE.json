@@ -23,7 +23,8 @@
       "imageStatus": "تصویر واقعی از دیتاشیت همان دات‌پیچ تأمین‌کننده",
       "imageSourceUrl": "https://protda.com/module-led-p25-indoor-gkgd",
       "note": "",
-      "imageLocalPath": "images/indoor-125.jpg"
+      "imageLocalPath": "images/indoor-125.jpg",
+      "imageUsage": "supplier_datasheet"
     },
     {
       "id": "indoor-153",
@@ -43,7 +44,8 @@
       "imageStatus": "تصویر واقعی از دیتاشیت همان دات‌پیچ تأمین‌کننده",
       "imageSourceUrl": "https://protda.com/module-led-p25-indoor-gkgd",
       "note": "",
-      "imageLocalPath": "images/indoor-153.jpg"
+      "imageLocalPath": "images/indoor-153.jpg",
+      "imageUsage": "supplier_datasheet"
     },
     {
       "id": "indoor-186",
@@ -63,7 +65,8 @@
       "imageStatus": "تصویر واقعی از دیتاشیت همان دات‌پیچ تأمین‌کننده",
       "imageSourceUrl": "https://protda.com/module-led-p25-indoor-gkgd",
       "note": "",
-      "imageLocalPath": "images/indoor-186.jpg"
+      "imageLocalPath": "images/indoor-186.jpg",
+      "imageUsage": "supplier_datasheet"
     },
     {
       "id": "indoor-2",
@@ -83,7 +86,8 @@
       "imageStatus": "تصویر واقعی از دیتاشیت همان دات‌پیچ تأمین‌کننده",
       "imageSourceUrl": "https://protda.com/module-led-p25-indoor-gkgd",
       "note": "",
-      "imageLocalPath": "images/indoor-2.jpg"
+      "imageLocalPath": "images/indoor-2.jpg",
+      "imageUsage": "supplier_datasheet"
     },
     {
       "id": "indoor-25-32s",
@@ -103,7 +107,8 @@
       "imageStatus": "تصویر واقعی از دیتاشیت همان دات‌پیچ تأمین‌کننده",
       "imageSourceUrl": "https://protda.com/module-led-p25-indoor-gkgd",
       "note": "",
-      "imageLocalPath": "images/indoor-25.jpg"
+      "imageLocalPath": "images/indoor-25.jpg",
+      "imageUsage": "supplier_datasheet"
     },
     {
       "id": "indoor-25-64s",
@@ -123,7 +128,8 @@
       "imageStatus": "تصویر واقعی از دیتاشیت همان دات‌پیچ تأمین‌کننده",
       "imageSourceUrl": "https://protda.com/module-led-p25-indoor-gkgd",
       "note": "",
-      "imageLocalPath": "images/indoor-25.jpg"
+      "imageLocalPath": "images/indoor-25.jpg",
+      "imageUsage": "supplier_datasheet"
     },
     {
       "id": "indoor-3076",
@@ -143,7 +149,8 @@
       "imageStatus": "تصویر واقعی از دیتاشیت همان دات‌پیچ تأمین‌کننده",
       "imageSourceUrl": "https://protda.com/module-led-p25-indoor-gkgd",
       "note": "دیتاشیت موجود؛ قیمت در لیست تانشا ذکر نشده",
-      "imageLocalPath": "images/indoor-3076.jpg"
+      "imageLocalPath": "images/indoor-3076.jpg",
+      "imageUsage": "supplier_datasheet"
     },
     {
       "id": "outdoor-25",
@@ -163,7 +170,8 @@
       "imageStatus": "تصویر واقعی از دیتاشیت همان دات‌پیچ تأمین‌کننده",
       "imageSourceUrl": "https://item.jd.com/10204995964805.html",
       "note": "",
-      "imageLocalPath": "images/outdoor-25.jpg"
+      "imageLocalPath": "images/outdoor-25.jpg",
+      "imageUsage": "supplier_datasheet"
     },
     {
       "id": "outdoor-3076",
@@ -183,7 +191,8 @@
       "imageStatus": "تصویر واقعی از دیتاشیت همان دات‌پیچ تأمین‌کننده",
       "imageSourceUrl": "https://item.jd.com/10204995964805.html",
       "note": "",
-      "imageLocalPath": "images/outdoor-3076.jpg"
+      "imageLocalPath": "images/outdoor-3076.jpg",
+      "imageUsage": "supplier_datasheet"
     },
     {
       "id": "outdoor-4",
@@ -203,7 +212,8 @@
       "imageStatus": "تصویر واقعی از دیتاشیت همان دات‌پیچ تأمین‌کننده",
       "imageSourceUrl": "https://item.jd.com/10204995964805.html",
       "note": "",
-      "imageLocalPath": "images/outdoor-4.jpg"
+      "imageLocalPath": "images/outdoor-4.jpg",
+      "imageUsage": "supplier_datasheet"
     },
     {
       "id": "outdoor-5",
@@ -223,7 +233,8 @@
       "imageStatus": "تصویر واقعی از دیتاشیت همان دات‌پیچ تأمین‌کننده",
       "imageSourceUrl": "https://item.jd.com/10204995964805.html",
       "note": "",
-      "imageLocalPath": "images/outdoor-5.jpg"
+      "imageLocalPath": "images/outdoor-5.jpg",
+      "imageUsage": "supplier_datasheet"
     },
     {
       "id": "flexible-153",
@@ -240,10 +251,11 @@
       "priceToman": 8853000,
       "priceStatus": "دارای قیمت",
       "imageUrl": null,
-      "imageStatus": "عکس از دیتاشیت Q1.53 تأمین‌کننده",
-      "imageSourceUrl": "https://www.ledlightsworld.com/products/if-3s-series-indoor-flexible-led-module-p1-53-320-160mm-smd-soft-back-shell-with-magnet-600nits",
+      "imageStatus": "تصویر نمایشی طراحی‌شده؛ عکس تأییدشده محصول این مدل نیست",
+      "imageSourceUrl": null,
       "note": "در دیتاشیت تانشا SMD1212، حداکثر 31 وات به‌ازای ماژول",
-      "imageLocalPath": "images/flexible-153.jpg"
+      "imageLocalPath": "images/flexible-153.jpg",
+      "imageUsage": "illustration_only"
     },
     {
       "id": "flexible-186",
@@ -260,10 +272,11 @@
       "priceToman": 6159000,
       "priceStatus": "دارای قیمت",
       "imageUrl": null,
-      "imageStatus": "عکس مرجع P1.53؛ عکس دقیق مدل دریافت نشده",
-      "imageSourceUrl": "https://www.ledlightsworld.com/products/if-3s-series-indoor-flexible-led-module-p1-53-320-160mm-smd-soft-back-shell-with-magnet-600nits",
+      "imageStatus": "تصویر نمایشی طراحی‌شده؛ عکس تأییدشده محصول این مدل نیست",
+      "imageSourceUrl": null,
       "note": "",
-      "imageLocalPath": "images/flexible-186.jpg"
+      "imageLocalPath": "images/flexible-186.jpg",
+      "imageUsage": "illustration_only"
     },
     {
       "id": "flexible-2",
@@ -280,10 +293,11 @@
       "priceToman": 5688000,
       "priceStatus": "دارای قیمت",
       "imageUrl": null,
-      "imageStatus": "عکس مرجع P1.53؛ عکس دقیق مدل دریافت نشده",
-      "imageSourceUrl": "https://www.ledlightsworld.com/products/if-3s-series-indoor-flexible-led-module-p1-53-320-160mm-smd-soft-back-shell-with-magnet-600nits",
+      "imageStatus": "تصویر نمایشی طراحی‌شده؛ عکس تأییدشده محصول این مدل نیست",
+      "imageSourceUrl": null,
       "note": "",
-      "imageLocalPath": "images/flexible-2.jpg"
+      "imageLocalPath": "images/flexible-2.jpg",
+      "imageUsage": "illustration_only"
     },
     {
       "id": "flexible-25",
@@ -300,10 +314,11 @@
       "priceToman": 4020000,
       "priceStatus": "دارای قیمت",
       "imageUrl": null,
-      "imageStatus": "عکس مرجع P1.53؛ عکس دقیق مدل دریافت نشده",
-      "imageSourceUrl": "https://www.ledlightsworld.com/products/if-3s-series-indoor-flexible-led-module-p1-53-320-160mm-smd-soft-back-shell-with-magnet-600nits",
+      "imageStatus": "تصویر نمایشی طراحی‌شده؛ عکس تأییدشده محصول این مدل نیست",
+      "imageSourceUrl": null,
       "note": "",
-      "imageLocalPath": "images/flexible-25.jpg"
+      "imageLocalPath": "images/flexible-25.jpg",
+      "imageUsage": "illustration_only"
     },
     {
       "id": "indoor-125-cob",
@@ -320,10 +335,11 @@
       "priceToman": null,
       "priceStatus": "استعلام قیمت",
       "imageUrl": null,
-      "imageStatus": "تصویر مرجع SMD، عکس COB واقعی دریافت نشده",
-      "imageSourceUrl": "https://protda.com/module-led-p25-indoor-gkgd",
+      "imageStatus": "تصویر نمایشی طراحی‌شده؛ عکس تأییدشده محصول این مدل نیست",
+      "imageSourceUrl": null,
       "note": "قیمت COB از فروشنده استعلام شود؛ عکس صحیح COB دریافت شود",
-      "imageLocalPath": "images/cob-125.jpg"
+      "imageLocalPath": "images/cob-125.jpg",
+      "imageUsage": "illustration_only"
     },
     {
       "id": "indoor-153-cob",
@@ -340,10 +356,11 @@
       "priceToman": null,
       "priceStatus": "استعلام قیمت",
       "imageUrl": null,
-      "imageStatus": "تصویر مرجع SMD، عکس COB واقعی دریافت نشده",
-      "imageSourceUrl": "https://protda.com/module-led-p25-indoor-gkgd",
+      "imageStatus": "تصویر نمایشی طراحی‌شده؛ عکس تأییدشده محصول این مدل نیست",
+      "imageSourceUrl": null,
       "note": "قیمت COB از فروشنده استعلام شود؛ عکس صحیح COB دریافت شود",
-      "imageLocalPath": "images/cob-153.jpg"
+      "imageLocalPath": "images/cob-153.jpg",
+      "imageUsage": "illustration_only"
     },
     {
       "id": "indoor-09-cob",
@@ -360,10 +377,11 @@
       "priceToman": null,
       "priceStatus": "استعلام قیمت",
       "imageUrl": null,
-      "imageStatus": "تصویر مرجع SMD، عکس COB واقعی دریافت نشده",
-      "imageSourceUrl": "https://protda.com/module-led-p25-indoor-gkgd",
+      "imageStatus": "تصویر نمایشی طراحی‌شده؛ عکس تأییدشده محصول این مدل نیست",
+      "imageSourceUrl": null,
       "note": "قیمت COB از فروشنده استعلام شود؛ عکس صحیح COB دریافت شود",
-      "imageLocalPath": "images/cob-09.jpg"
+      "imageLocalPath": "images/cob-09.jpg",
+      "imageUsage": "illustration_only"
     },
     {
       "id": "transparent-led-screen",
@@ -380,10 +398,11 @@
       "priceToman": null,
       "priceStatus": "استعلام قیمت",
       "imageUrl": null,
-      "imageStatus": "تصویر گرافیکی جایگزین؛ عکس واقعی محصول دریافت نشده",
-      "imageSourceUrl": "",
+      "imageStatus": "تصویر شبیه‌سازی‌شده از خود جنس، نه عکس مدل تأییدشده فروشنده",
+      "imageSourceUrl": "https://www.absen.com/product/jd-t-plus-series/",
       "note": "مدل و ابعاد و قیمت هنوز اعلام نشده؛ در سایت با استعلام قیمت ثبت شود",
-      "imageLocalPath": "images/transparent-led-screen.jpg"
+      "imageLocalPath": "images/transparent-led-screen.jpg",
+      "imageUsage": "AI_illustration_reference_only"
     },
     {
       "id": "adhesive-transparent-led-film",
@@ -400,10 +419,11 @@
       "priceToman": null,
       "priceStatus": "استعلام قیمت",
       "imageUrl": null,
-      "imageStatus": "تصویر گرافیکی جایگزین؛ عکس واقعی محصول دریافت نشده",
-      "imageSourceUrl": "",
+      "imageStatus": "تصویر شبیه‌سازی‌شده از خود جنس، نه عکس مدل تأییدشده فروشنده",
+      "imageSourceUrl": "https://www.doitvision.com/product/led-film/",
       "note": "مدل و ابعاد و قیمت هنوز اعلام نشده؛ در سایت با استعلام قیمت ثبت شود",
-      "imageLocalPath": "images/adhesive-transparent-led-film.jpg"
+      "imageLocalPath": "images/adhesive-transparent-led-film.jpg",
+      "imageUsage": "AI_illustration_reference_only"
     },
     {
       "id": "outdoor-flexible-led",
@@ -420,10 +440,11 @@
       "priceToman": null,
       "priceStatus": "استعلام قیمت",
       "imageUrl": null,
-      "imageStatus": "تصویر گرافیکی جایگزین؛ عکس واقعی محصول دریافت نشده",
-      "imageSourceUrl": "",
+      "imageStatus": "تصویر نمایشی طراحی‌شده؛ عکس تأییدشده محصول این مدل نیست",
+      "imageSourceUrl": null,
       "note": "مدل و ابعاد و قیمت هنوز اعلام نشده؛ در سایت با استعلام قیمت ثبت شود",
-      "imageLocalPath": "images/outdoor-flexible-led.jpg"
+      "imageLocalPath": "images/outdoor-flexible-led.jpg",
+      "imageUsage": "illustration_only"
     }
   ],
   "unpricedSpecialCategories": [

@@ -10,7 +10,7 @@ const svg = Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="160" hei
 (async () => {
   const browser = await chromium.launch({executablePath:process.env.AVA_TEST_CHROMIUM || '/usr/bin/chromium',headless:true,args:['--no-sandbox']});
   try {
-    const context = await browser.newContext({viewport:{width:1440,height:1000},acceptDownloads:true});
+    const context = await browser.newContext({viewport:{width:1440,height:1000},reducedMotion:'reduce',acceptDownloads:true});
     const page = await context.newPage();const errors = [];
     page.on('pageerror',error => errors.push(error.message));
     await page.goto(base);
@@ -79,7 +79,7 @@ const svg = Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="160" hei
     assert.equal(await page.locator('.product-downloads a').count(),3);
     const pdfWait = page.waitForEvent('download');await page.locator('.product-downloads a').first().click();const pdf = await pdfWait;
     assert.equal(pdf.suggestedFilename(),productId + '.pdf');
-    await page.getByRole('link',{name:'درخواست مشاوره دربارهٔ این محصول'}).click();
+    await page.getByRole('link',{name:'استعلام این محصول'}).click();
     await page.waitForURL('**/#contact');await page.locator('#home-content').waitFor({state:'visible'});
     assert((await page.locator('#message').inputValue()).includes('نمایشگر آزمایشی'));
     console.log('PASS product editor, draft/publication, featured selection, model search, specs, PDF download, consultation');
@@ -110,7 +110,7 @@ const svg = Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="160" hei
 
     await page.goto(base + '#admin/backup');
     const exportWait = page.waitForEvent('download');await page.locator('#export-site').click();await (await exportWait).saveAs(fixture);
-    const restoredContext = await browser.newContext();const restored = await restoredContext.newPage();
+    const restoredContext = await browser.newContext({reducedMotion:'reduce'});const restored = await restoredContext.newPage();
     restored.on('pageerror',error => errors.push(error.message));
     await restored.route('http://catalog-restored.test/',route => route.fulfill({contentType:'text/html',body:fs.readFileSync(fixture,'utf8')}));
     await restored.goto('http://catalog-restored.test/#product/' + productId);
@@ -121,7 +121,7 @@ const svg = Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="160" hei
     const legacy = JSON.parse(fs.readFileSync(path.join(__dirname,'../src/defaults.json'),'utf8'));
     delete legacy.productCategories;legacy.header.nameFa = 'نام حفظ‌شده';
     for (const product of legacy.modules.products.items) for (const key of ['categoryId','model','featured','specifications','datasheetUrl','manualUrl']) delete product[key];
-    const legacyContext = await browser.newContext();const oldPage = await legacyContext.newPage();
+    const legacyContext = await browser.newContext({reducedMotion:'reduce'});const oldPage = await legacyContext.newPage();
     oldPage.on('pageerror',error => errors.push(error.message));
     await oldPage.goto(base);await oldPage.evaluate(value => localStorage.setItem('ava-content-studio-v1',JSON.stringify(value)),legacy);await oldPage.reload();
     assert.equal(await oldPage.locator('.ava-wordmark small').textContent(),'نام حفظ‌شده');

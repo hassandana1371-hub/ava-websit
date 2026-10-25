@@ -15,7 +15,7 @@ const labels = ['اجارهٔ تلویزیون‌های شهری','مشاوره�
   const browser = await chromium.launch({executablePath:process.env.AVA_TEST_CHROMIUM || '/usr/bin/chromium',headless:true,args:['--no-sandbox']});
   const errors = [];
   try {
-    const page = await browser.newPage({viewport:{width:1440,height:950},acceptDownloads:true});page.on('pageerror',error=>errors.push(error.message));
+    const page = await browser.newPage({viewport:{width:1440,height:950},reducedMotion:'reduce',acceptDownloads:true});page.on('pageerror',error=>errors.push(error.message));
     await page.goto(base);await page.evaluate(()=>document.fonts.ready);
     await page.locator('.services-menu-trigger').hover();await page.waitForTimeout(200);assert.equal(await page.locator('.services-dropdown').isVisible(),false);
     await page.locator('.services-menu-trigger').click();await page.locator('.services-dropdown').waitFor({state:'visible'});
@@ -45,7 +45,7 @@ const labels = ['اجارهٔ تلویزیون‌های شهری','مشاوره�
     await page.goto(base+'#admin/services');await page.locator('[data-entry-id=initial-rental]').getByRole('button',{name:'انتشار',exact:true}).click();
     await page.goto(base+'#admin/backup');const wait = page.waitForEvent('download');await page.locator('#export-site').click();const download = await wait;
     const exportedPath = '/tmp/ava-v11-services-export.html';await download.saveAs(exportedPath);
-    const restored = await browser.newPage();await restored.route('http://services-restored.test/',route=>route.fulfill({contentType:'text/html',body:fs.readFileSync(exportedPath,'utf8')}));
+    const restored = await browser.newPage({reducedMotion:'reduce'});await restored.route('http://services-restored.test/',route=>route.fulfill({contentType:'text/html',body:fs.readFileSync(exportedPath,'utf8')}));
     await restored.goto('http://services-restored.test/#service/initial-rental');assert.equal(await restored.locator('.service-page-heading h1').textContent(),'اجارهٔ نمایشگر برای رویداد');
     console.log('PASS panel editing, draft exclusion, republishing and self-contained export');
 
@@ -63,7 +63,7 @@ const labels = ['اجارهٔ تلویزیون‌های شهری','مشاوره�
     console.log('PASS previous services migrate once while preserving custom records and descriptions');
 
     for (const width of [390,320]) {
-      const context = await browser.newContext({viewport:{width,height:800},hasTouch:true,isMobile:true});const mobile = await context.newPage();mobile.on('pageerror',error=>errors.push(error.message));
+      const context = await browser.newContext({viewport:{width,height:800},hasTouch:true,isMobile:true,reducedMotion:'reduce'});const mobile = await context.newPage();mobile.on('pageerror',error=>errors.push(error.message));
       await mobile.goto(base);await mobile.evaluate(()=>document.fonts.ready);await mobile.locator('.services-menu-trigger').tap();
       const box = await mobile.locator('.services-dropdown').boundingBox();assert(box.x>=0&&box.x+box.width<=width+1&&box.y+box.height<=800);
       assert.equal(await mobile.evaluate(()=>document.documentElement.scrollWidth),width,'Open services menu must not expand the document');
