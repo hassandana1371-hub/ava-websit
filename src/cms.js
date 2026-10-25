@@ -23,7 +23,7 @@
   const DESCRIPTIONS = {
     dashboard:'از اینجا ظاهر سایت را تنظیم کن و محتوای هر بخش را مدیریت کن.',
     header:'لوگو، نام فارسی و انگلیسی و شعارهای بالای سایت را جداگانه ویرایش کن.',
-    hero:'اسلایدها، عکس‌ها، متن و مقصد دکمه‌ها و سرعت حرکت هیرو را مدیریت کن.',
+    hero:'موشن‌لوگوی آغازین، عکس‌ها، ترتیب اسلایدها و زمان جابه‌جایی هیرو را مدیریت کن.',
     navigation:'نام هر گزینه، مقصد آن، ترتیب نمایش و دیده‌شدنش را مشخص کن.',
     backup:'از اطلاعات نسخهٔ پشتیبان بگیر یا نسخهٔ کامل سایت و پنل را دریافت کن.',
     categories:'دسته‌ها را بساز، نام‌گذاری و مرتب کن؛ هر دسته صفحهٔ اختصاصی خودش را دارد.'
@@ -34,6 +34,8 @@
   const defaultLogo = $('.ava-mark').outerHTML;
   const previewLogo = name => defaultLogo.replaceAll('ava-blue', 'ava-blue-' + name);
   const heroImages = JSON.parse($('#ava-hero-images').textContent);
+  const productImages = JSON.parse($('#ava-product-images').textContent);
+  const heroMotionDocument = JSON.parse($('#ava-hero-motion').textContent);
   let heroController;
   let data = clone(seed);
   let persistence = true;
@@ -45,6 +47,8 @@
   let toastTimer;
   let editingModule = '';
   let entryImage = '';
+  let entryImageAsset = '';
+  let categoryBannerEditor;
   let entryFile = '';
 
   function isObject(value) { return value !== null && typeof value === 'object' && !Array.isArray(value); }
@@ -70,6 +74,10 @@
     if (typeof value !== 'string' || value.length > 2850000 || !/^data:application\/pdf;base64,JVBERi0[A-Za-z0-9+/=\r\n]*$/.test(value)) throw new Error('فایل PDF معتبر نیست.');
     return value;
   }
+  function validateBanner(value) {
+    if (!isObject(value)) throw new Error('تنظیم بنر معتبر نیست.');
+    return {show:value.show !== false,image:imageData(value.image),asset:Object.hasOwn(heroImages,value.asset) ? value.asset : 'wall',title:text(value.title || '',160),description:text(value.description || '',1000),imageAlt:text(value.imageAlt || '',200)};
+  }
   function validate(raw) {
     if (!isObject(raw) || raw.version !== 1 || !isObject(raw.header) || !isObject(raw.hero) || !isObject(raw.modules) || !isObject(raw.contact) || !Array.isArray(raw.navigation)) throw new Error('ساختار فایل پشتیبان معتبر نیست.');
     const out = clone(seed);
@@ -80,6 +88,11 @@
       const ids = new Set(requested.map(category => category.id));
       categories = [...requested.map(category => ({...category,...categories.find(old => old.id === category.id)})),...categories.filter(category => !ids.has(category.id)).map(category => ['displays','controllers','accessories','uncategorized'].includes(category.id) ? {...category,menu:false} : category)];
     }
+    // Introduce the supplied catalogue once, retaining custom records and edits.
+    if (raw.catalogRevision !== 1) {
+      const required = new Set(['urban','urban-indoor','urban-outdoor','urban-flexible','transparent']);
+      for (const category of seed.productCategories.filter(c => required.has(c.id))) if (!categories.some(c => c.id === category.id)) categories.push(clone(category));
+    }
     if (categories.length > 100) throw new Error('تعداد دسته‌ها بیش از حد مجاز است.');
     out.taxonomyRevision = 2;
     const categoryIds = new Set();
@@ -89,7 +102,8 @@
       let name = text(category.name,80).trim();
       if (category.id === 'rental-flexible' && ['فلکسیبل (منعطف)','فلکسیبل','منعطف'].includes(name)) name = 'Flexible';
       if (!name) throw new Error('نام دسته نمی‌تواند خالی باشد.');
-      return {id:category.id,name,description:text(category.description,1000),visible:category.visible === true,parentId:text(category.parentId || '',80),menu:category.menu !== false};
+      const banner = category.banner || seed.productCategories.find(c => c.id === category.id)?.banner || {show:true,image:'',asset:'wall',title:'',description:'',imageAlt:''};
+      return {id:category.id,name,description:text(category.description,1000),visible:category.visible === true,parentId:text(category.parentId || '',80),menu:category.menu !== false,banner:validateBanner(banner)};
     });
     if (!categoryIds.has('uncategorized')) {
       out.productCategories.push({id:'uncategorized',name:'دسته‌بندی‌نشده',description:'',visible:true,parentId:'',menu:false});
@@ -133,9 +147,11 @@
       }
       return result;
     });
-    out.hero.autoplay = raw.hero.autoplay !== false;
-    out.hero.interval = raw.hero.interval === undefined ? 7000 : Number(raw.hero.interval);
-    if (!Number.isInteger(out.hero.interval) || out.hero.interval < 4000 || out.hero.interval > 15000) throw new Error('زمان هر اسلاید باید بین ۴ تا ۱۵ ثانیه باشد.');
+    out.hero.motionRevision = 2;
+    out.hero.showMotionLogo = raw.hero.showMotionLogo !== false;
+    out.hero.autoplay = [1,2].includes(raw.hero.motionRevision) ? raw.hero.autoplay !== false : true;
+    out.hero.interval = raw.hero.motionRevision === 2 && raw.hero.interval !== undefined ? Number(raw.hero.interval) : 2000;
+    if (!Number.isInteger(out.hero.interval) || out.hero.interval < 1000 || out.hero.interval > 15000) throw new Error('زمان هر اسلاید باید بین ۱ تا ۱۵ ثانیه باشد.');
     const seen = new Set();
     if (raw.navigation.length !== KEYS.length) throw new Error('تعداد گزینه‌های منو معتبر نیست.');
     out.navigation = raw.navigation.map(row => {
@@ -148,8 +164,13 @@
       return {id:row.id,label,target:row.target,visible:row.visible === true,url};
     });
     for (const key of CONTENT_KEYS) {
-      const module = key === 'equipment' && raw.modules[key] === undefined ? seed.modules.equipment : raw.modules[key];
+      let module = key === 'equipment' && raw.modules[key] === undefined ? seed.modules.equipment : raw.modules[key];
       if (!isObject(module) || !Array.isArray(module.items) || module.items.length > 500) throw new Error('اطلاعات یکی از بخش‌ها معتبر نیست.');
+      if (key === 'products' && raw.catalogRevision !== 1) {
+        const old = module.items.filter(item => !(item.id === 'initial-display' && item.title === 'فروش نمایشگر' && !item.image && !item.model && !item.body));
+        module = {...module,items:[...old,...seed.modules.products.items.filter(item => !old.some(existing => existing.id === item.id))]};
+        if (module.items.length > 500) throw new Error('تعداد محصولات بیش از حد مجاز است.');
+      }
       const ids = new Set();
       out.modules[key] = {name:text(module.name, 80),description:text(module.description, 1000),items:module.items.map(item => {
         if (!isObject(item) || typeof item.id !== 'string' || !/^[a-zA-Z0-9_-]{1,80}$/.test(item.id) || ids.has(item.id) || !['draft','published'].includes(item.status)) throw new Error('شناسه یا وضعیت محتوا معتبر نیست.');
@@ -164,6 +185,15 @@
           result.featured = item.featured === undefined ? true : item.featured === true;
           result.datasheetUrl = httpURL(item.datasheetUrl || '');
           result.manualUrl = httpURL(item.manualUrl || '');
+          result.imageAsset = Object.hasOwn(productImages,item.imageAsset) ? item.imageAsset : '';
+          result.imageCaption = text(item.imageCaption || '',200);
+          result.priceAmount = item.priceAmount === undefined || item.priceAmount === null || item.priceAmount === '' ? null : item.priceAmount;
+          if (result.priceAmount !== null && (!Number.isSafeInteger(result.priceAmount) || result.priceAmount < 0 || result.priceAmount > 9000000000000)) throw new Error('قیمت باید یک عدد صحیح معتبر به تومان باشد.');
+          result.priceKind = item.priceKind || (result.priceAmount === null ? 'quote' : 'reference');
+          if (!['reference','sale','quote'].includes(result.priceKind)) throw new Error('نوع قیمت معتبر نیست.');
+          result.priceUnit = text(item.priceUnit || 'هر ماژول',80);
+          result.priceDate = text(item.priceDate || '',10);
+          if (result.priceDate && !/^\d{4}-\d{2}-\d{2}$/.test(result.priceDate)) throw new Error('تاریخ قیمت معتبر نیست.');
           const specs = item.specifications || [];
           if (!Array.isArray(specs) || specs.length > 60) throw new Error('حداکثر ۶۰ ردیف مشخصات فنی قابل ثبت است.');
           result.specifications = specs.map(spec => {
@@ -175,6 +205,7 @@
         }
         return result;
       })};
+      if (key === 'products') out.modules[key].banner = validateBanner(module.banner || seed.modules.products.banner);
     }
     if (raw.servicesRevision !== 1) {
       const services = out.modules.services.items;
@@ -189,6 +220,7 @@
       if (services.length > 500) throw new Error('تعداد محتواهای خدمات بیش از حد مجاز است.');
     }
     out.servicesRevision = 1;
+    out.catalogRevision = 1;
     for (const key of ['title','description','phone','email','address']) out.contact[key] = text(raw.contact[key], key === 'description' ? 2500 : 500);
     return out;
   }
@@ -376,13 +408,13 @@
       const children = menuCategories(category.id);
       if (children.length) {
         const submenuId = id + '-' + category.id;
-        const toggle = el('button',{type:'button',class:'subcategory-toggle category-expand-trigger','aria-expanded':'false','aria-controls':submenuId,'aria-label':'زیرگروه‌های ' + category.name},el('span',{class:'product-category-name',dir:'auto'},category.name),el('small',{},categoryCount(category.id).toLocaleString('fa-IR') + ' محصول'),el('span',{'aria-hidden':'true',class:'subcategory-chevron'},'⌄'));
+        const toggle = el('button',{type:'button',class:'subcategory-toggle','aria-expanded':'false','aria-controls':submenuId,'aria-label':'زیرگروه‌های ' + category.name},el('span',{'aria-hidden':'true',class:'subcategory-chevron'},'⌄'));
         const submenu = el('div',{class:'products-submenu',id:submenuId,hidden:'','aria-label':'زیرگروه‌های ' + category.name});
         children.forEach(child => submenu.append(categoryLink(child,'product-subcategory-link')));
         const expand = () => {closeSubmenus();submenu.hidden = false;toggle.setAttribute('aria-expanded','true');};
         toggle.addEventListener('click',() => {const open = submenu.hidden;closeSubmenus();if (open) expand();});
         group.addEventListener('keydown',event => {if (event.key === 'Escape' && !submenu.hidden) {event.stopPropagation();submenu.hidden = true;toggle.setAttribute('aria-expanded','false');toggle.focus();}});
-        top.append(toggle);group.append(top,submenu);
+        top.append(categoryLink(category),toggle);group.append(top,submenu);
       } else {
         top.append(categoryLink(category));group.append(top);
       }
@@ -393,15 +425,25 @@
     wrap.addEventListener('focusout',event => {if (!wrap.contains(event.relatedTarget)) closeNavigationMenus();});
     wrap.append(trigger,dropdown);return wrap;
   }
+  function productImage(item) {return item.image || productImages[item.imageAsset] || '';}
+  function productPrice(item) {
+    const block = el('div',{class:'product-price-block'});
+    if (item.priceAmount === null || item.priceAmount === undefined || item.priceKind === 'quote') {
+      block.classList.add('is-quote');block.append(el('strong',{class:'product-price-value'},'استعلام قیمت'));return block;
+    }
+    block.append(el('span',{class:'product-price-label'},(item.priceKind === 'sale' ? 'قیمت فروش' : 'قیمت مرجع') + (item.priceUnit ? ' ' + item.priceUnit : '')),el('strong',{class:'product-price-value'},item.priceAmount.toLocaleString('fa-IR'),el('small',{},' تومان')));
+    return block;
+  }
   function productCard(item) {
     const category = categoryFor(item);
     const link = el('a',{class:'product-card',href:'#product/' + item.id});
     const media = el('div',{class:'product-card-media'});
-    if (item.image) media.append(el('img',{src:item.image,alt:item.title,loading:'lazy'}));
+    if (productImage(item)) media.append(el('img',{src:productImage(item),alt:item.title,loading:'lazy'}));
     else media.append(el('div',{class:'product-no-image','aria-hidden':'true'},el('span',{},'▦'),el('small',{},'تصویر محصول')));
     const content = el('div',{class:'product-card-content'},el('span',{class:'product-category-label'},category?.name || ''),el('h3',{},item.title));
     if (item.model) content.append(el('span',{class:'product-model',dir:'auto'},item.model));
-    content.append(el('p',{},item.summary),el('span',{class:'product-card-link'},'بررسی محصول',el('span',{'aria-hidden':'true'},'←')));
+    if (item.imageCaption) media.append(el('span',{class:'product-image-caption'},item.imageCaption));
+    content.append(el('p',{},item.summary),productPrice(item),el('span',{class:'product-card-link'},'مشخصات و جزئیات',el('span',{'aria-hidden':'true'},'←')));
     link.append(media,content);return link;
   }
   function breadcrumbs(parts) {
@@ -416,11 +458,18 @@
     const category = categoryId ? publicCategories().find(item => item.id === categoryId) : null;
     if (categoryId && !category) {renderCatalogueNotFound();return;}
     const heading = el('section',{class:'catalog-heading'});
+    const banner = category?.banner || data.modules.products.banner;
     const trail = category ? categoryCrumbs(category).map((part,index,all) => index === all.length-1 ? {label:part.label} : part) : [];
-    heading.append(breadcrumbs([{label:'خانه',href:'#home'},{label:data.modules.products.name,href:category ? '#products' : ''},...trail]),el('span',{class:'catalog-kicker'},'AVA GROUP / PRODUCTS'),el('h1',{},category?.name || data.modules.products.name),el('p',{},category?.description || data.modules.products.description));
+    heading.append(breadcrumbs([{label:'خانه',href:'#home'},{label:data.modules.products.name,href:category ? '#products' : ''},...trail]),el('span',{class:'catalog-kicker'},'AVA GROUP / PRODUCTS'),el('h1',{},banner?.title || category?.name || data.modules.products.name),el('p',{},banner?.description || category?.description || data.modules.products.description));
     const count = categoryCount(categoryId);
     heading.append(el('span',{class:'catalog-total'},count.toLocaleString('fa-IR') + ' محصول برای بررسی'));
-    root.append(heading);
+    if (banner?.show !== false) {
+      const hero = el('section',{class:'catalog-banner','aria-label':'بنر ' + (category?.name || data.modules.products.name)});
+      hero.append(el('img',{class:'catalog-banner-image',src:banner?.image || heroImages[banner?.asset || 'wall'],alt:banner?.imageAlt || category?.name || 'نمایشگرهای آوا',fetchpriority:'high'}),el('div',{class:'catalog-banner-shade','aria-hidden':'true'}),heading);
+      const browse = el('button',{type:'button',class:'catalog-browse'},'مشاهدهٔ محصولات',el('span',{'aria-hidden':'true'},'↓'));
+      browse.addEventListener('click',() => $('.catalog-layout',root).scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',block:'start'}));
+      heading.append(browse);root.append(hero);
+    } else root.append(heading);
     const categoryCards = menuCategories(category?.id || '');
     if (categoryCards.length) {
       const grid = el('div',{class:'category-overview'});
@@ -440,14 +489,20 @@
     const main = el('div',{class:'catalog-results'});
     const tools = el('div',{class:'catalog-tools'});
     const search = el('input',{type:'search',placeholder:'جستجوی نام یا مدل محصول…','aria-label':'جستجوی محصولات',class:'catalog-search',maxlength:'160'});
-    const sort = el('select',{'aria-label':'مرتب‌سازی محصولات'},el('option',{value:'original'},'ترتیب نمایش'),el('option',{value:'title'},'نام: الف تا ی'),el('option',{value:'title-desc'},'نام: ی تا الف'));
+    const sort = el('select',{'aria-label':'مرتب‌سازی محصولات'},el('option',{value:'original'},'ترتیب نمایش'),el('option',{value:'title'},'نام: الف تا ی'),el('option',{value:'title-desc'},'نام: ی تا الف'),el('option',{value:'price'},'قیمت: کم به زیاد'),el('option',{value:'price-desc'},'قیمت: زیاد به کم'));
     tools.append(search,sort);
     const counter = el('p',{class:'catalog-result-count','aria-live':'polite'});
     const grid = el('div',{class:'product-grid'});
     function paint() {
       const query = search.value.trim().toLocaleLowerCase('fa-IR');
       let items = publicProducts().filter(item => categoryContains(categoryId,item) && (item.title + ' ' + (item.model || '') + ' ' + item.summary).toLocaleLowerCase('fa-IR').includes(query));
-      if (sort.value !== 'original') items.sort((a,b) => a.title.localeCompare(b.title,'fa') * (sort.value === 'title-desc' ? -1 : 1));
+      if (sort.value.startsWith('price')) items.sort((a,b) => {
+        const av = a.priceKind === 'quote' ? null : a.priceAmount,bv = b.priceKind === 'quote' ? null : b.priceAmount;
+        if (av === null || av === undefined) return bv === null || bv === undefined ? 0 : 1;
+        if (bv === null || bv === undefined) return -1;
+        return (av-bv) * (sort.value === 'price-desc' ? -1 : 1);
+      });
+      else if (sort.value !== 'original') items.sort((a,b) => a.title.localeCompare(b.title,'fa') * (sort.value === 'title-desc' ? -1 : 1));
       counter.textContent = items.length.toLocaleString('fa-IR') + ' محصول' + (query ? ' در نتیجهٔ جستجو' : ' در این فهرست');
       grid.replaceChildren(...items.map(productCard));
       if (!items.length) grid.append(catalogueEmpty(query ? 'محصولی با این عبارت پیدا نشد.' : 'هنوز محصولی در این دسته منتشر نشده است.'));
@@ -468,11 +523,15 @@
     container.append(breadcrumbs([{label:'خانه',href:'#home'},{label:data.modules.products.name,href:'#products'},...categoryCrumbs(category),{label:item.title}]));
     const hero = el('section',{class:'product-hero'});
     const media = el('div',{class:'product-main-image'});
-    if (item.image) media.append(el('img',{src:item.image,alt:item.title}));
+    if (productImage(item)) media.append(el('img',{src:productImage(item),alt:item.title}));
     else media.append(el('div',{class:'product-no-image'},el('span',{'aria-hidden':'true'},'▦'),el('small',{},'تصویر این محصول هنوز اضافه نشده است.')));
+    if (item.imageCaption) media.append(el('span',{class:'product-image-caption'},item.imageCaption));
     const info = el('div',{class:'product-introduction'},el('a',{class:'product-category-label',href:'#category/' + category.id},category.name),el('h1',{},item.title));
     if (item.model) info.append(el('p',{class:'product-model',dir:'auto'},item.model));
     info.append(el('p',{class:'product-summary'},item.summary));
+    info.append(productPrice(item));
+    if (item.priceKind === 'reference' && item.priceAmount !== null) info.append(el('p',{class:'product-price-note'},'قیمت مرجع ' + item.priceUnit + '؛ هزینهٔ حمل، واردات و مالیات در آن لحاظ نشده است. قیمت نهایی را استعلام کنید.'));
+    if (item.priceDate) info.append(el('p',{class:'product-price-date'},'تاریخ لیست قیمت: ' + item.priceDate.replace(/\d/g,n => '۰۱۲۳۴۵۶۷۸۹'[n])));
     if (item.meta) info.append(el('p',{class:'product-extra'},item.meta));
     const actions = el('div',{class:'product-main-actions'});
     const consult = el('a',{href:'#contact',class:'button'},'درخواست مشاوره دربارهٔ این محصول');
@@ -571,77 +630,81 @@
     const hero = data.hero;
     const root = $('#hero');root.hidden = !hero.show;
     const viewport = $('#hero-viewport');viewport.replaceChildren();
-    const choices = $('#hero-slide-choices');choices.replaceChildren();
     const signalController = new AbortController();const signal = signalController.signal;
     const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
-    const slides = hero.slides;
-    let index = 0,timer,animations = [],busy = false,focused = false,inView = false;
-    let userPaused = !hero.autoplay || reducedMotion.matches;
-    const nodes = slides.map((slide,number) => {
+    let index = 0,timer,animations = [],busy = false,inView = false,disposed = false;
+    let motionAnimations = [],motionReady = false,motionWaiting = false,motionVisit = 0;
+    const hasMotion = hero.showMotionLogo !== false;
+    const nodes = [];
+    const count = hero.slides.length + Number(hasMotion);
+    function slideNode(number,motion = false) {
+      const node = el('div',{class:'hero-slide' + (motion ? ' hero-motion-slide' : ''),role:'group','aria-roledescription':'اسلاید','aria-label':motion ? 'موشن‌لوگوی آوا؛ دو بار پخش' : (number+1) + ' از ' + count,'aria-hidden':String(number !== 0)});
+      node.hidden = number !== 0;node.inert = number !== 0;nodes.push(node);viewport.append(node);return node;
+    }
+    if (hasMotion) {
+      const frame = el('iframe',{class:'hero-motion-frame',title:'موشن‌لوگوی آوا',sandbox:'allow-same-origin',tabindex:'-1'});
+      frame.addEventListener('load',() => {
+        if (disposed) return;
+        motionAnimations = frame.contentDocument.getAnimations();
+        motionReady = motionAnimations.length > 0;
+        for (const animation of motionAnimations) {animation.pause();animation.currentTime = reducedMotion.matches || !hero.autoplay ? 3500 : 0;}
+        schedule();
+      },{signal});
+      frame.srcdoc = heroMotionDocument;slideNode(0,true).append(frame);
+    }
+    hero.slides.forEach((slide,number) => {
       const image = el('img',{class:'hero-scene',src:slide.image || heroImages[slide.asset],alt:slide.imageAlt,draggable:'false',decoding:'async','fetchpriority':number === 0 ? 'high' : 'low'});
-      const article = el('article',{class:'hero-slide',id:'hero-slide-' + number,role:'group','aria-roledescription':'اسلاید','aria-label':(number+1) + ' از ' + slides.length});
-      article.hidden = number !== 0;article.inert = number !== 0;
-      const copy = el('div',{class:'hero-copy'},el('div',{class:'eyebrow',dir:'auto'},slide.eyebrow),el('h1',{},slide.title,el('br'),el('em',{},slide.highlight)),el('p',{},slide.description));
-      const primary = el('a',{class:'button'},slide.primaryLabel,el('span',{'aria-hidden':'true'},'↖'));
-      const category = data.productCategories.find(record => record.id === slide.categoryId && categoryVisible(record));
-      if (category) primary.href = '#category/' + category.id;else wireTarget(primary,slide.primaryTarget);
-      const secondary = el('a',{class:'secondary'},slide.secondaryLabel,el('span',{'aria-hidden':'true'},' ↖'));wireTarget(secondary,slide.secondaryTarget);
-      if (slide.primaryLabel || slide.secondaryLabel) {const actions = el('div',{class:'actions'});if(slide.primaryLabel) actions.append(primary);if(slide.secondaryLabel) actions.append(secondary);copy.append(actions);}
-      article.append(image,el('div',{class:'hero-shade','aria-hidden':'true'}),el('div',{class:'hero-slide-content'},copy));viewport.append(article);
-      const button = el('button',{type:'button',class:'hero-slide-choice','aria-label':'اسلاید ' + (number+1) + ': ' + slide.title + ' ' + slide.highlight,'aria-controls':article.id},el('span',{class:'hero-choice-number','aria-hidden':'true'},String(number+1).padStart(2,'0')),el('span',{class:'hero-choice-name'},number === 0 ? 'نمایشگرهای LED' : slide.primaryLabel),el('span',{class:'hero-choice-line','aria-hidden':'true'}));
-      button.addEventListener('click',() => go(number,number > index ? 1 : -1,true),{signal});choices.append(button);
-      return article;
+      slideNode(number + Number(hasMotion)).append(image);
     });
-    const stop = () => {clearTimeout(timer);root.classList.remove('is-playing');};
+    const stop = () => clearTimeout(timer);
+    function canPlay() {return !disposed && nodes.length > 1 && hero.autoplay && !reducedMotion.matches && inView && !document.hidden && !root.hidden && !$('#home-content').hidden && !$('#public-site').hidden;}
     function schedule() {
       stop();
-      if (slides.length < 2 || userPaused || (matchMedia('(hover: hover)').matches && root.matches(':hover')) || focused || !inView || document.hidden || root.hidden || $('#home-content').hidden || $('#public-site').hidden || document.querySelector('dialog[open]') || document.querySelector('.header-menu-trigger[aria-expanded="true"]')) return;
-      root.style.setProperty('--hero-duration',hero.interval + 'ms');
-      // Restart the current slide's progress line without accumulating intervals.
-      void root.offsetWidth;root.classList.add('is-playing');timer = setTimeout(() => go((index+1)%slides.length,1,false),hero.interval);
+      const playing = canPlay();
+      for (const animation of motionAnimations) {
+        if (playing && hasMotion && index === 0) {
+          if (animation.currentTime < animation.effect.getComputedTiming().endTime) animation.play();
+        } else animation.pause();
+      }
+      if (!playing) return;
+      if (hasMotion && index === 0) {
+        if (!motionReady || motionWaiting) return;
+        motionWaiting = true;const visit = motionVisit;
+        // Completion is driven by the SVG's own two animation iterations,
+        // including its 120ms delayed accent, rather than the photo timer.
+        Promise.all(motionAnimations.map(animation => animation.finished)).then(() => {
+          if (disposed || visit !== motionVisit || index !== 0) return;
+          motionWaiting = false;advance();schedule();
+        }).catch(() => {});
+      } else timer = setTimeout(() => {advance();schedule();},hero.interval);
     }
-    function paint(manual = false) {
-      [...choices.children].forEach((button,number) => button.setAttribute('aria-current',String(number === index)));
-      $('#hero-slide-counter').textContent = String(index+1).padStart(2,'0') + ' / ' + String(slides.length).padStart(2,'0');
-      $('#hero-image-caption').hidden = Boolean(slides[index].image);
-      const play = $('#hero-play');play.innerHTML = userPaused ? '<svg viewBox="0 0 20 20" width="13" height="13" aria-hidden="true"><path d="M6 3.5 16 10 6 16.5Z" fill="currentColor"/></svg>' : '<svg viewBox="0 0 20 20" width="13" height="13" aria-hidden="true"><path d="M6 4v12M14 4v12" stroke="currentColor" stroke-width="2.5"/></svg>';play.setAttribute('aria-label',userPaused ? 'شروع پخش خودکار' : 'توقف پخش خودکار');play.setAttribute('aria-pressed',String(!userPaused));
-      for (const selector of ['#hero-next','#hero-previous','#hero-play']) $(selector).hidden = slides.length < 2;
-      if (manual) $('#hero-status').textContent = 'اسلاید ' + (index+1).toLocaleString('fa-IR') + ' از ' + slides.length.toLocaleString('fa-IR') + ': ' + slides[index].title + ' ' + slides[index].highlight;
-    }
-    function go(next,direction,manual) {
-      if (manual) userPaused = true;
-      if (busy || next === index) {paint();schedule();return;}
-      stop();const old = nodes[index];const incoming = nodes[next];
-      // Move focus out before making an outgoing slide inert.
-      if (old.contains(document.activeElement)) viewport.focus({preventScroll:true});
-      old.inert = true;incoming.hidden = false;incoming.inert = false;index = next;paint(manual);
-      if (reducedMotion.matches) {old.hidden = true;schedule();return;}
+    function advance() {
+      if (busy) return;
+      const old = nodes[index];index = (index+1)%nodes.length;const incoming = nodes[index];
+      if (hasMotion && index === 0) {
+        motionVisit++;motionWaiting = false;
+        for (const animation of motionAnimations) {animation.pause();animation.currentTime = 0;}
+      }
+      old.inert = true;old.setAttribute('aria-hidden','true');incoming.hidden = false;incoming.inert = false;incoming.setAttribute('aria-hidden','false');
       busy = true;
-      animations = [old.animate([{transform:'translateX(0)'},{transform:'translateX(' + (-direction*100) + '%)'}],{duration:950,easing:'cubic-bezier(.22,.7,.2,1)'}),incoming.animate([{transform:'translateX(' + (direction*100) + '%)'},{transform:'translateX(0)'}],{duration:950,easing:'cubic-bezier(.22,.7,.2,1)'})];
-      Promise.all(animations.map(animation => animation.finished)).then(() => {old.hidden = true;animations = [];busy = false;schedule();}).catch(() => {});
+      const options = {duration:600,easing:'cubic-bezier(.22,.7,.2,1)'};
+      animations = [old.animate([{transform:'translateX(0)'},{transform:'translateX(-100%)'}],options),incoming.animate([{transform:'translateX(100%)'},{transform:'translateX(0)'}],options)];
+      Promise.all(animations.map(animation => animation.finished)).then(() => {old.hidden = true;animations = [];busy = false;}).catch(() => {});
     }
-    $('#hero-next').addEventListener('click',() => go((index+1)%slides.length,1,true),{signal});
-    $('#hero-previous').addEventListener('click',() => go((index+slides.length-1)%slides.length,-1,true),{signal});
-    $('#hero-play').addEventListener('click',() => {userPaused = !userPaused;focused = false;paint();schedule();},{signal});
-    viewport.addEventListener('keydown',event => {if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {event.preventDefault();const direction = event.key === 'ArrowLeft' ? 1 : -1;go((index+slides.length+direction)%slides.length,direction,true);}},{signal});
-    root.addEventListener('pointerenter',event => {if(event.pointerType === 'mouse') stop();},{signal});
-    root.addEventListener('pointerleave',schedule,{signal});
-    root.addEventListener('focusin',() => {focused = true;stop();},{signal});
-    root.addEventListener('focusout',event => {if (!root.contains(event.relatedTarget)) {focused = false;schedule();}},{signal});
-    let touch;
-    viewport.addEventListener('pointerdown',event => {if (event.pointerType === 'touch' && !event.target.closest('a,button')) touch = {x:event.clientX,y:event.clientY};},{signal});
-    viewport.addEventListener('pointercancel',() => {touch = null;},{signal});
-    viewport.addEventListener('pointerup',event => {if (!touch) return;const dx = event.clientX-touch.x,dy = event.clientY-touch.y;touch = null;if(Math.abs(dx)>45 && Math.abs(dx)>Math.abs(dy)*1.3) {const direction = dx < 0 ? 1 : -1;go((index+slides.length+direction)%slides.length,direction,true);}},{signal});
     document.addEventListener('visibilitychange',schedule,{signal});
-    document.addEventListener('click',() => {if (!root.contains(document.activeElement)) schedule();},{signal});
     window.addEventListener('hashchange',schedule,{signal});
-    const motionChange = () => {if (reducedMotion.matches) {userPaused = true;paint();stop();}};
+    const motionChange = () => {
+      if (reducedMotion.matches) {
+        stop();animations.forEach(animation => animation.cancel());animations = [];busy = false;
+        for (const animation of motionAnimations) {animation.pause();if (index === 0) animation.currentTime = 3500;}
+        nodes.forEach((node,number) => {node.hidden = number !== index;});
+      } else schedule();
+    };
     reducedMotion.addEventListener('change',motionChange);
     const observer = new IntersectionObserver(entries => {inView = entries[0].isIntersecting;schedule();},{threshold:.15});observer.observe(root);
-    const measureHeader = () => root.style.setProperty('--header-height',Math.ceil($('.site-header').getBoundingClientRect().height) + 'px');
+    const measureHeader = () => {const height = Math.ceil($('.site-header').getBoundingClientRect().height) + 'px';root.style.setProperty('--header-height',height);document.documentElement.style.setProperty('--site-header-height',height);};
     const headerObserver = new ResizeObserver(measureHeader);headerObserver.observe($('.site-header'));measureHeader();
-    heroController = {dispose:() => {stop();signalController.abort();observer.disconnect();headerObserver.disconnect();reducedMotion.removeEventListener('change',motionChange);animations.forEach(animation => animation.cancel());}};
-    paint();
+    heroController = {dispose:() => {disposed = true;stop();signalController.abort();observer.disconnect();headerObserver.disconnect();reducedMotion.removeEventListener('change',motionChange);animations.forEach(animation => animation.cancel());motionAnimations.forEach(animation => animation.cancel());}};
   }
   function renderPublic() {
     const h = data.header;
@@ -750,6 +813,15 @@
   function imagePreview(node, image, fallback = 'تصویری انتخاب نشده') {
     node.replaceChildren(image ? el('img',{src:image,alt:'پیش‌نمایش تصویر انتخاب‌شده'}) : document.createTextNode(fallback));
   }
+  function mountBannerEditor(root, initial) {
+    const banner = clone(initial || {show:true,image:'',asset:'wall',title:'',description:'',imageAlt:''});let image = banner.image;
+    root.innerHTML = `<h3 class="banner-editor-title">بنر اختصاصی این صفحه</h3>${checkbox('نمایش بنر بالای صفحه','bannerShow',banner.show !== false)}<div class="banner-media-editor"><div class="media-preview"></div><div><label class="upload-button">انتخاب عکس بنر<input data-banner-upload type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"></label><button type="button" class="text-button" data-banner-reset>بازگشت به تصویر پیش‌فرض</button><small>عکس افقی و باکیفیت؛ حداکثر ۱ مگابایت.</small></div></div><label>تصویر پیش‌فرض<select name="bannerAsset">${[['wall','نمایشگر LED'],['flex','نمایشگر Flexible'],['film','نمایشگر شفاف'],['floor','کف LED']].map(([id,name])=>`<option value="${id}" ${banner.asset===id?'selected':''}>${name}</option>`).join('')}</select></label>${field('عنوان روی بنر','bannerTitle',banner.title,{max:160})}${field('توضیح بنر','bannerDescription',banner.description,{multiline:true,max:1000})}${field('توضیح تصویر برای دسترس‌پذیری','bannerImageAlt',banner.imageAlt,{max:200})}`;
+    const preview = () => imagePreview($('.media-preview',root),image || heroImages[$('[name=bannerAsset]',root).value]);preview();
+    $('[data-banner-upload]',root).addEventListener('change',async event => {try {const selected = await readImage(event.target.files[0]);if(!selected) return;image = selected;markDirty();preview();}catch(error){toast(error.message,true);}event.target.value = '';});
+    $('[data-banner-reset]',root).addEventListener('click',() => {image = '';markDirty();preview();});
+    $('[name=bannerAsset]',root).addEventListener('change',() => {image = '';markDirty();preview();});
+    return {read:() => ({show:$('[name=bannerShow]',root).checked,image,asset:$('[name=bannerAsset]',root).value,title:$('[name=bannerTitle]',root).value,description:$('[name=bannerDescription]',root).value,imageAlt:$('[name=bannerImageAlt]',root).value})};
+  }
   function renderHeaderEditor(root) {
     const h = data.header;let logo = h.logo;
     root.innerHTML = `<div class="admin-editor-layout"><div class="admin-panel"><form class="admin-form" id="header-form">
@@ -776,9 +848,9 @@
   }
   function renderHeroEditor(root) {
     const h = data.hero;let slides = clone(h.slides);
-    root.innerHTML = `<div class="admin-panel"><form class="admin-form" id="hero-form"><h2>اسلایدر تمام‌صفحه</h2>${checkbox('نمایش هیرو در سایت','show',h.show)}<div class="admin-form-grid">${checkbox('پخش خودکار اسلایدها','autoplay',h.autoplay)}<label>زمان نمایش هر اسلاید (ثانیه)<input type="number" name="interval" min="4" max="15" step="1" value="${h.interval/1000}" required></label></div><small>حرکت با فلش، لمس یا انتخاب اسلاید، پخش خودکار را متوقف می‌کند. تصاویر اولیه مفهومی هستند؛ عکس‌های خودتان را برای هر اسلاید انتخاب کنید.</small><div class="hero-editor-slides" id="hero-editor-slides"></div><div><button class="admin-button secondary" id="add-hero-slide" type="button">افزودن اسلاید</button></div>${saveButton('ذخیرهٔ اسلایدر')}</form></div>`;
+    root.innerHTML = `<div class="admin-panel"><form class="admin-form" id="hero-form"><h2>اسلایدر تمام‌صفحه</h2>${checkbox('نمایش هیرو در سایت','show',h.show)}${checkbox('نمایش موشن‌لوگوی آوا در آغاز؛ دو دور پخش','showMotionLogo',h.showMotionLogo !== false)}<div class="admin-form-grid">${checkbox('پخش خودکار اسلایدها','autoplay',h.autoplay)}<label>زمان نمایش هر اسلاید (ثانیه)<input type="number" name="interval" min="1" max="15" step="1" value="${h.interval/1000}" required></label></div><small>موشن‌لوگو ابتدا دو دور، حدود ۱۴ ثانیه، پخش می‌شود؛ سپس عکس‌ها با زمان انتخابی به چپ حرکت می‌کنند. تصاویر اولیه مفهومی هستند و قابل تعویض‌اند.</small><div class="hero-editor-slides" id="hero-editor-slides"></div><div><button class="admin-button secondary" id="add-hero-slide" type="button">افزودن اسلاید</button></div>${saveButton('ذخیرهٔ اسلایدر')}</form></div>`;
     const form = $('#hero-form');watchForm(form);
-    const textFields = ['eyebrow','title','highlight','description','imageAlt','primaryLabel','primaryTarget','secondaryLabel','secondaryTarget','categoryId'];
+    const textFields = ['title','imageAlt'];
     function collect() {
       for (const slide of slides) {
         const row = $('[data-slide-id="' + slide.id + '"]',form);
@@ -789,11 +861,11 @@
       const list = $('#hero-editor-slides');list.replaceChildren();
       slides.forEach((slide,index) => {
         const row = el('details',{class:'hero-editor-slide','data-slide-id':slide.id});if(index === 0) row.open = true;
-        const summary = el('summary',{},'اسلاید ' + (index+1).toLocaleString('fa-IR') + ' — ' + slide.title + ' ' + slide.highlight);row.append(summary);
+        const summary = el('summary',{},'اسلاید ' + (index+1).toLocaleString('fa-IR') + ' — ' + slide.title);row.append(summary);
         const body = el('div',{class:'hero-editor-slide-body'});
-        body.innerHTML = `<div class="hero-editor-media"><div class="media-preview"></div><div><label class="upload-button">انتخاب عکس این اسلاید<input type="file" data-slide-image accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"></label><button type="button" class="text-button" data-reset-image>بازگشت به تصویر مفهومی</button><small>حداکثر ۱ مگابایت؛ عکس افقی و عریض بهترین نتیجه را می‌دهد.</small></div></div>${field('توضیح تصویر برای دسترس‌پذیری','imageAlt',slide.imageAlt)}${field('متن کوتاه بالای عنوان','eyebrow',slide.eyebrow)}<div class="admin-form-grid">${field('سطر اول عنوان','title',slide.title,{max:200})}${field('سطر دوم عنوان','highlight',slide.highlight,{max:200})}</div>${field('توضیح اسلاید','description',slide.description,{multiline:true})}<div class="admin-form-grid">${field('متن دکمهٔ اصلی','primaryLabel',slide.primaryLabel)}<label>مقصد دکمهٔ اصلی<select name="primaryTarget">${targetOptions(slide.primaryTarget)}</select></label></div><label>دستهٔ محصول برای دکمهٔ اصلی<select name="categoryId"><option value="">همان مقصد انتخاب‌شده در بالا</option>${data.productCategories.filter(categoryVisible).map(category => `<option value="${category.id}" ${category.id === slide.categoryId ? 'selected' : ''}>${escapeHTML(categoryLabel(category))}</option>`).join('')}</select><small>اگر دسته‌ای انتخاب شود، دکمهٔ اصلی مستقیم به همان دسته می‌رود.</small></label><div class="admin-form-grid">${field('متن دکمهٔ دوم','secondaryLabel',slide.secondaryLabel)}<label>مقصد دکمهٔ دوم<select name="secondaryTarget">${targetOptions(slide.secondaryTarget)}</select></label></div><div class="hero-editor-order"><button class="admin-button secondary" type="button" data-move-slide="-1" ${index === 0 ? 'disabled' : ''}>↑ زودتر</button><button class="admin-button secondary" type="button" data-move-slide="1" ${index === slides.length-1 ? 'disabled' : ''}>↓ دیرتر</button><button class="admin-button danger" type="button" data-delete-slide ${slides.length === 1 ? 'disabled' : ''}>حذف اسلاید</button></div>`;
+        body.innerHTML = `<div class="hero-editor-media"><div class="media-preview"></div><div><label class="upload-button">انتخاب عکس این اسلاید<input type="file" data-slide-image accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"></label><button type="button" class="text-button" data-reset-image>بازگشت به تصویر مفهومی</button><small>حداکثر ۱ مگابایت؛ عکس افقی و عریض بهترین نتیجه را می‌دهد.</small></div></div>${field('نام اسلاید در پنل','title',slide.title,{max:200,required:true})}${field('توضیح تصویر برای دسترس‌پذیری','imageAlt',slide.imageAlt,{max:200})}<div class="hero-editor-order"><button class="admin-button secondary" type="button" data-move-slide="-1" ${index === 0 ? 'disabled' : ''}>↑ زودتر</button><button class="admin-button secondary" type="button" data-move-slide="1" ${index === slides.length-1 ? 'disabled' : ''}>↓ دیرتر</button><button class="admin-button danger" type="button" data-delete-slide ${slides.length === 1 ? 'disabled' : ''}>حذف اسلاید</button></div>`;
         row.append(body);list.append(row);imagePreview($('.media-preview',row),slide.image || heroImages[slide.asset]);
-        $('[name=title]',row).addEventListener('input',() => {summary.textContent = 'اسلاید ' + (index+1).toLocaleString('fa-IR') + ' — ' + $('[name=title]',row).value + ' ' + $('[name=highlight]',row).value;});
+        $('[name=title]',row).addEventListener('input',() => {summary.textContent = 'اسلاید ' + (index+1).toLocaleString('fa-IR') + ' — ' + $('[name=title]',row).value;});
         $('[data-slide-image]',row).addEventListener('change',async event => {try {const image = await readImage(event.target.files[0]);if(!image) return;slide.image = image;markDirty();imagePreview($('.media-preview',row),image);}catch(error){toast(error.message,true);}event.target.value = '';});
         $('[data-reset-image]',row).addEventListener('click',() => {slide.image = '';markDirty();imagePreview($('.media-preview',row),heroImages[slide.asset]);});
         $$('[data-move-slide]',row).forEach(button => button.addEventListener('click',() => {collect();const to = index + Number(button.dataset.moveSlide);if(to < 0 || to >= slides.length) return;[slides[index],slides[to]] = [slides[to],slides[index]];markDirty();paint();}));
@@ -802,7 +874,7 @@
       $('#add-hero-slide').disabled = slides.length >= 8;
     }
     $('#add-hero-slide').addEventListener('click',() => {if(slides.length >= 8) return;collect();slides.push({...clone(seed.hero.slides[0]),id:'slide-' + (typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : Date.now()),title:'اسلاید تازه',highlight:'',image:'',categoryId:''});markDirty();paint();const last = $('.hero-editor-slide:last-child',form);last.open = true;last.scrollIntoView({block:'center',behavior:'instant'});});
-    form.addEventListener('submit',event => {event.preventDefault();collect();const next = clone(data);next.hero.slides = slides;next.hero.show = form.elements.show.checked;next.hero.autoplay = form.elements.autoplay.checked;next.hero.interval = Number(form.elements.interval.value)*1000;for (const key of ['eyebrow','title','highlight','description','image','imageAlt','primaryLabel','primaryTarget','secondaryLabel','secondaryTarget']) next.hero[key] = slides[0][key];if(commit(next,'اسلایدر ذخیره شد.')) {slides = clone(data.hero.slides);paint();}});
+    form.addEventListener('submit',event => {event.preventDefault();collect();const next = clone(data);next.hero.slides = slides;next.hero.show = form.elements.show.checked;next.hero.showMotionLogo = form.elements.showMotionLogo.checked;next.hero.autoplay = form.elements.autoplay.checked;next.hero.interval = Number(form.elements.interval.value)*1000;for (const key of ['eyebrow','title','highlight','description','image','imageAlt','primaryLabel','primaryTarget','secondaryLabel','secondaryTarget']) next.hero[key] = slides[0][key];if(commit(next,'اسلایدر ذخیره شد.')) {slides = clone(data.hero.slides);paint();}});
     paint();
   }
   function renderNavigationEditor(root) {
@@ -827,10 +899,11 @@
   }
   function renderModule(root, key) {
     const module = data.modules[key];
-    root.innerHTML = `<div class="admin-panel"><form class="admin-form" id="module-settings"><div class="admin-form-grid">${field('نام بخش در سایت','name',module.name,{max:80,required:true})}${field('معرفی کوتاه بخش','description',module.description,{max:1000})}</div>${saveButton('ذخیرهٔ مشخصات بخش')}</form></div>
+    root.innerHTML = `<div class="admin-panel"><form class="admin-form" id="module-settings"><div class="admin-form-grid">${field('نام بخش در سایت','name',module.name,{max:80,required:true})}${field('معرفی کوتاه بخش','description',module.description,{max:1000})}</div>${key === 'products' ? '<div class="banner-editor-fields" id="products-banner-fields"></div>' : ''}${saveButton('ذخیرهٔ مشخصات بخش')}</form></div>
       <div class="module-tools"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><input type="search" id="entry-search" aria-label="جستجو در محتوا" placeholder="جستجو در عنوان محتوا…"><select id="entry-filter" aria-label="فیلتر وضعیت" style="font:inherit;border:1px solid #dce4f1;background:white;color:#657692;padding:9px;border-radius:8px"><option value="all">همهٔ وضعیت‌ها</option><option value="published">منتشرشده</option><option value="draft">پیش‌نویس</option></select></div><button type="button" class="admin-button" id="add-entry">＋ افزودن ${escapeHTML(LABELS[key])}</button></div><div class="admin-entry-list" id="entry-list"></div>`;
     const form = $('#module-settings');watchForm(form);
-    form.addEventListener('submit',event => {event.preventDefault();const v = formValues(form);const next = clone(data);next.modules[key].name = v.name.trim();next.modules[key].description = v.description;commit(next);});
+    const bannerEditor = key === 'products' ? mountBannerEditor($('#products-banner-fields'),module.banner) : null;
+    form.addEventListener('submit',event => {event.preventDefault();const v = formValues(form);const next = clone(data);next.modules[key].name = v.name.trim();next.modules[key].description = v.description;if (bannerEditor) next.modules[key].banner = bannerEditor.read();commit(next);});
     if (key === 'products') {
       const tools = $('.module-tools');const categoryLink = el('a',{href:'#admin/categories',class:'admin-button secondary'},'مدیریت دسته‌بندی‌ها');tools.append(categoryLink);
       const categoryFilter = el('select',{id:'entry-category-filter','aria-label':'فیلتر دستهٔ محصول'},el('option',{value:''},'همهٔ دسته‌ها'),data.productCategories.map(category => el('option',{value:category.id},categoryLabel(category))));
@@ -848,7 +921,8 @@
       if (!items.length) {list.append(el('div',{class:'admin-empty'},el('strong',{},query || filter !== 'all' ? 'محتوایی با این فیلتر پیدا نشد.' : 'اولین محتوای این بخش را اضافه کن.'),el('p',{},'عنوان، تصویر و توضیحات را وارد کن؛ سپس آن را به‌صورت پیش‌نویس یا منتشرشده ذخیره کن.')));return;}
       items.forEach(item => {
         const row = el('article',{class:'admin-entry','data-entry-id':item.id});
-        row.append(item.image ? el('img',{class:'entry-thumbnail',src:item.image,alt:''}) : el('div',{class:'entry-thumbnail','aria-hidden':'true'},'AVA'));
+        const thumbnail = key === 'products' ? productImage(item) : item.image;
+        row.append(thumbnail ? el('img',{class:'entry-thumbnail',src:thumbnail,alt:''}) : el('div',{class:'entry-thumbnail','aria-hidden':'true'},'AVA'));
         row.append(el('div',{class:'admin-entry-info'},el('h3',{},item.title),el('p',{},item.summary || 'بدون توضیح کوتاه'),el('span',{class:'entry-status' + (item.status === 'draft' ? ' draft' : '')},item.status === 'draft' ? 'پیش‌نویس' : 'منتشرشده')));
         if (key === 'products') {
           $('.admin-entry-info',row).append(el('span',{class:'entry-category-badge'},categoryLabel(categoryFor(item)) || 'دسته‌بندی‌نشده'));
@@ -869,7 +943,7 @@
     if (!discardAllowed()) return;
     if (dirty) renderPage(currentPage);
     dirty = false;
-    editingModule = key;entryImage = item?.image || '';entryFile = item?.file || '';
+    editingModule = key;entryImage = item?.image || '';entryImageAsset = item?.imageAsset || '';entryFile = item?.file || '';
     const form = $('#entry-form');form.reset();
     for (const name of ['id','title','summary','body','meta','url','status']) form.elements[name].value = item ? item[name] : name === 'status' ? 'draft' : '';
     $('#entry-editor-title').textContent = item ? 'ویرایش محتوا' : 'افزودن محتوا';
@@ -880,6 +954,11 @@
     $('#entry-category').replaceChildren(...data.productCategories.map(category => el('option',{value:category.id},categoryLabel(category) + (categoryVisible(category) ? '' : ' — پنهان'))));
     form.elements.categoryId.value = item?.categoryId || 'uncategorized';
     form.elements.model.value = item?.model || '';
+    form.elements.priceAmount.value = item?.priceAmount ?? '';
+    form.elements.priceKind.value = item?.priceKind || 'quote';
+    form.elements.priceUnit.value = item?.priceUnit || 'هر ماژول';
+    form.elements.priceDate.value = item?.priceDate || '';
+    form.elements.imageCaption.value = item?.imageCaption || '';
     form.elements.featured.checked = item?.featured === true;
     form.elements.specifications.value = (item?.specifications || []).map(spec => spec.label + ': ' + spec.value).join('\n');
     form.elements.datasheetUrl.value = item?.datasheetUrl || '';form.elements.manualUrl.value = item?.manualUrl || '';
@@ -887,7 +966,7 @@
     $('#entry-pdf-label').textContent = isProduct ? 'انتخاب PDF مشخصات محصول' : 'انتخاب فایل PDF کاتالوگ';
     $('#pdf-filename').textContent = entryFile ? 'یک فایل PDF به این محتوا پیوست شده است.' : 'حداکثر ۲ مگابایت؛ فایل در بخش دانلودها نمایش داده می‌شود.';
     $('#entry-error').textContent = '';
-    imagePreview($('#entry-image-preview'),entryImage,'تصویر محتوا');
+    imagePreview($('#entry-image-preview'),entryImage || (key === 'products' ? productImages[entryImageAsset] : ''),'تصویر محتوا');
     $('#entry-editor').showModal();
   }
   function renderCategories(root) {
@@ -922,6 +1001,7 @@
     form.elements.parentId.disabled = hasChildren || category?.id === 'uncategorized';
     $('#category-parent-note').textContent = hasChildren ? 'این دسته زیرگروه دارد؛ برای تبدیلش به زیرگروه، ابتدا زیرگروه‌های فعلی را منتقل کن.' : 'دستهٔ اصلی را انتخاب کن تا این گزینه زیر آن باز شود؛ حداکثر دو سطح.';
     form.elements.menu.checked = category ? category.menu !== false : true;
+    categoryBannerEditor = mountBannerEditor($('#category-banner-fields'),category?.banner);
     $('#category-error').textContent = '';$('#category-editor-title').textContent = category ? 'ویرایش دسته' : 'افزودن دسته';$('#category-editor').showModal();
   }
   function renderBackup(root) {
@@ -986,8 +1066,8 @@
   $('#close-entry').addEventListener('click',closeEditor);$('#cancel-entry').addEventListener('click',closeEditor);
   $('#entry-editor').addEventListener('cancel',event => {event.preventDefault();closeEditor();});
   watchForm($('#entry-form'));
-  $('#entry-image').addEventListener('change',async event => {try {const result = await readImage(event.target.files[0]);if (!result) return;entryImage = result;imagePreview($('#entry-image-preview'),entryImage);markDirty();} catch(error) {$('#entry-error').textContent = error.message;}event.target.value = '';});
-  $('#entry-image-remove').addEventListener('click',() => {entryImage = '';imagePreview($('#entry-image-preview'),'','تصویر محتوا');markDirty();});
+  $('#entry-image').addEventListener('change',async event => {try {const result = await readImage(event.target.files[0]);if (!result) return;entryImage = result;entryImageAsset = '';$('#entry-form').elements.imageCaption.value = '';imagePreview($('#entry-image-preview'),entryImage);markDirty();} catch(error) {$('#entry-error').textContent = error.message;}event.target.value = '';});
+  $('#entry-image-remove').addEventListener('click',() => {entryImage = '';entryImageAsset = '';$('#entry-form').elements.imageCaption.value = '';imagePreview($('#entry-image-preview'),'','تصویر محتوا');markDirty();});
   $('#entry-pdf').addEventListener('change',async event => {try {const file = event.target.files[0];if (!file) return;if (file.size > 2 * 1024 * 1024) throw new Error('حجم PDF باید حداکثر ۲ مگابایت باشد.');if (new TextDecoder().decode(await file.slice(0,5).arrayBuffer()) !== '%PDF-') throw new Error('یک فایل PDF معتبر انتخاب کن.');entryFile = await new Promise((resolve,reject) => {const reader = new FileReader();reader.onload = () => resolve(reader.result);reader.onerror = () => reject(new Error('خواندن PDF ممکن نشد.'));reader.readAsDataURL(new Blob([file],{type:'application/pdf'}));});pdfData(entryFile);$('#pdf-filename').textContent = file.name;markDirty();} catch(error) {$('#entry-error').textContent = error.message;}event.target.value = '';});
   $('#entry-pdf-remove').addEventListener('click',() => {entryFile = '';$('#pdf-filename').textContent = 'فایل PDF حذف شد.';markDirty();});
   watchForm($('#category-form'));
@@ -995,7 +1075,7 @@
   $('#close-category').addEventListener('click',closeCategory);$('#cancel-category').addEventListener('click',closeCategory);
   $('#category-editor').addEventListener('cancel',event => {event.preventDefault();closeCategory();});
   $('#category-form').addEventListener('submit',event => {
-    event.preventDefault();const values = formValues(event.currentTarget);const category = {id:values.id || 'cat-' + (typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2,9)),name:values.name.trim(),description:values.description,visible:event.currentTarget.elements.visible.checked,parentId:event.currentTarget.elements.parentId.value,menu:event.currentTarget.elements.menu.checked};
+    event.preventDefault();const values = formValues(event.currentTarget);const category = {id:values.id || 'cat-' + (typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2,9)),name:values.name.trim(),description:values.description,visible:event.currentTarget.elements.visible.checked,parentId:event.currentTarget.elements.parentId.value,menu:event.currentTarget.elements.menu.checked,banner:categoryBannerEditor.read()};
     const next = clone(data);const index = next.productCategories.findIndex(c => c.id === category.id);if (index < 0) next.productCategories.splice(Math.max(0,next.productCategories.length-1),0,category);else next.productCategories[index] = category;
     if (commit(next,'دسته ذخیره شد.')) {$('#category-editor').close();renderPage('categories');}else $('#category-error').textContent = 'دسته ذخیره نشد؛ نام و اطلاعات را بررسی کن.';
   });
@@ -1009,7 +1089,7 @@
         if (separator <= 0 || !line.slice(separator+1).trim()) {$('#entry-error').textContent = 'هر مشخصه را در یک خط به شکل «نام: مقدار» وارد کن.';return;}
         specifications.push({label:line.slice(0,separator).trim(),value:line.slice(separator+1).trim()});
       }
-      Object.assign(item,{categoryId:values.categoryId,model:values.model.trim(),featured:event.currentTarget.elements.featured.checked,specifications,datasheetUrl:values.datasheetUrl.trim(),manualUrl:values.manualUrl.trim()});
+      Object.assign(item,{imageAsset:entryImageAsset,imageCaption:values.imageCaption,priceAmount:values.priceAmount === '' ? null : Number(values.priceAmount),priceKind:values.priceKind,priceUnit:values.priceUnit,priceDate:values.priceDate,categoryId:values.categoryId,model:values.model.trim(),featured:event.currentTarget.elements.featured.checked,specifications,datasheetUrl:values.datasheetUrl.trim(),manualUrl:values.manualUrl.trim()});
     }
     const next = clone(data);const index = next.modules[editingModule].items.findIndex(i => i.id === item.id);
     if (index < 0) next.modules[editingModule].items.unshift(item);else next.modules[editingModule].items[index] = item;

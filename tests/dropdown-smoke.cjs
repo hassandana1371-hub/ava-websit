@@ -5,9 +5,10 @@ const path = require('node:path');
 const http = require('node:http');
 const root = path.resolve(__dirname,'..');
 const labels = ['تلویزیون‌های شهری','تلویزیون‌های رنتال','استندهای دیجیتال','نمایشگرهای شفاف (ترنسپرنت)','نمایشگرهای کنفرانسی ـ خانگی','کف LED','نمایشگرهای تزئینی'];
-const sublabels = {urban:['فضای داخلی','فضای خارجی'],rental:['خارجی','داخلی','Flexible'],'conference-home':['لمسی','عادی']};
+const sublabels = {urban:['فضای داخلی','فضای خارجی','Flexible'],rental:['خارجی','داخلی','Flexible'],'conference-home':['لمسی','عادی']};
 const state = JSON.parse(fs.readFileSync(path.join(root,'src/defaults.json'),'utf8'));
-const title = (name,id) => ({...state.modules.products.items[0],id,title:name,categoryId:id === 'outdoor-fixture' ? 'urban-outdoor' : 'urban-indoor'});
+const template = state.modules.products.items[0];state.modules.products.items=[];
+const title = (name,id) => ({...template,id,title:name,categoryId:id === 'outdoor-fixture' ? 'urban-outdoor' : 'urban-indoor'});
 state.modules.products.items.push(title('محصول داخلی','indoor-fixture'),title('محصول خارجی','outdoor-fixture'));
 state.updatedAt = Date.now();
 
@@ -30,9 +31,9 @@ state.updatedAt = Date.now();
       const group = page.locator(`[data-category-group="${id}"]`);await group.hover();await page.waitForTimeout(150);
       assert.equal(await group.locator('.products-submenu').isVisible(),false,'Hover must not expand a category');
       const before = page.url();
-      await group.locator('.product-category-name').first().click();
+      await group.locator('.subcategory-toggle').click();
       await group.locator('.products-submenu').waitFor({state:'visible'});
-      assert.equal(page.url(),before,'Clicking parent label should expand instead of navigating');
+      assert.equal(page.url(),before,'Clicking the subcategory arrow should expand without navigating');
       assert.deepEqual(await group.locator('.products-submenu a>span').allTextContents(),names);
       assert.equal(await page.locator('.products-submenu:visible').count(),1);
     }
@@ -41,14 +42,14 @@ state.updatedAt = Date.now();
     await page.locator('[data-category-group=urban] .products-submenu').waitFor({state:'visible'});
     await page.keyboard.press('Escape');assert.equal(await page.locator('[data-category-group=urban] .products-submenu').isVisible(),false);
     await page.keyboard.press('Escape');assert.equal(await page.locator('.products-dropdown').isVisible(),false);
-    console.log('PASS click-only root and category expansion, parent label action, Flexible, removed footer link and keyboard');
+    console.log('PASS click-only root and category expansion, parent arrow action, Flexible, removed footer link and keyboard');
 
     await page.evaluate(value => localStorage.setItem('ava-content-studio-v1',JSON.stringify(value)),state);await page.reload();
     await page.goto(base + '#category/urban');await page.locator('#catalog-page').waitFor({state:'visible'});
     assert.equal(await page.locator('#catalog-page .product-card').count(),2);
-    assert.deepEqual(await page.locator('.category-overview-card strong').allTextContents(),['فضای داخلی','فضای خارجی']);
+    assert.deepEqual(await page.locator('.category-overview-card strong').allTextContents(),['فضای داخلی','فضای خارجی','Flexible']);
     await page.locator('.category-overview-card[href="#category/urban-indoor"]').click();await page.waitForURL('**/#category/urban-indoor');
-    await page.locator('#catalog-page h1').filter({hasText:'فضای داخلی'}).waitFor();assert.equal(await page.locator('#catalog-page .product-card').count(),1);
+    await page.locator('#catalog-page h1').filter({hasText:'داخلی'}).waitFor();assert.equal(await page.locator('#catalog-page .product-card').count(),1);
     assert((await page.locator('.catalog-breadcrumbs').textContent()).includes('تلویزیون‌های شهری'));
     console.log('PASS parent counts and product aggregation, child filtering and breadcrumb trail');
 
@@ -71,12 +72,12 @@ state.updatedAt = Date.now();
 
     const legacy = JSON.parse(JSON.stringify(state));delete legacy.taxonomyRevision;
     legacy.productCategories = state.productCategories.filter(c => ['displays','controllers','accessories','uncategorized'].includes(c.id)).map(({parentId,menu,...rest}) => rest);
-    legacy.modules.products.items = [legacy.modules.products.items[0]];legacy.header.nameFa = 'نام قبلی حفظ شود';
+    legacy.modules.products.items = [{...legacy.modules.products.items[0],id:'legacy-product',title:'محصول قبلی',categoryId:'displays'}];legacy.header.nameFa = 'نام قبلی حفظ شود';
     await page.evaluate(value => localStorage.setItem('ava-content-studio-v1',JSON.stringify(value)),legacy);await page.goto(base);await page.reload();
     await page.locator('.products-menu-trigger').click();await page.locator('.products-dropdown').waitFor({state:'visible'});
     assert.deepEqual(await page.locator('.product-category-row .product-category-name').allTextContents(),labels);
     assert.equal(await page.locator('.ava-wordmark small').textContent(),'نام قبلی حفظ شود');
-    await page.goto(base + '#product/initial-display');assert.equal(await page.locator('.product-introduction h1').textContent(),'فروش نمایشگر');
+    await page.goto(base + '#product/legacy-product');assert.equal(await page.locator('.product-introduction h1').textContent(),'محصول قبلی');
     console.log('PASS version 7/8 data migration adds requested menu without losing existing content');
 
     for (const width of [390,320]) {

@@ -18,17 +18,17 @@ const svg = Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="160" hei
     assert.equal(await page.locator('.products-dropdown>.product-category-group').count(),7);
     await page.keyboard.press('Escape');assert.equal(await page.locator('.products-menu-trigger').getAttribute('aria-expanded'),'false');
     await page.locator('.products-menu-trigger').click();
-    await page.goto(base + '#category/displays');
-    await page.waitForURL('**/#category/displays');
-    assert.equal(await page.locator('#catalog-page h1').textContent(),'نمایشگرها');
+    await page.goto(base + '#category/urban-indoor');
+    await page.waitForURL('**/#category/urban-indoor');
+    assert.equal(await page.locator('#catalog-page h1').textContent(),'تلویزیون‌های شهری داخلی');
     assert.equal(await page.locator('#home-content').isVisible(),false);
-    await page.locator('#catalog-page .product-card').click();
-    await page.waitForURL('**/#product/initial-display');
-    assert.equal(await page.locator('.product-introduction h1').textContent(),'فروش نمایشگر');
+    await page.locator('#catalog-page .product-card[href="#product/indoor-125"]').click();
+    await page.waitForURL('**/#product/indoor-125');
+    assert.equal(await page.locator('.product-introduction h1').textContent(),'ماژول LED داخلی P1.25');
     assert.equal(await page.locator('#content-detail').isVisible(),false);
-    await page.reload();assert.equal(await page.locator('.product-introduction h1').textContent(),'فروش نمایشگر');
-    await page.goBack();await page.waitForURL('**/#category/displays');
-    await page.goForward();await page.waitForURL('**/#product/initial-display');
+    await page.reload();assert.equal(await page.locator('.product-introduction h1').textContent(),'ماژول LED داخلی P1.25');
+    await page.goBack();await page.waitForURL('**/#category/urban-indoor');
+    await page.goForward();await page.waitForURL('**/#product/indoor-125');
     console.log('PASS dropdown, category page, dedicated product link, reload and browser history');
 
     await page.locator('.site-menu-toggle').click();await page.locator('#open-admin').click();
@@ -125,14 +125,14 @@ const svg = Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="160" hei
     oldPage.on('pageerror',error => errors.push(error.message));
     await oldPage.goto(base);await oldPage.evaluate(value => localStorage.setItem('ava-content-studio-v1',JSON.stringify(value)),legacy);await oldPage.reload();
     assert.equal(await oldPage.locator('.ava-wordmark small').textContent(),'نام حفظ‌شده');
-    await oldPage.goto(base + '#product/initial-display');
-    assert.equal(await oldPage.locator('.product-introduction h1').textContent(),'فروش نمایشگر');
+    await oldPage.goto(base + '#product/indoor-125');
+    assert.equal(await oldPage.locator('.product-introduction h1').textContent(),'ماژول LED داخلی P1.25');
     assert.equal(await oldPage.locator('.product-introduction>.product-category-label').textContent(),'دسته‌بندی‌نشده');
     console.log('PASS previous version migration preserves content and header without guessing product categories');
 
     for (const width of [1440,768,390,320]) {
       await page.setViewportSize({width,height:900});
-      for (const hash of ['products','category/displays','product/' + productId,'admin/categories','admin/products']) {
+      for (const hash of ['products','category/urban-indoor','product/' + productId,'admin/categories','admin/products']) {
         await page.goto(base + '#' + hash);
         await page.locator(hash.startsWith('admin/') ? '#admin-app' : '#catalog-page').waitFor({state:'visible'});
         assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth),false,`Overflow at ${width} ${hash}`);

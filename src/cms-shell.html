@@ -38,6 +38,9 @@
     <div id="product-entry-fields" hidden>
       <div class="admin-form-grid"><label>دستهٔ محصول<select name="categoryId" id="entry-category"></select></label><label>مدل یا کد محصول<input name="model" maxlength="120" dir="ltr" placeholder="مدل محصول"></label></div>
       <label class="checkbox"><input name="featured" type="checkbox">نمایش در محصولات منتخب صفحهٔ اصلی</label>
+      <div class="admin-form-grid"><label>نوع نمایش قیمت<select name="priceKind"><option value="quote">استعلام قیمت</option><option value="reference">قیمت مرجع</option><option value="sale">قیمت فروش</option></select></label><label>مبلغ به تومان<input name="priceAmount" type="number" min="0" max="9000000000000" step="1" placeholder="مثلاً 4791000"></label></div>
+      <div class="admin-form-grid"><label>مبنای قیمت<input name="priceUnit" maxlength="80" placeholder="هر ماژول"></label><label>تاریخ قیمت<input name="priceDate" type="date"></label></div>
+      <label>برچسب عکس<input name="imageCaption" maxlength="200" placeholder="مثلاً تصویر مرجع؛ برای عکس تأییدشده خالی بگذارید"></label>
     </div>
     <label>توضیح کوتاه<textarea name="summary" rows="2" maxlength="700" placeholder="این متن روی کارت محتوا دیده می‌شود"></textarea></label>
     <label>متن کامل<textarea name="body" rows="5" maxlength="20000" placeholder="جزئیات، معرفی یا متن مقاله"></textarea></label>
@@ -58,7 +61,7 @@
 
 <dialog id="category-editor" class="admin-modal" aria-labelledby="category-editor-title">
   <div class="modal-heading"><h2 id="category-editor-title">دستهٔ محصول</h2><button type="button" class="icon-button" id="close-category" aria-label="بستن ویرایش دسته">×</button></div>
-  <form id="category-form" class="admin-form"><input type="hidden" name="id"><label>نام دسته<input name="name" maxlength="80" required placeholder="مثلاً نمایشگرهای فضای داخلی"></label><label>زیرگروه کدام دسته است؟<select name="parentId" id="category-parent"></select></label><small id="category-parent-note"></small><label>معرفی دسته<textarea name="description" rows="3" maxlength="1000"></textarea></label><label class="checkbox"><input type="checkbox" name="visible" checked>نمایش دسته و محصولات منتشرشدهٔ آن در سایت</label><label class="checkbox"><input type="checkbox" name="menu" checked>نمایش این دسته در منوی محصولات</label><p class="form-error" id="category-error" role="alert"></p><div class="form-actions"><button type="submit" class="admin-button">ذخیرهٔ دسته</button><button type="button" class="admin-button secondary" id="cancel-category">انصراف</button></div></form>
+  <form id="category-form" class="admin-form"><input type="hidden" name="id"><label>نام دسته<input name="name" maxlength="80" required placeholder="مثلاً نمایشگرهای فضای داخلی"></label><label>زیرگروه کدام دسته است؟<select name="parentId" id="category-parent"></select></label><small id="category-parent-note"></small><label>معرفی دسته<textarea name="description" rows="3" maxlength="1000"></textarea></label><div class="banner-editor-fields" id="category-banner-fields"></div><label class="checkbox"><input type="checkbox" name="visible" checked>نمایش دسته و محصولات منتشرشدهٔ آن در سایت</label><label class="checkbox"><input type="checkbox" name="menu" checked>نمایش این دسته در منوی محصولات</label><p class="form-error" id="category-error" role="alert"></p><div class="form-actions"><button type="submit" class="admin-button">ذخیرهٔ دسته</button><button type="button" class="admin-button secondary" id="cancel-category">انصراف</button></div></form>
 </dialog>
 
 <dialog id="content-detail" class="section-dialog content-detail" aria-labelledby="detail-title"><button type="button" class="icon-button" data-close="content-detail" aria-label="بستن محتوا">×</button><div id="detail-body"></div></dialog>
