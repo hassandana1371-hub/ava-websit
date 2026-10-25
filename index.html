@@ -741,20 +741,20 @@ h1,h2,h3{font-weight:700;letter-spacing:0}
 .hero-motion-frame{display:block;position:absolute;inset:0;width:100%;height:100%;border:0;pointer-events:none;background:#03050a}
 .hero-slider.is-dragging .hero-viewport{cursor:grabbing}
 .hero-controls{position:absolute;inset:0;z-index:3;pointer-events:none}
-.hero-arrow{pointer-events:auto;position:absolute;top:12%;bottom:12%;width:clamp(54px,7vw,130px);border:0;padding:0;color:#fff;display:flex;align-items:center;justify-content:center;opacity:.32;transition:opacity .25s,background .25s;touch-action:manipulation}
-.hero-next{right:0;background:linear-gradient(270deg,#02091466,transparent)}
-.hero-previous{left:0;background:linear-gradient(90deg,#02091466,transparent)}
+.hero-arrow{pointer-events:auto;position:absolute;top:12%;bottom:12%;width:clamp(54px,7vw,130px);border:0;padding:0;color:#fff;display:flex;align-items:center;justify-content:center;opacity:.32;background:transparent;outline:none;box-shadow:none;transition:opacity .25s;touch-action:manipulation}
+.hero-next{right:0}
+.hero-previous{left:0}
 .hero-arrow svg{width:27px;height:54px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 2px 7px #0008);pointer-events:none}
 .hero-slider:hover .hero-arrow,.hero-arrow:focus-visible{opacity:.9}
-.hero-arrow:hover{opacity:1;background-color:#0c1b2b15}
+.hero-arrow:hover{opacity:1}
+.hero-arrow:hover,.hero-arrow:focus,.hero-arrow:focus-visible,.hero-arrow:active{background:transparent;border:0;outline:none;box-shadow:none}
+.hero-arrow:focus-visible svg{stroke-width:3;filter:drop-shadow(0 0 6px #ffffffaa)}
 .hero-pagination{pointer-events:auto;position:absolute;bottom:24px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;padding:4px 10px;border:1px solid #ffffff24;border-radius:40px;background:#0913214d;backdrop-filter:blur(12px);max-width:calc(100% - 40px)}
 .hero-dots{display:flex;align-items:center;justify-content:center}
 .hero-dot{position:relative;width:26px;height:28px;border:0;padding:0;background:transparent;display:grid;place-items:center;flex-shrink:0}
 .hero-dot:before{content:'';height:5px;width:5px;border-radius:5px;background:#ffffff77;transition:width .25s,background .25s}
 .hero-dot[aria-current=true]{width:37px}
 .hero-dot[aria-current=true]:before{width:25px;background:#fff}
-.hero-play{display:grid;place-items:center;flex-shrink:0;width:28px;height:28px;border:0;border-inline-start:1px solid #ffffff29;background:transparent;color:#fff;padding:5px}
-.hero-play svg{width:13px;height:13px;pointer-events:none}
 @media(hover:none){.hero-arrow{opacity:.66}}
 @media(max-width:600px){.hero-arrow{width:44px;top:22%;bottom:22%}.hero-arrow svg{width:19px;height:38px;stroke-width:2.4}.hero-pagination{bottom:18px;padding:3px 8px;gap:5px}.hero-dot{width:23px;height:28px}.hero-dot[aria-current=true]{width:30px}}
 @media(prefers-reduced-motion:reduce){.hero-arrow,.hero-dot:before{transition:none}}
@@ -1060,7 +1060,7 @@ h1,h2,h3{letter-spacing:0}
     <label>توضیح کوتاه<textarea name="summary" rows="2" maxlength="700" placeholder="این متن روی کارت محتوا دیده می‌شود"></textarea></label>
     <label>متن کامل<textarea name="body" rows="5" maxlength="20000" placeholder="جزئیات، معرفی یا متن مقاله"></textarea></label>
     <label><span id="entry-meta-label">اطلاعات تکمیلی</span><input name="meta" maxlength="200"></label>
-    <div class="media-field"><div class="media-preview" id="entry-image-preview">تصویر محتوا</div><div><label class="upload-button">انتخاب تصویر<input id="entry-image" type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"></label><button type="button" class="text-button" id="entry-image-remove">حذف تصویر</button><small>PNG، JPG، WebP، GIF یا SVG؛ حداکثر ۱ مگابایت</small></div></div>
+    <div class="media-field"><div class="media-preview" id="entry-image-preview">تصویر محتوا</div><div><label class="upload-button">انتخاب تصویر<input id="entry-image" type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"></label><button type="button" class="text-button" id="entry-image-remove">حذف تصویر</button><small>PNG، JPG، WebP، GIF یا SVG؛ حداکثر ۵ مگابایت؛ عکس‌های بزرگ برای نمایش وب بهینه می‌شوند</small></div></div>
     <label>پیوند مرتبط یا فایل دانلود<input name="url" type="url" dir="ltr" placeholder="https://…" maxlength="2000"></label>
     <div id="product-technical-fields" hidden>
       <label>مشخصات فنی<textarea name="specifications" rows="5" maxlength="16000" placeholder="هر ویژگی در یک خط، به شکل نام: مقدار&#10;نوع نمایشگر: LED&#10;کاربری: فضای داخلی"></textarea></label>
@@ -1288,7 +1288,7 @@ copyButton.addEventListener('click', async function () {
   }
   function imageData(value) {
     if (!value) return '';
-    if (typeof value !== 'string' || value.length > 1450000 || !/^data:image\/(png|jpeg|webp|gif|svg\+xml);base64,[A-Za-z0-9+/=\r\n]+$/.test(value)) throw new Error('فایل تصویر معتبر نیست یا بیش از اندازه بزرگ است.');
+    if (typeof value !== 'string' || value.length > Math.ceil(5 * 1024 * 1024 / 3) * 4 + 200 || !/^data:image\/(png|jpeg|webp|gif|svg\+xml);base64,[A-Za-z0-9+/=\r\n]+$/.test(value)) throw new Error('فایل تصویر معتبر نیست یا بیش از اندازه بزرگ است.');
     return value;
   }
   function pdfData(value) {
@@ -1371,7 +1371,7 @@ copyButton.addEventListener('click', async function () {
     });
     out.hero.motionRevision = 2;
     out.hero.showMotionLogo = raw.hero.showMotionLogo !== false;
-    out.hero.autoplay = [1,2].includes(raw.hero.motionRevision) ? raw.hero.autoplay !== false : true;
+    out.hero.autoplay = true;
     out.hero.interval = raw.hero.motionRevision === 2 && raw.hero.interval !== undefined ? Number(raw.hero.interval) : 2000;
     if (!Number.isInteger(out.hero.interval) || out.hero.interval < 1000 || out.hero.interval > 15000) throw new Error('زمان هر اسلاید باید بین ۱ تا ۱۵ ثانیه باشد.');
     const seen = new Set();
@@ -1862,8 +1862,8 @@ copyButton.addEventListener('click', async function () {
     viewport.tabIndex = 0;viewport.setAttribute('aria-label','اسلایدهای آوا؛ با کشیدن تصویر یا کلیدهای جهت جابه‌جا شوید');
     const signalController = new AbortController(),signal = signalController.signal;
     const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
-    let index = 0,timer,animations = [],inView = false,disposed = false,focused = false;
-    let userPaused = !hero.autoplay,transitionVisit = 0,pointer = null,previewIndex = null;
+    let index = 0,timer,animations = [],inView = false,disposed = false;
+    let transitionVisit = 0,pointer = null,previewIndex = null;
     let motionAnimations = [],motionReady = false,motionWaiting = false,motionVisit = 0,motionFrame;
     const hasMotion = hero.showMotionLogo !== false,nodes = [],count = hero.slides.length + Number(hasMotion);
     function slideNode(number,motion = false) {
@@ -1875,7 +1875,7 @@ copyButton.addEventListener('click', async function () {
       motionFrame = frame;
       frame.addEventListener('load',() => {
         if (disposed) return;
-        refreshMotion(reducedMotion.matches || userPaused ? 3500 : 0);
+        refreshMotion(reducedMotion.matches ? 3500 : 0);
         schedule();
       },{signal});
       frame.srcdoc = heroMotionDocument;slideNode(0,true).append(frame);
@@ -1892,13 +1892,10 @@ copyButton.addEventListener('click', async function () {
       const button = el('button',{type:'button',class:'hero-dot','aria-label':'اسلاید ' + (number+1) + ': ' + name});
       button.addEventListener('click',() => go(number,number > index ? 1 : -1,true),{signal});dots.append(button);return button;
     });
-    const play = el('button',{type:'button',class:'hero-play'}),status = el('span',{class:'sr-only','aria-live':'polite','aria-atomic':'true'});
-    pagination.append(dots,play);controls.append(previous,next,pagination,status);controls.hidden = count < 2;root.append(controls);
+    const status = el('span',{class:'sr-only','aria-live':'polite','aria-atomic':'true'});
+    pagination.append(dots);controls.append(previous,next,pagination,status);controls.hidden = count < 2;root.append(controls);
     function paint(manual = false) {
       dotButtons.forEach((button,number) => button.setAttribute('aria-current',String(number === index)));
-      play.hidden = reducedMotion.matches;
-      play.setAttribute('aria-label',userPaused ? 'شروع پخش خودکار' : 'توقف پخش خودکار');play.setAttribute('aria-pressed',String(!userPaused));
-      play.innerHTML = userPaused ? '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="m6 3.5 10 6.5-10 6.5Z" fill="currentColor"/></svg>' : '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M6 4v12M14 4v12" stroke="currentColor" stroke-width="2.5"/></svg>';
       if (manual) status.textContent = 'اسلاید ' + (index+1).toLocaleString('fa-IR') + ' از ' + count.toLocaleString('fa-IR');
     }
     const stop = () => clearTimeout(timer);
@@ -1913,7 +1910,7 @@ copyButton.addEventListener('click', async function () {
       }
       if (time !== undefined) for(const animation of motionAnimations){animation.pause();animation.currentTime = time;}
     }
-    function canPlay() {return !disposed && count > 1 && !userPaused && !focused && !pointer && !reducedMotion.matches && inView && !document.hidden && !root.hidden && !$('#home-content').hidden && !$('#public-site').hidden;}
+    function canPlay() {return !disposed && count > 1 && !pointer && !reducedMotion.matches && inView && !document.hidden && !root.hidden && !$('#home-content').hidden && !$('#public-site').hidden;}
     function schedule() {
       stop();const playing = canPlay();
       if (playing && hasMotion && index === 0) refreshMotion();
@@ -1936,13 +1933,12 @@ copyButton.addEventListener('click', async function () {
       nodes.forEach((node,number) => {node.style.transform = '';node.hidden = number !== index;node.inert = number !== index;node.setAttribute('aria-hidden',String(number !== index));});previewIndex = null;
     }
     function go(nextIndex,direction,manual,offset = 0) {
-      if (manual) userPaused = true;
       normalize();
       if (nextIndex === index) {paint(manual);schedule();return;}
       motionVisit++;motionWaiting = false;
       const old = nodes[index];index = (nextIndex+count)%count;const incoming = nodes[index];
       old.inert = true;old.setAttribute('aria-hidden','true');incoming.hidden = false;incoming.inert = false;incoming.setAttribute('aria-hidden','false');paint(manual);
-      if (hasMotion && index === 0) refreshMotion(reducedMotion.matches || userPaused ? 3500 : 0);
+      if (hasMotion && index === 0) refreshMotion(reducedMotion.matches ? 3500 : 0);
       if (reducedMotion.matches) {old.hidden = true;schedule();return;}
       const visit = transitionVisit,width = viewport.clientWidth,options = {duration:500,easing:'cubic-bezier(.22,.7,.2,1)'};
       animations = [old.animate([{transform:'translateX('+offset+'px)'},{transform:'translateX('+(-direction*100)+'%)'}],options),incoming.animate([{transform:'translateX('+(direction*width+offset)+'px)'},{transform:'translateX(0)'}],options)];
@@ -1950,20 +1946,11 @@ copyButton.addEventListener('click', async function () {
       schedule();
     }
     previous.addEventListener('click',() => go((index+count-1)%count,-1,true),{signal});next.addEventListener('click',() => go((index+1)%count,1,true),{signal});
-    function togglePlay() {
-      userPaused = !userPaused;focused = false;
-      if (!userPaused && hasMotion && index === 0) {motionVisit++;motionWaiting = false;refreshMotion(0);}
-      paint();schedule();
-    }
-    play.addEventListener('click',togglePlay,{signal});
     root.addEventListener('keydown',event => {
       if (event.target !== viewport) return;
       if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') {event.preventDefault();const direction = event.key === 'ArrowRight' ? 1 : -1;go((index+count+direction)%count,direction,true);}
       if(event.key === 'Home' || event.key === 'End'){event.preventDefault();go(event.key === 'Home' ? 0 : count-1,event.key === 'Home' ? -1 : 1,true);}
-      if(event.code === 'Space' && !reducedMotion.matches){event.preventDefault();togglePlay();}
     },{signal});
-    root.addEventListener('focusin',() => {focused = true;schedule();},{signal});
-    root.addEventListener('focusout',event => {if(!root.contains(event.relatedTarget)){focused = false;schedule();}},{signal});
     function clearDrag() {root.classList.remove('is-dragging');nodes[index].style.transform = '';if(previewIndex !== null && previewIndex !== index){nodes[previewIndex].style.transform = '';nodes[previewIndex].hidden = true;}previewIndex = null;}
     viewport.addEventListener('pointerdown',event => {
       if (count < 2 || !event.isPrimary || (event.pointerType === 'mouse' && event.button !== 0)) return;
@@ -2099,17 +2086,33 @@ copyButton.addEventListener('click', async function () {
   async function readImage(file) {
     if (!file) return '';
     if (!['image/png','image/jpeg','image/webp','image/gif','image/svg+xml'].includes(file.type)) throw new Error('یک فایل تصویر PNG، JPG، WebP، GIF یا SVG انتخاب کن.');
-    if (file.size > 1024 * 1024) throw new Error('حجم تصویر باید حداکثر ۱ مگابایت باشد.');
+    if (file.size > 5 * 1024 * 1024) throw new Error('حجم تصویر باید حداکثر ۵ مگابایت باشد.');
     const encoded = await new Promise((resolve,reject) => {const reader = new FileReader();reader.onload = () => resolve(reader.result);reader.onerror = () => reject(new Error('خواندن فایل تصویر ممکن نشد.'));reader.readAsDataURL(file);});
-    await new Promise((resolve,reject) => {const image = new Image();image.onload = resolve;image.onerror = () => reject(new Error('فایل انتخاب‌شده تصویر قابل خواندن نیست.'));image.src = encoded;});
-    return imageData(encoded);
+    const decoded = await new Promise((resolve,reject) => {const image = new Image();image.onload = () => resolve(image);image.onerror = () => reject(new Error('فایل انتخاب‌شده تصویر قابل خواندن نیست.'));image.src = encoded;});
+    if (file.size <= 1024 * 1024 || ['image/gif','image/svg+xml'].includes(file.type)) return imageData(encoded);
+    // Keep large camera images usable in local browser storage. Animated/vector
+    // uploads retain their original format; raster photos get a web-sized copy.
+    const canvas = document.createElement('canvas'),context = canvas.getContext('2d');
+    if (!context) throw new Error('آماده‌سازی تصویر ممکن نشد.');
+    let side = Math.min(3200,Math.max(decoded.naturalWidth,decoded.naturalHeight)),optimized = encoded;
+    while (side >= 600) {
+      const scale = Math.min(1,side/Math.max(decoded.naturalWidth,decoded.naturalHeight));
+      canvas.width = Math.max(1,Math.round(decoded.naturalWidth*scale));canvas.height = Math.max(1,Math.round(decoded.naturalHeight*scale));
+      context.drawImage(decoded,0,0,canvas.width,canvas.height);
+      for (const quality of [.92,.85,.78]) {
+        optimized = canvas.toDataURL('image/webp',quality);
+        if (optimized.length <= 1230000) return imageData(optimized);
+      }
+      side = Math.round(side*.78);
+    }
+    return imageData(optimized);
   }
   function imagePreview(node, image, fallback = 'تصویری انتخاب نشده') {
     node.replaceChildren(image ? el('img',{src:image,alt:'پیش‌نمایش تصویر انتخاب‌شده'}) : document.createTextNode(fallback));
   }
   function mountBannerEditor(root, initial) {
     const banner = clone(initial || {show:true,image:'',asset:'wall',title:'',description:'',imageAlt:''});let image = banner.image;
-    root.innerHTML = `<h3 class="banner-editor-title">بنر اختصاصی این صفحه</h3>${checkbox('نمایش بنر بالای صفحه','bannerShow',banner.show !== false)}<div class="banner-media-editor"><div class="media-preview"></div><div><label class="upload-button">انتخاب عکس بنر<input data-banner-upload type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"></label><button type="button" class="text-button" data-banner-reset>بازگشت به تصویر پیش‌فرض</button><small>عکس افقی و باکیفیت؛ حداکثر ۱ مگابایت.</small></div></div><label>تصویر پیش‌فرض<select name="bannerAsset">${[['wall','نمایشگر LED'],['flex','نمایشگر Flexible'],['film','نمایشگر شفاف'],['floor','کف LED']].map(([id,name])=>`<option value="${id}" ${banner.asset===id?'selected':''}>${name}</option>`).join('')}</select></label>${field('عنوان روی بنر','bannerTitle',banner.title,{max:160})}${field('توضیح بنر','bannerDescription',banner.description,{multiline:true,max:1000})}${field('توضیح تصویر برای دسترس‌پذیری','bannerImageAlt',banner.imageAlt,{max:200})}`;
+    root.innerHTML = `<h3 class="banner-editor-title">بنر اختصاصی این صفحه</h3>${checkbox('نمایش بنر بالای صفحه','bannerShow',banner.show !== false)}<div class="banner-media-editor"><div class="media-preview"></div><div><label class="upload-button">انتخاب عکس بنر<input data-banner-upload type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"></label><button type="button" class="text-button" data-banner-reset>بازگشت به تصویر پیش‌فرض</button><small>عکس افقی و باکیفیت؛ حداکثر ۵ مگابایت.</small></div></div><label>تصویر پیش‌فرض<select name="bannerAsset">${[['wall','نمایشگر LED'],['flex','نمایشگر Flexible'],['film','نمایشگر شفاف'],['floor','کف LED']].map(([id,name])=>`<option value="${id}" ${banner.asset===id?'selected':''}>${name}</option>`).join('')}</select></label>${field('عنوان روی بنر','bannerTitle',banner.title,{max:160})}${field('توضیح بنر','bannerDescription',banner.description,{multiline:true,max:1000})}${field('توضیح تصویر برای دسترس‌پذیری','bannerImageAlt',banner.imageAlt,{max:200})}`;
     const preview = () => imagePreview($('.media-preview',root),image || heroImages[$('[name=bannerAsset]',root).value]);preview();
     $('[data-banner-upload]',root).addEventListener('change',async event => {try {const selected = await readImage(event.target.files[0]);if(!selected) return;image = selected;markDirty();preview();}catch(error){toast(error.message,true);}event.target.value = '';});
     $('[data-banner-reset]',root).addEventListener('click',() => {image = '';markDirty();preview();});
@@ -2119,7 +2122,7 @@ copyButton.addEventListener('click', async function () {
   function renderHeaderEditor(root) {
     const h = data.header;let logo = h.logo;
     root.innerHTML = `<div class="admin-editor-layout"><div class="admin-panel"><form class="admin-form" id="header-form">
-      <h2>نشان و نام گروه</h2><div class="media-field"><div class="media-preview" id="logo-preview"></div><div><label class="upload-button">انتخاب لوگو<input type="file" id="logo-input" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"></label><button class="text-button" type="button" id="reset-logo">لوگوی اصلی آوا</button><small>حداکثر ۱ مگابایت؛ تصویر شفاف بهترین نتیجه را می‌دهد.</small></div></div>
+      <h2>نشان و نام گروه</h2><div class="media-field"><div class="media-preview" id="logo-preview"></div><div><label class="upload-button">انتخاب لوگو<input type="file" id="logo-input" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"></label><button class="text-button" type="button" id="reset-logo">لوگوی اصلی آوا</button><small>حداکثر ۵ مگابایت؛ تصویر شفاف بهترین نتیجه را می‌دهد.</small></div></div>
       ${checkbox('نمایش نشان لوگو','showLogo',h.showLogo)}
       <div class="admin-form-grid"><div>${field('نام انگلیسی — بالا','nameEn',h.nameEn,{ltr:true})}${checkbox('نمایش نام انگلیسی','showNameEn',h.showNameEn)}</div><div>${field('نام فارسی — پایین','nameFa',h.nameFa)}${checkbox('نمایش نام فارسی','showNameFa',h.showNameFa)}</div></div>
       <h2>شعارهای هدر</h2><div class="admin-form-grid"><div>${field('شعار انگلیسی','sloganEn',h.sloganEn,{ltr:true})}${checkbox('نمایش شعار انگلیسی','showSloganEn',h.showSloganEn)}</div><div>${field('شعار فارسی','sloganFa',h.sloganFa)}${checkbox('نمایش شعار فارسی','showSloganFa',h.showSloganFa)}</div></div>
@@ -2142,7 +2145,7 @@ copyButton.addEventListener('click', async function () {
   }
   function renderHeroEditor(root) {
     const h = data.hero;let slides = clone(h.slides);
-    root.innerHTML = `<div class="admin-panel"><form class="admin-form" id="hero-form"><h2>اسلایدر تمام‌صفحه</h2>${checkbox('نمایش هیرو در سایت','show',h.show)}${checkbox('نمایش موشن‌لوگوی آوا در آغاز؛ دو دور پخش','showMotionLogo',h.showMotionLogo !== false)}<div class="admin-form-grid">${checkbox('پخش خودکار اسلایدها','autoplay',h.autoplay)}<label>زمان نمایش هر اسلاید (ثانیه)<input type="number" name="interval" min="1" max="15" step="1" value="${h.interval/1000}" required></label></div><small>موشن‌لوگو ابتدا دو دور، حدود ۱۴ ثانیه، پخش می‌شود؛ سپس عکس‌ها با زمان انتخابی به چپ حرکت می‌کنند. تصاویر اولیه مفهومی هستند و قابل تعویض‌اند.</small><div class="hero-editor-slides" id="hero-editor-slides"></div><div><button class="admin-button secondary" id="add-hero-slide" type="button">افزودن اسلاید</button></div>${saveButton('ذخیرهٔ اسلایدر')}</form></div>`;
+    root.innerHTML = `<div class="admin-panel"><form class="admin-form" id="hero-form"><h2>اسلایدر تمام‌صفحه</h2>${checkbox('نمایش هیرو در سایت','show',h.show)}${checkbox('نمایش موشن‌لوگوی آوا در آغاز؛ دو دور پخش','showMotionLogo',h.showMotionLogo !== false)}<div class="admin-form-grid"><label>زمان نمایش هر اسلاید (ثانیه)<input type="number" name="interval" min="1" max="15" step="1" value="${h.interval/1000}" required></label></div><small>موشن‌لوگو ابتدا دو دور، حدود ۱۴ ثانیه، پخش می‌شود؛ سپس عکس‌ها با زمان انتخابی به چپ حرکت می‌کنند. تصاویر اولیه مفهومی هستند و قابل تعویض‌اند.</small><div class="hero-editor-slides" id="hero-editor-slides"></div><div><button class="admin-button secondary" id="add-hero-slide" type="button">افزودن اسلاید</button></div>${saveButton('ذخیرهٔ اسلایدر')}</form></div>`;
     const form = $('#hero-form');watchForm(form);
     const textFields = ['title','imageAlt'];
     function collect() {
@@ -2157,7 +2160,7 @@ copyButton.addEventListener('click', async function () {
         const row = el('details',{class:'hero-editor-slide','data-slide-id':slide.id});if(index === 0) row.open = true;
         const summary = el('summary',{},'اسلاید ' + (index+1).toLocaleString('fa-IR') + ' — ' + slide.title);row.append(summary);
         const body = el('div',{class:'hero-editor-slide-body'});
-        body.innerHTML = `<div class="hero-editor-media"><div class="media-preview"></div><div><label class="upload-button">انتخاب عکس این اسلاید<input type="file" data-slide-image accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"></label><button type="button" class="text-button" data-reset-image>بازگشت به تصویر مفهومی</button><small>حداکثر ۱ مگابایت؛ عکس افقی و عریض بهترین نتیجه را می‌دهد.</small></div></div>${field('نام اسلاید در پنل','title',slide.title,{max:200,required:true})}${field('توضیح تصویر برای دسترس‌پذیری','imageAlt',slide.imageAlt,{max:200})}<div class="hero-editor-order"><button class="admin-button secondary" type="button" data-move-slide="-1" ${index === 0 ? 'disabled' : ''}>↑ زودتر</button><button class="admin-button secondary" type="button" data-move-slide="1" ${index === slides.length-1 ? 'disabled' : ''}>↓ دیرتر</button><button class="admin-button danger" type="button" data-delete-slide ${slides.length === 1 ? 'disabled' : ''}>حذف اسلاید</button></div>`;
+        body.innerHTML = `<div class="hero-editor-media"><div class="media-preview"></div><div><label class="upload-button">انتخاب عکس این اسلاید<input type="file" data-slide-image accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"></label><button type="button" class="text-button" data-reset-image>بازگشت به تصویر مفهومی</button><small>حداکثر ۵ مگابایت؛ عکس افقی و عریض بهترین نتیجه را می‌دهد.</small></div></div>${field('نام اسلاید در پنل','title',slide.title,{max:200,required:true})}${field('توضیح تصویر برای دسترس‌پذیری','imageAlt',slide.imageAlt,{max:200})}<div class="hero-editor-order"><button class="admin-button secondary" type="button" data-move-slide="-1" ${index === 0 ? 'disabled' : ''}>↑ زودتر</button><button class="admin-button secondary" type="button" data-move-slide="1" ${index === slides.length-1 ? 'disabled' : ''}>↓ دیرتر</button><button class="admin-button danger" type="button" data-delete-slide ${slides.length === 1 ? 'disabled' : ''}>حذف اسلاید</button></div>`;
         row.append(body);list.append(row);imagePreview($('.media-preview',row),slide.image || heroImages[slide.asset]);
         $('[name=title]',row).addEventListener('input',() => {summary.textContent = 'اسلاید ' + (index+1).toLocaleString('fa-IR') + ' — ' + $('[name=title]',row).value;});
         $('[data-slide-image]',row).addEventListener('change',async event => {try {const image = await readImage(event.target.files[0]);if(!image) return;slide.image = image;markDirty();imagePreview($('.media-preview',row),image);}catch(error){toast(error.message,true);}event.target.value = '';});
@@ -2168,7 +2171,7 @@ copyButton.addEventListener('click', async function () {
       $('#add-hero-slide').disabled = slides.length >= 8;
     }
     $('#add-hero-slide').addEventListener('click',() => {if(slides.length >= 8) return;collect();slides.push({...clone(seed.hero.slides[0]),id:'slide-' + (typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : Date.now()),title:'اسلاید تازه',highlight:'',image:'',categoryId:''});markDirty();paint();const last = $('.hero-editor-slide:last-child',form);last.open = true;last.scrollIntoView({block:'center',behavior:'instant'});});
-    form.addEventListener('submit',event => {event.preventDefault();collect();const next = clone(data);next.hero.slides = slides;next.hero.show = form.elements.show.checked;next.hero.showMotionLogo = form.elements.showMotionLogo.checked;next.hero.autoplay = form.elements.autoplay.checked;next.hero.interval = Number(form.elements.interval.value)*1000;for (const key of ['eyebrow','title','highlight','description','image','imageAlt','primaryLabel','primaryTarget','secondaryLabel','secondaryTarget']) next.hero[key] = slides[0][key];if(commit(next,'اسلایدر ذخیره شد.')) {slides = clone(data.hero.slides);paint();}});
+    form.addEventListener('submit',event => {event.preventDefault();collect();const next = clone(data);next.hero.slides = slides;next.hero.show = form.elements.show.checked;next.hero.showMotionLogo = form.elements.showMotionLogo.checked;next.hero.autoplay = true;next.hero.interval = Number(form.elements.interval.value)*1000;for (const key of ['eyebrow','title','highlight','description','image','imageAlt','primaryLabel','primaryTarget','secondaryLabel','secondaryTarget']) next.hero[key] = slides[0][key];if(commit(next,'اسلایدر ذخیره شد.')) {slides = clone(data.hero.slides);paint();}});
     paint();
   }
   function renderNavigationEditor(root) {
@@ -2306,7 +2309,7 @@ copyButton.addEventListener('click', async function () {
     $('#export-backup').addEventListener('click',() => download('ava-content-backup.json',JSON.stringify(data,null,2),'application/json;charset=utf-8'));
     $('#import-backup').addEventListener('change',async event => {
       const file = event.target.files[0];if (!file) return;
-      try {if (file.size > 8 * 1024 * 1024) throw new Error('حجم فایل پشتیبان بیش از حد مجاز است.');const next = validate(JSON.parse(await file.text()));if (!confirm('اطلاعات این پشتیبان جایگزین همهٔ اطلاعات فعلی شود؟')) return;if (commit(next,'پشتیبان با موفقیت بازیابی شد.')) {renderPage('backup');}}
+      try {if (file.size > 32 * 1024 * 1024) throw new Error('حجم فایل پشتیبان بیش از حد مجاز است.');const next = validate(JSON.parse(await file.text()));if (!confirm('اطلاعات این پشتیبان جایگزین همهٔ اطلاعات فعلی شود؟')) return;if (commit(next,'پشتیبان با موفقیت بازیابی شد.')) {renderPage('backup');}}
       catch (error) {toast(error instanceof SyntaxError ? 'فایل انتخاب‌شده JSON معتبر نیست.' : error.message,true);}
       finally {event.target.value = '';}
     });
