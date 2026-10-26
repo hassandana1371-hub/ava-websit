@@ -461,7 +461,8 @@
     const width = Math.min(preferredWidth,viewportWidth-24);
     const left = Math.max(12,Math.min(anchor.right-width,viewportWidth-width-12));
     dropdown.style.width = width + 'px';dropdown.style.transform = 'none';
-    dropdown.style.right = (anchor.right-left-width) + 'px';
+    const compact=innerWidth<=700;dropdown.style.position=compact?'fixed':'absolute';dropdown.style.left=compact?left+'px':'';dropdown.style.top=compact?($('.site-header').getBoundingClientRect().bottom+6)+'px':'';
+    dropdown.style.right = compact?'auto':(anchor.right-left-width)+'px';
     dropdown.hidden = false;trigger.setAttribute('aria-expanded','true');
     const rect = dropdown.getBoundingClientRect();
     dropdown.style.maxHeight = Math.max(100,document.documentElement.clientHeight-rect.top-16) + 'px';
@@ -1289,6 +1290,7 @@
       content.animate([{opacity:0},{opacity:1}],{duration:420,easing:'ease-out'});
     }
   }
+  $('#navigation').addEventListener('scroll',closeNavigationMenus,{passive:true});
   $('.site-menu-toggle').addEventListener('click',() => $('#site-menu').showModal());
   document.addEventListener('click',event => {if (!event.target.closest('.header-menu-item')) closeNavigationMenus();});
   $('#open-admin').addEventListener('click',() => {$('#site-menu').close();location.hash = 'admin/dashboard';});

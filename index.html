@@ -952,6 +952,25 @@ h1,h2,h3{letter-spacing:0}
 
 .contact-page-banner{grid-column:1/-1;min-width:0}.contact-page-banner .catalog-banner{border-radius:15px}
 
+/* Mobile navigation remains a single RTL row; dropdowns use viewport positioning. */
+@media(max-width:700px){
+ .nav-shell{min-width:0;gap:8px;padding:0 12px}
+ .site-menu-toggle{align-self:center;margin:0;flex:none}
+ .main-navigation{display:flex!important;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;min-width:0;max-width:none;gap:0;padding:0;scrollbar-width:none;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}
+ .main-navigation::-webkit-scrollbar{display:none}
+ .main-navigation>*{flex:0 0 auto;min-width:76px}
+ .main-navigation>a,.products-menu-trigger,.services-menu-trigger,.partners-menu-trigger{min-height:44px;font-size:11px;padding:8px 12px;white-space:nowrap}
+ .main-navigation .header-menu-popup{z-index:100}
+ #featured-products.content{padding-left:14px;padding-right:14px}
+ #featured-products .product-grid{grid-template-columns:minmax(0,1fr);gap:22px}
+ #featured-products .product-card-media{height:clamp(240px,72vw,420px);padding:14px}
+ #featured-products .product-card-content{padding:22px}
+ #featured-products .product-card h3{font-size:18px}
+ #featured-products .product-card p{font-size:13px}
+ #featured-products .product-price-value{font-size:23px}
+ #featured-products .product-price-label,#featured-products .product-card-link{font-size:12px}
+}
+
 </style>
 </head>
 <body>
@@ -1732,7 +1751,8 @@ copyButton.addEventListener('click', async function () {
     const width = Math.min(preferredWidth,viewportWidth-24);
     const left = Math.max(12,Math.min(anchor.right-width,viewportWidth-width-12));
     dropdown.style.width = width + 'px';dropdown.style.transform = 'none';
-    dropdown.style.right = (anchor.right-left-width) + 'px';
+    const compact=innerWidth<=700;dropdown.style.position=compact?'fixed':'absolute';dropdown.style.left=compact?left+'px':'';dropdown.style.top=compact?($('.site-header').getBoundingClientRect().bottom+6)+'px':'';
+    dropdown.style.right = compact?'auto':(anchor.right-left-width)+'px';
     dropdown.hidden = false;trigger.setAttribute('aria-expanded','true');
     const rect = dropdown.getBoundingClientRect();
     dropdown.style.maxHeight = Math.max(100,document.documentElement.clientHeight-rect.top-16) + 'px';
@@ -2560,6 +2580,7 @@ copyButton.addEventListener('click', async function () {
       content.animate([{opacity:0},{opacity:1}],{duration:420,easing:'ease-out'});
     }
   }
+  $('#navigation').addEventListener('scroll',closeNavigationMenus,{passive:true});
   $('.site-menu-toggle').addEventListener('click',() => $('#site-menu').showModal());
   document.addEventListener('click',event => {if (!event.target.closest('.header-menu-item')) closeNavigationMenus();});
   $('#open-admin').addEventListener('click',() => {$('#site-menu').close();location.hash = 'admin/dashboard';});

@@ -44,3 +44,22 @@
 @media(prefers-reduced-motion:reduce){.page-banner-frame,.page-banner-dot{transition:none}}
 
 .contact-page-banner{grid-column:1/-1;min-width:0}.contact-page-banner .catalog-banner{border-radius:15px}
+
+/* Mobile navigation remains a single RTL row; dropdowns use viewport positioning. */
+@media(max-width:700px){
+ .nav-shell{min-width:0;gap:8px;padding:0 12px}
+ .site-menu-toggle{align-self:center;margin:0;flex:none}
+ .main-navigation{display:flex!important;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;min-width:0;max-width:none;gap:0;padding:0;scrollbar-width:none;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}
+ .main-navigation::-webkit-scrollbar{display:none}
+ .main-navigation>*{flex:0 0 auto;min-width:76px}
+ .main-navigation>a,.products-menu-trigger,.services-menu-trigger,.partners-menu-trigger{min-height:44px;font-size:11px;padding:8px 12px;white-space:nowrap}
+ .main-navigation .header-menu-popup{z-index:100}
+ #featured-products.content{padding-left:14px;padding-right:14px}
+ #featured-products .product-grid{grid-template-columns:minmax(0,1fr);gap:22px}
+ #featured-products .product-card-media{height:clamp(240px,72vw,420px);padding:14px}
+ #featured-products .product-card-content{padding:22px}
+ #featured-products .product-card h3{font-size:18px}
+ #featured-products .product-card p{font-size:13px}
+ #featured-products .product-price-value{font-size:23px}
+ #featured-products .product-price-label,#featured-products .product-card-link{font-size:12px}
+}
