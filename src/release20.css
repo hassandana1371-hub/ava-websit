@@ -63,3 +63,6 @@
  #featured-products .product-price-value{font-size:23px}
  #featured-products .product-price-label,#featured-products .product-card-link{font-size:12px}
 }
+
+/* Outside the scrolling/filtered header so Safari and Chromium cannot clip popups. */
+.detached-navigation-popup{position:fixed!important;z-index:1000!important;direction:rtl;overscroll-behavior:contain}
