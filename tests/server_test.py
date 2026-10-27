@@ -109,6 +109,7 @@ class ServerTest(unittest.TestCase):
         self.cookie = headers['Set-Cookie'].split(';')[0]
         self.assertEqual(self.request('/api/track', {'path':'/does-not-exist','event':'pageview'})[0],400)
         self.assertEqual(self.request('/api/stats')[0],401)
+        self.assertEqual(self.request('/api/track',{'path':[],'event':'pageview'})[0],400)
         app.initialize()
         self.login()
         stats = json.loads(self.request('/api/stats')[2])

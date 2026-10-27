@@ -47,7 +47,7 @@ def xml_sitemap(data,origin):
 
 def record(db,payload,cookie_header,data,secure):
     path=payload.get('path');event=payload.get('event')
-    if path not in pages(data) or event not in ['pageview','contact-phone','contact-email','contact-request','contact-link']:raise ValueError('رویداد معتبر نیست.')
+    if not isinstance(path,str) or not isinstance(event,str) or path not in pages(data) or event not in ['pageview','contact-phone','contact-email','contact-request','contact-link']:raise ValueError('رویداد معتبر نیست.')
     try:
         cookies=SimpleCookie(cookie_header);token=cookies['ava_visitor'].value
     except (KeyError,ValueError,CookieError):token=''
