@@ -19,7 +19,7 @@
   const KEYS = ['products','services','projects','partners','software','articles','contact','catalog'];
   const CONTENT_KEYS = [...KEYS,'equipment'];
   const LABELS = {products:'محصولات',services:'خدمات',projects:'پروژه‌ها',partners:'همکاران',equipment:'فروش تجهیزات تلویزیون',software:'نرم‌افزار',articles:'مقالات',contact:'تماس با ما',catalog:'کاتالوگ'};
-  const TITLES = {dashboard:'پیشخوان',header:'لوگو و هدر',hero:'هیرو / تصویر اصلی',navigation:'منوها و اتصال‌ها',categories:'دسته‌بندی محصولات',banners:'بنر اختصاصی صفحات',security:'رمز و ورود',backup:'نسخهٔ پشتیبان و خروجی'};
+  const TITLES = {stats:'آمار بازدید',footer:'فوتر سایت',seo:'تنظیمات سئو',dashboard:'پیشخوان',header:'لوگو و هدر',hero:'هیرو / تصویر اصلی',navigation:'منوها و اتصال‌ها',categories:'دسته‌بندی محصولات',banners:'بنر اختصاصی صفحات',security:'رمز و ورود',backup:'نسخهٔ پشتیبان و خروجی'};
   const DESCRIPTIONS = {
     dashboard:'از اینجا ظاهر سایت را تنظیم کن و محتوای هر بخش را مدیریت کن.',
     header:'لوگو، نام فارسی و انگلیسی و شعارهای بالای سایت را جداگانه ویرایش کن.',
@@ -47,7 +47,7 @@
   let loadWarning = '';
   let dirty = false;
   let currentPage = '';
-  let lastHash = location.hash;
+  let lastHash = currentHash();
   let adminVisible = false;
   let toastTimer;
   let editingModule = '';
@@ -63,16 +63,17 @@
     if (!response.ok) {if(response.status===401) authenticated=false;throw new Error(result.error || 'ارتباط با سرور انجام نشد.');}return result;
   }
   async function boot() {
-    if(serverMode && location.pathname==='/admin' && !location.hash) history.replaceState(null,'','#admin/dashboard');
+    if(serverMode && location.pathname==='/admin' && !currentHash()) history.replaceState(null,'','#admin/dashboard');
     if (serverMode) {
       try {const session = await api('/api/session');authenticated=session.authenticated;csrf=session.csrf;serverReady=true;const result=await api('/api/content');data=validate(result.data);serverRevision=result.revision;
         $('.local-badge').textContent='متصل به سرور';$('.sidebar-note').textContent='تغییرات پس از ذخیره روی سرور نگهداری می‌شوند. از بخش پشتیبان خروجی بگیرید.';
         $('#admin-logout').hidden=false;
       } catch(error) {renderLogin(error.message);return;}
     }
-    renderPublic();renderSidebar();route();document.documentElement.dataset.avaRoute=location.hash || '#home';
+    data=validate(data);renderPublic();renderSidebar();route();document.documentElement.dataset.avaRoute=currentHash() || '#home';
   }
   function renderLogin(error = '') {
+    $('#ava-seo-content')?.remove();setMeta('robots','noindex,nofollow');
     adminVisible=false;$('#public-site').hidden=true;$('#admin-app').hidden=true;
     const root=$('#admin-login');root.hidden=false;
     root.innerHTML=`<div class="login-card"><a href="#home" class="login-back">گروه آوا ↗</a><span class="admin-eyebrow">AVA GROUP / CONTENT STUDIO</span><h1>ورود به مدیریت سایت</h1><p>برای مدیریت محصولات، خدمات و بنرهای سایت وارد شوید.</p><form id="login-form" class="admin-form"><label>رمز مدیر<input type="password" name="password" autocomplete="current-password" required maxlength="256"></label><p role="alert" class="form-error" id="login-error">${escapeHTML(error)}</p><button class="admin-button" type="submit">ورود به پنل</button></form><small>رمز اولیه را هنگام راه‌اندازی سرور تعیین کنید؛ پس از ورود از بخش «رمز و ورود» قابل تغییر است.</small></div>`;
@@ -105,7 +106,7 @@
     pageBannerControllers.push(()=>{disposed=true;clearTimeout(timer);observer.disconnect();abort.abort();});
   }
   function appendPageBanner(root,banner,title) {
-    const hero=el('section',{class:'catalog-banner page-banner','aria-label':'بنر '+title}),heading=el('section',{class:'catalog-heading'},el('span',{class:'catalog-kicker'},'AVA GROUP'),el('h1',{},banner.title || title),el('p',{},banner.description || ''));
+    const hero=el('section',{class:'catalog-banner page-banner','aria-label':'بنر '+title}),heading=el('section',{class:'catalog-heading'},el('span',{class:'catalog-kicker'},'AVA GROUP'),el('h2',{},banner.title || title),el('p',{},banner.description || ''));
     fillPageBanner(hero,banner,heading);root.append(hero);
   }
   function trailerServiceFeature(item) {
@@ -134,6 +135,32 @@
     select.onchange=()=>{if(!discardAllowed()){select.value=id;return;}dirty=false;id=select.value;paint();};
     const form=$('#page-banner-form');watchForm(form);form.onsubmit=async event=>{event.preventDefault();const next=clone(data);writePageBanner(next,id,editor.read());if(await commit(next,'بنر این صفحه روی سایت ذخیره شد.'))paint();};
   }
+
+  function currentHash(){if(location.hash)return location.hash;const path=location.pathname.replace(/\/$/,'');if(path==='/panel'||path==='/admin')return '#admin/dashboard';return !path||path==='/index.html'?'#home':'#'+path.slice(1);}
+  function publicPath(){const hash=currentHash();return hash==='#home'||hash==='#' ? '/' : '/'+hash.slice(1);}
+  function clickURL(value){value=text(value||'',2000);if(!value)return '';if(value.startsWith('#')&&!value.startsWith('#admin'))return value;if(/^\/(?!\/)/.test(value)&&!/^\/(panel|admin|api)(\/|$)/.test(value))return value;return httpURL(value);}
+  function setMeta(name,content){let node=$('meta[name="'+name+'"]');if(!node){node=el('meta',{name});document.head.append(node);}node.content=content;}
+  let lastTrackedPath='';
+  function trackEvent(event){if(!serverMode||authenticated||adminVisible||currentHash().startsWith('#admin'))return;fetch('/api/track',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:publicPath(),event}),keepalive:true}).catch(()=>{});}
+  function finishPublicPage(){
+    $('#ava-seo-content')?.remove();
+    if(adminVisible||currentHash().startsWith('#admin')){setMeta('robots','noindex,nofollow');return;}
+    const path=publicPath(),[kind,id]=path.slice(1).split('/');let record;
+    if(kind==='product')record=publicProducts().find(i=>i.id===id);if(kind==='service')record=published('services').find(i=>i.id===id);if(kind==='category')record=publicCategories().find(i=>i.id===id);
+    const seo=data.pageSeo?.[path]||{};document.title=(record?.seoTitle||seo.title||record?.title||record?.name||data.modules[kind]?.name||data.header.nameFa)+' | AvA Groups';setMeta('description',record?.seoDescription||seo.description||record?.summary||record?.description||data.modules[kind]?.description||data.hero.description);setMeta('robots','index,follow');
+    let canonical=$('link[rel=canonical]');if(!canonical){canonical=el('link',{rel:'canonical'});document.head.append(canonical);}canonical.href=location.origin+path;
+    if(serverMode)history.replaceState(null,'',path);
+    if(lastTrackedPath!==path){trackEvent('pageview');lastTrackedPath=path;}
+  }
+  async function renderStats(root){
+    root.innerHTML='<div class="notice">در حال دریافت آمار…</div>';if(!serverMode){root.textContent='آمار در نسخهٔ سروری ثبت می‌شود؛ فایل آفلاین آمار ساختگی نمایش نمی‌دهد.';return;}
+    try{const stats=await api('/api/stats');if(currentPage!=='stats')return;root.replaceChildren(el('div',{class:'notice'},stats.startedAt?'شروع ثبت واقعی: '+new Date(stats.startedAt).toLocaleString('fa-IR',{timeZone:'Asia/Tehran'}):'هنوز هیچ بازدیدی ثبت نشده است؛ آمار تاریخی وجود ندارد.'),el('p',{},'زمان تهران؛ هفته = ۷ روز اخیر، ماه = ۳۰ روز اخیر. بازدیدکننده تخمینی بر اساس شناسهٔ مرورگر است، نه شخص قطعی. بازدید مدیر ثبت نمی‌شود.'));
+      for(const [key,label]of [['today','امروز'],['week','۷ روز اخیر'],['month','۳۰ روز اخیر']])root.append(el('div',{class:'admin-panel'},el('h2',{},label),el('p',{},'بازدید صفحات: '+stats.periods[key].views.toLocaleString('fa-IR')+' — بازدیدکنندگان تخمینی: '+stats.periods[key].visitors.toLocaleString('fa-IR'))));
+      for(const [key,label]of [['topPages','صفحات پربازدید؛ از شروع ثبت'],['topProducts','محصولات پربازدید؛ از شروع ثبت'],['contactClicks','کلیک‌های تماس؛ از شروع ثبت']]){const list=el('div',{class:'admin-panel'},el('h2',{},label));for(const row of stats[key])list.append(el('p',{},(row.path||{'contact-phone':'تلفن','contact-email':'ایمیل','contact-request':'فرم تماس','contact-link':'رفتن به تماس'}[row.event]||row.event)+' — '+(row.views||row.clicks).toLocaleString('fa-IR')));if(!stats[key].length)list.append(el('p',{},'داده‌ای ثبت نشده است.'));root.append(list);}
+    }catch(e){root.textContent=e.message;}
+  }
+  function renderFooterEditor(root){const footer=data.footer;root.innerHTML='<div class="admin-panel"><form id="footer-form" class="admin-form">'+field('متن معرفی پایین سایت','text',footer.text,{max:1000,multiline:true})+field('متن حقوق و کپی‌رایت','copyright',footer.copyright,{max:1000})+saveButton()+'</form></div>';const form=$('#footer-form');watchForm(form);form.onsubmit=async event=>{event.preventDefault();const next=clone(data);next.footer=formValues(form);await commit(next);};}
+  function renderSeoEditor(root){root.innerHTML='<div class="admin-panel"><form class="admin-form" id="seo-form"><label>صفحه<select id="seo-page"></select></label><div id="seo-fields"></div>'+saveButton('ذخیرهٔ سئوی صفحه')+'</form></div><div class="notice">عنوان و توضیح سئوی هر محصول در ویرایش همان محصول نیز قابل تنظیم است.</div>';const select=$('#seo-page');const choices=[{id:'/',name:'صفحهٔ اصلی'},...CONTENT_KEYS.map(k=>({id:'/'+k,name:data.modules[k].name})),...data.productCategories.map(c=>({id:'/category/'+c.id,name:c.name}))];select.replaceChildren(...choices.map(c=>el('option',{value:c.id},c.name)));let path=select.value;const paint=()=>{const seo=data.pageSeo[path]||{};$('#seo-fields').innerHTML=field('عنوان سئو','title',seo.title||'',{max:160})+field('توضیحات سئو','description',seo.description||'',{max:320,multiline:true});};paint();select.onchange=()=>{if(!discardAllowed()){select.value=path;return;}dirty=false;path=select.value;paint();};const form=$('#seo-form');watchForm(form);form.onsubmit=async event=>{event.preventDefault();const next=clone(data);next.pageSeo[path]={title:form.elements.title.value,description:form.elements.description.value};await commit(next);};}
 
   function isObject(value) { return value !== null && typeof value === 'object' && !Array.isArray(value); }
   function text(value, max = 2000) {
@@ -170,6 +197,8 @@
   function validate(raw) {
     if (!isObject(raw) || raw.version !== 1 || !isObject(raw.header) || !isObject(raw.hero) || !isObject(raw.modules) || !isObject(raw.contact) || !Array.isArray(raw.navigation)) throw new Error('ساختار فایل پشتیبان معتبر نیست.');
     const out = clone(seed);
+    const footer=raw.footer||{text:'آوا؛ فروش و اجارهٔ نمایشگر.',copyright:''};out.footer={text:text(footer.text||'',1000),copyright:text(footer.copyright||'',1000)};out.pageSeo={};
+    if(raw.pageSeo && !isObject(raw.pageSeo))throw new Error('سئو معتبر نیست.');for(const [key,value] of Object.entries(raw.pageSeo||{})){if(!/^\/(?:[a-zA-Z0-9_-]+\/?)*$/.test(key)||!isObject(value))throw new Error('صفحهٔ سئو معتبر نیست.');out.pageSeo[key]={title:text(value.title||'',160),description:text(value.description||'',320)};}
     if (raw.trailerRevision !== 1) {
       raw = clone(raw);
       raw.productCategories = raw.productCategories || clone(seed.productCategories);
@@ -236,7 +265,7 @@
     out.hero.slides = slides.map(slide => {
       if (!isObject(slide) || !/^[a-zA-Z0-9_-]{1,80}$/.test(slide.id) || slideIds.has(slide.id)) throw new Error('شناسهٔ اسلاید معتبر یا یکتا نیست.');
       slideIds.add(slide.id);
-      const result = {id:slide.id};
+      const result = {id:slide.id,clickUrl:clickURL(slide.clickUrl)};
       for (const key of ['eyebrow','title','highlight','description','imageAlt','primaryLabel','secondaryLabel']) result[key] = text(slide[key],key === 'description' ? 2500 : 200);
       if (!result.title.trim()) throw new Error('عنوان اسلاید نمی‌تواند خالی باشد.');
       result.image = imageData(slide.image);
@@ -278,7 +307,7 @@
         ids.add(item.id);
         const title = text(item.title, 160).trim();
         if (!title) throw new Error('عنوان محتوا را وارد کن.');
-        const result = {id:item.id,title,summary:text(item.summary,700),body:text(item.body,20000),meta:text(item.meta,200),image:imageData(item.image),url:httpURL(item.url),file:pdfData(item.file || ''),fileName:text(item.fileName || '',160),status:item.status,imageAsset:Object.hasOwn(productImages,item.imageAsset) ? item.imageAsset : ''};
+        const result = {id:item.id,title,summary:text(item.summary,700),body:text(item.body,20000),meta:text(item.meta,200),image:imageData(item.image),url:httpURL(item.url),file:pdfData(item.file || ''),fileName:text(item.fileName || '',160),status:item.status,seoTitle:text(item.seoTitle||'',160),seoDescription:text(item.seoDescription||'',320),imageAsset:Object.hasOwn(productImages,item.imageAsset) ? item.imageAsset : ''};
         if (item.banner) result.banner = validateBanner(item.banner);
         if (key === 'products') {
           if (item.categoryId !== undefined && !categoryIds.has(item.categoryId)) throw new Error('دستهٔ یکی از محصولات وجود ندارد.');
@@ -392,10 +421,11 @@
     document.body.append(a);a.click();a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 30000);
   }
-  function exportSite() {
+  async function exportSite() {
     if (!discardAllowed()) return;
     const json = JSON.stringify(data).replace(/</g, '\\u003c');
-    const output = bootHTML.replace(/<script id="ava-server-mode" type="application\/json">[\s\S]*?<\/script>/,'').replace(/(<script id="ava-initial-data" type="application\/json">)[\s\S]*?(<\/script>)/, (_, open, close) => open + json + close);
+    let output = bootHTML.replace(/<script id="ava-server-mode" type="application\/json">[\s\S]*?<\/script>/,'').replace(/(<script id="ava-initial-data" type="application\/json">)[\s\S]*?(<\/script>)/, (_, open, close) => open + json + close);
+    if(serverMode){try{for(const path of new Set(output.match(/\/assets\/[a-f0-9]{32}\.(?:webp|jpg|woff2)/g)||[])){const response=await fetch(path);if(!response.ok)throw new Error('دریافت فایل خروجی انجام نشد.');const bytes=new Uint8Array(await response.arrayBuffer());let binary='';for(let n=0;n<bytes.length;n+=32768)binary+=String.fromCharCode(...bytes.subarray(n,n+32768));output=output.replaceAll(path,'data:'+response.headers.get('Content-Type').split(';')[0]+';base64,'+btoa(binary));}}catch(error){toast(error.message,true);return;}}
     download('ava-site-and-panel.html', output, 'text/html;charset=utf-8');
     toast('نسخهٔ کامل سایت و پنل، همراه با محتوای ذخیره‌شده، آماده شد.');
   }
@@ -437,7 +467,7 @@
     closeNavigationMenus();
     if ($('#site-menu').open) $('#site-menu').close();
     if (target === 'external') {window.open(url, '_blank', 'noopener,noreferrer');return;}
-    if (['products','equipment'].includes(target)) {if (location.hash === '#' + target) renderCatalogRoute();else location.hash = target;return;}
+    if (['products','equipment'].includes(target)) {if (currentHash() === '#' + target) renderCatalogRoute();else location.hash = target;return;}
     const wasCatalog = !$('#catalog-page').hidden;
     if (wasCatalog) {$('#home-content').hidden = false;$('#catalog-page').hidden = true;}
     const node = document.getElementById(target);
@@ -712,7 +742,7 @@
     root.append(container);document.title = item.title + (item.model ? ' ' + item.model : '') + ' | ' + (data.header.nameFa || 'آوا');
   }
   function renderCatalogRoute() {
-    const [name,id] = location.hash.slice(1).split('/');
+    const [name,id] = currentHash().slice(1).split('/');
     const isCatalog = ['products','category','product','service','equipment'].includes(name);
     $('#home-content').hidden = isCatalog;$('#catalog-page').hidden = !isCatalog;
     if (!isCatalog) return false;
@@ -783,7 +813,7 @@
       },{signal});
       frame.srcdoc = heroMotionDocument;slideNode(0,true).append(frame);
     }
-    hero.slides.forEach((slide,number) => slideNode(number+Number(hasMotion)).append(el('img',{class:'hero-scene',src:slide.image || heroImages[slide.asset],alt:slide.imageAlt,draggable:'false',decoding:'async',fetchpriority:number === 0 ? 'high' : 'low'})));
+    hero.slides.forEach((slide,number) => {const node=slideNode(number+Number(hasMotion));node.append(el('img',{class:'hero-scene',src:slide.image || heroImages[slide.asset],alt:slide.imageAlt,draggable:'false',decoding:'async',fetchpriority:number===0?'high':'low',loading:number===0?'eager':'lazy'}));if(slide.clickUrl){node.append(el('a',{class:'hero-image-link',draggable:'false',href:slide.clickUrl,'aria-label':slide.title}));}});
     const controls = el('div',{class:'hero-controls'});
     const previous = el('button',{type:'button',class:'hero-arrow hero-previous','aria-label':'اسلاید قبلی'});
     const next = el('button',{type:'button',class:'hero-arrow hero-next','aria-label':'اسلاید بعدی'});
@@ -858,7 +888,6 @@
     viewport.addEventListener('pointerdown',event => {
       if (count < 2 || !event.isPrimary || (event.pointerType === 'mouse' && event.button !== 0)) return;
       normalize();pointer = {id:event.pointerId,x:event.clientX,y:event.clientY,dx:0,dy:0,horizontal:false};schedule();
-      if(event.pointerType === 'mouse') try{viewport.setPointerCapture(event.pointerId);}catch{}
     },{signal});
     viewport.addEventListener('pointermove',event => {
       if(!pointer || pointer.id !== event.pointerId) return;
@@ -871,9 +900,11 @@
       if(hasMotion && newPreview === 0 && previousPreview !== 0) refreshMotion(3500);
       nodes[previewIndex].style.transform = 'translateX('+(direction*viewport.clientWidth+pointer.dx)+'px)';
     },{signal,passive:false});
+    let suppressHeroClick=false;
+    viewport.addEventListener('click',event=>{if(suppressHeroClick){event.preventDefault();event.stopPropagation();suppressHeroClick=false;}},{signal,capture:true});
     viewport.addEventListener('pointerup',event => {
       if(!pointer || pointer.id !== event.pointerId) return;
-      const drag = pointer;pointer = null;clearDrag();
+      const drag = pointer;suppressHeroClick=drag.horizontal;setTimeout(()=>{suppressHeroClick=false;},400);pointer = null;clearDrag();
       if(viewport.hasPointerCapture(event.pointerId)) viewport.releasePointerCapture(event.pointerId);
       if(drag.horizontal && Math.abs(drag.dx)>Math.min(100,viewport.clientWidth*.16)){const direction = drag.dx < 0 ? 1 : -1;go((index+count+direction)%count,direction,true,drag.dx);}else schedule();
     },{signal});
@@ -894,6 +925,7 @@
     closeNavigationMenus();
     disposePageBanners();
     const h = data.header;
+    $('.ava-brand').href=serverMode?'/':'#home';$('footer>a:first-child').href=serverMode?'/':'#home';$('footer>a:last-child').href='#home';
     let logo = $('.ava-brand .ava-mark');
     const replacement = h.logo ? el('img',{class:'ava-mark uploaded-logo',src:h.logo,alt:'لوگوی ' + h.nameFa}) : (() => {const t = document.createElement('template');t.innerHTML = defaultLogo;return t.content.firstElementChild;})();
     replacement.hidden = !h.showLogo;
@@ -950,15 +982,17 @@
       }
       section.prepend(heading);section.append(cards);sections.append(section);
     }
+    $('footer>p').textContent=(data.footer?.text||'')+(data.footer?.copyright?' — '+data.footer.copyright:'');
     $('.contact h2').textContent = data.contact.title;
     $('.contact>div>p').textContent = data.contact.description;
     let contacts = $('.contact-links');if (!contacts) {$('.contact>div').append(el('div',{class:'contact-links'}));contacts = $('.contact-links');}
     contacts.replaceChildren();
-    if (data.contact.phone) contacts.append(el('span',{},'تلفن: ',data.contact.phone));
-    if (data.contact.email) contacts.append(el('span',{},'ایمیل: ',data.contact.email));
+    if (data.contact.phone) contacts.append(el('a',{href:'tel:'+data.contact.phone,'data-contact-event':'contact-phone'},'تلفن: '+data.contact.phone));
+    if (data.contact.email) contacts.append(el('a',{href:'mailto:'+data.contact.email,'data-contact-event':'contact-email'},'ایمیل: '+data.contact.email));
     if (data.contact.address) contacts.append(el('span',{},'نشانی: ',data.contact.address));
     $('.contact>.contact-page-banner')?.remove();
     if(data.pageBanners.contact?.show) {const holder=el('section',{class:'contact-page-banner'});appendPageBanner(holder,data.pageBanners.contact,data.modules.contact.name);$('.contact').prepend(holder);}
+    if(!$('#home-page-heading'))$('#home-content').prepend(el('h1',{id:'home-page-heading',class:'sr-only'},data.header.nameFa+'؛ '+data.hero.title+' '+data.hero.highlight));
     if (!adminVisible) renderCatalogRoute();
   }
 
@@ -1072,7 +1106,7 @@
     const h = data.hero;let slides = clone(h.slides);
     root.innerHTML = `<div class="admin-panel"><form class="admin-form" id="hero-form"><h2>اسلایدر تمام‌صفحه</h2>${checkbox('نمایش هیرو در سایت','show',h.show)}${checkbox('نمایش موشن‌لوگوی آوا در آغاز؛ دو دور پخش','showMotionLogo',h.showMotionLogo !== false)}<div class="admin-form-grid"><label>زمان نمایش هر اسلاید (ثانیه)<input type="number" name="interval" min="1" max="15" step="1" value="${h.interval/1000}" required></label></div><small>موشن‌لوگو ابتدا دو دور، حدود ۱۴ ثانیه، پخش می‌شود؛ سپس عکس‌ها با زمان انتخابی به چپ حرکت می‌کنند. تصاویر اولیه مفهومی هستند و قابل تعویض‌اند.</small><div class="hero-editor-slides" id="hero-editor-slides"></div><div><button class="admin-button secondary" id="add-hero-slide" type="button">افزودن اسلاید</button></div>${saveButton('ذخیرهٔ اسلایدر')}</form></div>`;
     const form = $('#hero-form');watchForm(form);
-    const textFields = ['title','imageAlt'];
+    const textFields = ['title','imageAlt','clickUrl'];
     function collect() {
       for (const slide of slides) {
         const row = $('[data-slide-id="' + slide.id + '"]',form);
@@ -1085,7 +1119,7 @@
         const row = el('details',{class:'hero-editor-slide','data-slide-id':slide.id});if(index === 0) row.open = true;
         const summary = el('summary',{},'اسلاید ' + (index+1).toLocaleString('fa-IR') + ' — ' + slide.title);row.append(summary);
         const body = el('div',{class:'hero-editor-slide-body'});
-        body.innerHTML = `<div class="hero-editor-media"><div class="media-preview"></div><div><label class="upload-button">انتخاب عکس این اسلاید<input type="file" data-slide-image accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"></label><button type="button" class="text-button" data-reset-image>بازگشت به تصویر مفهومی</button><small>حداکثر ۵ مگابایت؛ عکس افقی و عریض بهترین نتیجه را می‌دهد.</small></div></div>${field('نام اسلاید در پنل','title',slide.title,{max:200,required:true})}${field('توضیح تصویر برای دسترس‌پذیری','imageAlt',slide.imageAlt,{max:200})}<div class="hero-editor-order"><button class="admin-button secondary" type="button" data-move-slide="-1" ${index === 0 ? 'disabled' : ''}>↑ زودتر</button><button class="admin-button secondary" type="button" data-move-slide="1" ${index === slides.length-1 ? 'disabled' : ''}>↓ دیرتر</button><button class="admin-button danger" type="button" data-delete-slide ${slides.length === 1 ? 'disabled' : ''}>حذف اسلاید</button></div>`;
+        body.innerHTML = `<div class="hero-editor-media"><div class="media-preview"></div><div><label class="upload-button">انتخاب عکس این اسلاید<input type="file" data-slide-image accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"></label><button type="button" class="text-button" data-reset-image>بازگشت به تصویر مفهومی</button><small>حداکثر ۵ مگابایت؛ عکس افقی و عریض بهترین نتیجه را می‌دهد.</small></div></div>${field('مقصد کلیک عکس؛ مثل /product/indoor-125 یا https://…','clickUrl',slide.clickUrl||'',{max:2000,ltr:true})}${field('نام اسلاید در پنل','title',slide.title,{max:200,required:true})}${field('توضیح تصویر برای دسترس‌پذیری','imageAlt',slide.imageAlt,{max:200})}<div class="hero-editor-order"><button class="admin-button secondary" type="button" data-move-slide="-1" ${index === 0 ? 'disabled' : ''}>↑ زودتر</button><button class="admin-button secondary" type="button" data-move-slide="1" ${index === slides.length-1 ? 'disabled' : ''}>↓ دیرتر</button><button class="admin-button danger" type="button" data-delete-slide ${slides.length === 1 ? 'disabled' : ''}>حذف اسلاید</button></div>`;
         row.append(body);list.append(row);imagePreview($('.media-preview',row),slide.image || heroImages[slide.asset]);
         $('[name=title]',row).addEventListener('input',() => {summary.textContent = 'اسلاید ' + (index+1).toLocaleString('fa-IR') + ' — ' + $('[name=title]',row).value;});
         $('[data-slide-image]',row).addEventListener('change',async event => {try {const image = await readImage(event.target.files[0]);if(!image) return;slide.image = image;markDirty();imagePreview($('.media-preview',row),image);}catch(error){toast(error.message,true);}event.target.value = '';});
@@ -1166,7 +1200,7 @@
     if (dirty) renderPage(currentPage);
     dirty = false;
     editingModule = key;entryImage = item?.image || '';entryImageAsset = item?.imageAsset || '';entryImageStyle = item?.imageStyle || '';entryFile = item?.file || '';
-    const form = $('#entry-form');form.reset();
+    const form = $('#entry-form');form.reset();form.elements.seoTitle.value=item?.seoTitle||'';form.elements.seoDescription.value=item?.seoDescription||'';
     for (const name of ['id','title','summary','body','meta','url','status']) form.elements[name].value = item ? item[name] : name === 'status' ? 'draft' : '';
     $('#entry-editor-title').textContent = item ? 'ویرایش محتوا' : 'افزودن محتوا';
     $('#entry-editor-module').textContent = data.modules[key].name;
@@ -1252,6 +1286,9 @@
     else if (page === 'hero') renderHeroEditor(root);
     else if (page === 'navigation') renderNavigationEditor(root);
     else if (page === 'banners') renderBannersEditor(root);
+    else if(page==='stats')renderStats(root);
+    else if(page==='footer')renderFooterEditor(root);
+    else if(page==='seo')renderSeoEditor(root);
     else if (page === 'security') renderSecurity(root);
     else if (page === 'backup') renderBackup(root);
     else if (page === 'contact') renderContactEditor(root);
@@ -1259,7 +1296,7 @@
     else renderModule(root,page);
   }
   function route() {
-    const nextHash = location.hash;
+    const nextHash = currentHash();
     if (!discardAllowed()) {history.replaceState(null,'',lastHash || location.pathname + location.search);return;}
     if (!$('#catalog-page').hidden || /^#(products|category|product|service|equipment)(\/|$)/.test(nextHash) || nextHash.startsWith('#admin')) disposePageBanners();
     closeNavigationMenus();
@@ -1267,6 +1304,7 @@
     lastHash = nextHash;dirty = false;
     $('#admin-login').hidden=true;
     const requested = nextHash.startsWith('#admin') ? (nextHash.split('/')[1] || 'dashboard') : '';
+    if(requested&&serverMode&&location.pathname!=='/panel')history.replaceState(null,'','/panel'+nextHash);
     if (requested && serverMode && (!serverReady || !authenticated)) {renderLogin();return;}
     if (requested) {
       adminVisible = true;
@@ -1285,11 +1323,12 @@
         else if (wasAdmin || wasCatalog || !nextHash || nextHash === '#home') window.scrollTo(0,0);
       }
     }
+    finishPublicPage();
   }
   let pageTransition;
   function transitionRoute() {
-    const update = () => {route();document.documentElement.dataset.avaRoute = location.hash || '#home';};
-    const publicRoute = !adminVisible && !location.hash.startsWith('#admin') && !dirty;
+    const update = () => {route();document.documentElement.dataset.avaRoute = currentHash() || '#home';};
+    const publicRoute = !adminVisible && !currentHash().startsWith('#admin') && !dirty;
     if (!publicRoute || matchMedia('(prefers-reduced-motion: reduce)').matches) {pageTransition?.skipTransition();update();return;}
     const finish = () => $('#public-site').removeAttribute('aria-busy');
     if (document.startViewTransition) {
@@ -1306,7 +1345,7 @@
   $('#navigation').addEventListener('scroll',closeNavigationMenus,{passive:true});
   $('.site-menu-toggle').addEventListener('click',() => $('#site-menu').showModal());
   document.addEventListener('click',event => {if (!event.target.closest('.header-menu-item,.header-menu-popup')) closeNavigationMenus();});
-  $('#open-admin').addEventListener('click',() => {$('#site-menu').close();location.hash = 'admin/dashboard';});
+
   $('#admin-logout').addEventListener('click',async()=>{if(!discardAllowed())return;try{await api('/api/logout',{});authenticated=false;csrf='';dirty=false;const result=await api('/api/content');data=validate(result.data);serverRevision=result.revision;renderLogin();}catch(e){toast(e.message,true);}});
   $('#view-site').addEventListener('click',() => {location.hash = 'home';});
   $$('[data-close]').forEach(button => button.addEventListener('click',() => document.getElementById(button.dataset.close).close()));
@@ -1330,7 +1369,7 @@
   });
   $('#entry-form').addEventListener('submit',async event => {
     event.preventDefault();const values = formValues(event.currentTarget);
-    const item = {id:values.id || (typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : 'entry-' + Date.now() + '-' + Math.random().toString(36).slice(2,9)),title:values.title.trim(),summary:values.summary,body:values.body,meta:values.meta,url:values.url.trim(),status:values.status,image:entryImage,imageAsset:entryImageAsset,banner:entryBannerEditor.read(),file:['catalog','products'].includes(editingModule) ? entryFile : '',fileName:['catalog','products'].includes(editingModule) ? values.fileName : ''};
+    const item = {id:values.id || (typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : 'entry-' + Date.now() + '-' + Math.random().toString(36).slice(2,9)),title:values.title.trim(),summary:values.summary,body:values.body,meta:values.meta,url:values.url.trim(),status:values.status,seoTitle:values.seoTitle,seoDescription:values.seoDescription,image:entryImage,imageAsset:entryImageAsset,banner:entryBannerEditor.read(),file:['catalog','products'].includes(editingModule) ? entryFile : '',fileName:['catalog','products'].includes(editingModule) ? values.fileName : ''};
     if (editingModule === 'products') {
       const specifications = [];
       for (const line of values.specifications.split('\n').map(line => line.trim()).filter(Boolean)) {
@@ -1348,6 +1387,9 @@
     else $('#entry-error').textContent = 'ذخیره انجام نشد؛ پیام خطا را بررسی کن. فرم و تغییراتت حفظ شده‌اند.';
   });
   window.addEventListener('hashchange',transitionRoute);
+  window.addEventListener('popstate',transitionRoute);
+  document.addEventListener('click',event=>{const link=event.target.closest('a');if(!link)return;const kind=link.dataset.contactEvent||(link.getAttribute('href')==='#contact'?'contact-link':'');if(kind)trackEvent(kind);});
+  $('#request-form').addEventListener('submit',()=>trackEvent('contact-request'));
   window.addEventListener('beforeunload',event => {if (dirty) {event.preventDefault();event.returnValue = '';}});
   window.addEventListener('resize',() => {closeNavigationMenus();const nav = $('#navigation');nav.style.gridTemplateColumns = 'repeat(' + Math.max(1,Math.min(innerWidth <= 600 ? 4 : 8,nav.children.length)) + ',minmax(0,1fr))';});
   boot();

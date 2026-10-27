@@ -3,6 +3,8 @@
 Run `python3 server.py set-password` first. Production requires HTTPS at a
 reverse proxy and AVA_PUBLIC_ORIGIN. See DEPLOYMENT-fa.md.
 """
+import site_features
+import gzip
 import argparse
 import copy
 import getpass
@@ -42,6 +44,7 @@ def initialize():
         ''')
         if not db.execute('SELECT 1 FROM content').fetchone():
             db.execute('INSERT INTO content VALUES (1,1,?)', ((ROOT / 'src/defaults.json').read_text(),))
+        site_features.initialize(db)
     os.chmod(DB, 0o600)
 
 
@@ -200,6 +203,19 @@ def validate_content(data):
                     string(spec.get('value'), 400)
                     if not spec['label'].strip() or not spec['value'].strip():
                         raise ValueError('نام و مقدار مشخصه ضروری است.')
+    for item_module in data['modules'].values():
+        for item in item_module['items']:
+            string(item.get('seoTitle',''),160);string(item.get('seoDescription',''),320)
+    if not isinstance(data.get('footer',{}),dict) or not isinstance(data.get('pageSeo',{}),dict):raise ValueError('تنظیمات معتبر نیست.')
+    for k in ['text','copyright']:string(data.get('footer',{}).get(k,''),1000)
+    for path,seo in data.get('pageSeo',{}).items():
+        string(path,180)
+        if not isinstance(seo,dict):raise ValueError('سئو معتبر نیست.')
+        string(seo.get('title',''),160);string(seo.get('description',''),320)
+    for slide in hero['slides']:
+        link=slide.get('clickUrl','')
+        string(link,2000)
+        if link and not (link.startswith('#') or (link.startswith('/') and not link.startswith('//')) or urlsplit(link).scheme in ['https','http']):raise ValueError('مقصد هیرو معتبر نیست.')
     def walk(value, key='', depth=0):
         if depth > 14:
             raise ValueError('ساختار محتوا بیش از حد تو در تو است.')
@@ -224,7 +240,7 @@ def validate_content(data):
                     raise ValueError('فایل معتبر نیست.')
             if len(value) > limit:
                 raise ValueError('اندازهٔ یک فیلد بیش از حد مجاز است.')
-            if key.lower().endswith('url') and value:
+            if key.lower().endswith('url') and key != 'clickUrl' and value:
                 url = urlsplit(value)
                 if url.scheme not in ['http', 'https'] or not url.hostname or url.username or url.password:
                     raise ValueError('پیوند معتبر نیست.')
@@ -245,6 +261,11 @@ def public_content(data):
         module['items'] = [i for i in module['items'] if i.get('status') == 'published' and (key != 'products' or i.get('categoryId') in visible)]
         prefix = 'product' if key == 'products' else 'service' if key == 'services' else key
         allowed_pages.update(prefix+':'+i['id'] for i in module['items'])
+    visible_paths={'/','/contact'}|{'/'+k for k in MODULES}|{'/category/'+c for c in visible}
+    for key,module in data['modules'].items():
+        prefix='product' if key=='products' else 'service' if key=='services' else key
+        visible_paths.update('/'+prefix+'/'+i['id'] for i in module['items'])
+    data['pageSeo']={k:v for k,v in data.get('pageSeo',{}).items() if k in visible_paths}
     data['pageBanners'] = {k:v for k,v in data.get('pageBanners', {}).items() if k in allowed_pages}
     return data
 
@@ -258,10 +279,14 @@ class Handler(BaseHTTPRequestHandler):
 
     def reply(self, code, value, cookie=None, content_type='application/json; charset=utf-8'):
         body = value if isinstance(value, bytes) else json.dumps(value, ensure_ascii=False).encode()
+        compressed=len(body)>1024 and ('text/' in content_type or 'json' in content_type or 'xml' in content_type) and 'gzip' in self.headers.get('Accept-Encoding','')
+        if compressed:body=gzip.compress(body,compresslevel=3)
         self.send_response(code)
         self.send_header('Content-Type', content_type)
         self.send_header('Content-Length', str(len(body)))
-        self.send_header('Cache-Control', 'no-store')
+        if compressed:self.send_header('Content-Encoding','gzip')
+        self.send_header('Vary','Accept-Encoding')
+        self.send_header('Cache-Control', 'public, max-age=31536000, immutable' if urlsplit(self.path).path.startswith('/assets/') and code==200 else 'no-store')
         self.send_header('X-Content-Type-Options', 'nosniff')
         self.send_header('X-Frame-Options', 'SAMEORIGIN')
         self.send_header('Referrer-Policy', 'strict-origin-when-cross-origin')
@@ -285,8 +310,14 @@ class Handler(BaseHTTPRequestHandler):
         if not self.valid_host():
             return self.reply(403, {'error':'میزبان معتبر نیست.'})
         path = urlsplit(self.path).path
+        bundled,assets=site_features.asset_bundle(ROOT/'index.html')
+        if path in assets:
+            blob,mime=assets[path];return self.reply(200,blob,content_type=mime)
         with connect() as db:
             session = self.session(db)
+            if path == '/api/stats':
+                if not session:return self.reply(401, {'error':'ورود لازم است.'})
+                return self.reply(200,site_features.statistics(db))
             if path == '/api/session':
                 configured = bool(db.execute('SELECT 1 FROM account').fetchone())
                 return self.reply(200, {'authenticated':bool(session), 'configured':configured, 'csrf':session['csrf'] if session else ''})
@@ -294,12 +325,26 @@ class Handler(BaseHTTPRequestHandler):
             data = json.loads(row['data'])
             if path == '/api/content':
                 return self.reply(200, {'revision':row['revision'], 'data':data if session else public_content(data)})
-            if path in ['/', '/index.html', '/admin']:
+            public=public_content(data)
+            if path == '/robots.txt':
+                return self.reply(200,('User-agent: *\nAllow: /\nDisallow: /panel\nDisallow: /admin\nDisallow: /api/\nSitemap: '+self.server.origin+'/sitemap.xml\n').encode(),content_type='text/plain; charset=utf-8')
+            if path == '/sitemap.xml':
+                return self.reply(200,site_features.xml_sitemap(public,self.server.origin).encode(),content_type='application/xml; charset=utf-8')
+            if path in ['/', '/index.html', '/admin','/panel','/panel/'] or path in site_features.pages(public):
                 # Always embed public data, even when an administrator requests HTML.
-                html = (ROOT / 'index.html').read_text()
+                html = bundled
                 seed = json.dumps(public_content(data), ensure_ascii=False).replace('<', '\\u003c')
                 html = re.sub(r'(<script id="ava-initial-data" type="application/json">).*?(</script>)', lambda m:m[1]+seed+m[2], html, flags=re.S)
                 html = html.replace('<head>', '<head><script id="ava-server-mode" type="application/json">true</script>', 1)
+                if path.startswith(('/panel','/admin')):
+                    html=html.replace('<head>','<head><meta name="robots" content="noindex,nofollow">',1)
+                else:
+                    seo=site_features.seo_html(public,'/' if path=='/index.html' else path,self.server.origin)
+                    if seo:
+                        html=re.sub(r'<title>.*?</title>','',html, count=1,flags=re.S)
+                        html=re.sub(r'<meta name="description"[^>]*>','',html,count=1)
+                        html=html.replace('</head>',seo[0]+'</head>',1).replace('<div id="public-site">','<div id="public-site" hidden>',1)
+                        html=html.replace('</body>',seo[1]+'</body>')
                 return self.reply(200, html.encode(), content_type='text/html; charset=utf-8')
         self.reply(404, {'error':'صفحه پیدا نشد.'})
 
@@ -319,6 +364,13 @@ class Handler(BaseHTTPRequestHandler):
             return self.reply(400, {'error':'درخواست JSON معتبر نیست.'})
         path = urlsplit(self.path).path
         with connect() as db:
+            if path == '/api/track':
+                if len(json.dumps(payload))>1000:return self.reply(400, {'error':'رویداد بزرگ است.'})
+                if self.session(db):return self.reply(200, {'ok':True,'ignored':True})
+                try:cookie=site_features.record(db,payload,self.headers.get('Cookie',''),public_content(json.loads(db.execute('SELECT data FROM content').fetchone()[0])),not self.server.dev)
+                except ValueError as error:return self.reply(400, {'error':str(error)})
+                db.commit()
+                return self.reply(200, {'ok':True},cookie)
             # Serialize credential/session writes, including concurrent password changes.
             db.execute('BEGIN IMMEDIATE')
             now = time.time()

@@ -2,7 +2,6 @@
   <div class="drawer-top"><strong id="site-menu-title">گروه آوا</strong><button type="button" class="icon-button" data-close="site-menu" aria-label="بستن منوی سایت">×</button></div>
   <p>دنیای تصویر و نور</p>
   <div id="drawer-links"></div>
-  <button type="button" class="manage-link" id="open-admin">مدیریت سایت <span aria-hidden="true">←</span></button>
 </dialog>
 
 <div id="admin-login" hidden></div>
@@ -14,6 +13,7 @@
   <div class="admin-layout">
     <aside class="admin-sidebar" aria-label="بخش‌های مدیریت">
       <p class="sidebar-label">ساختار و ظاهر</p>
+      <a href="#admin/stats" data-page="stats">آمار بازدید</a><a href="#admin/seo" data-page="seo">تنظیمات سئو</a><a href="#admin/footer" data-page="footer">فوتر سایت</a>
       <a href="#admin/dashboard" data-page="dashboard"><span aria-hidden="true">◫</span>پیشخوان</a>
       <a href="#admin/header" data-page="header"><span aria-hidden="true">◈</span>لوگو و هدر</a>
       <a href="#admin/hero" data-page="hero"><span aria-hidden="true">▣</span>هیرو / تصویر اصلی</a>
@@ -45,6 +45,7 @@
       <div class="admin-form-grid"><label>مبنای قیمت<input name="priceUnit" maxlength="80" placeholder="هر ماژول"></label><label>تاریخ قیمت<input name="priceDate" type="date"></label></div>
       <label>برچسب عکس<input name="imageCaption" maxlength="200" placeholder="مثلاً تصویر مرجع؛ برای عکس تأییدشده خالی بگذارید"></label>
     </div>
+    <details><summary>تنظیمات سئو</summary><label>عنوان سئو<input name="seoTitle" maxlength="160"></label><label>توضیحات سئو<textarea name="seoDescription" maxlength="320"></textarea></label></details>
     <label>توضیح کوتاه<textarea name="summary" rows="2" maxlength="700" placeholder="این متن روی کارت محتوا دیده می‌شود"></textarea></label>
     <label>متن کامل<textarea name="body" rows="5" maxlength="20000" placeholder="جزئیات، معرفی یا متن مقاله"></textarea></label>
     <label><span id="entry-meta-label">اطلاعات تکمیلی</span><input name="meta" maxlength="200"></label>

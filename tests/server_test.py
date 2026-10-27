@@ -102,6 +102,22 @@ class ServerTest(unittest.TestCase):
             self.assertEqual(self.request('/api/login', {'password':'invalid'})[0], 401)
         self.assertEqual(self.request('/api/login', {'password':'replacement-password-456'})[0], 429)
 
+    def test_metrics_persist_without_changing_content(self):
+        with app.connect() as db:before=db.execute('SELECT data FROM content').fetchone()[0]
+        status, headers, body = self.request('/api/track', {'path':'/product/indoor-125','event':'pageview'})
+        self.assertEqual(status, 200)
+        self.cookie = headers['Set-Cookie'].split(';')[0]
+        self.assertEqual(self.request('/api/track', {'path':'/does-not-exist','event':'pageview'})[0],400)
+        self.assertEqual(self.request('/api/stats')[0],401)
+        app.initialize()
+        self.login()
+        stats = json.loads(self.request('/api/stats')[2])
+        self.assertEqual(stats['periods']['today'],{'views':1,'visitors':1})
+        self.assertTrue(stats['startedAt'])
+        self.request('/api/track', {'path':'/product/indoor-125','event':'pageview'})
+        self.assertEqual(json.loads(self.request('/api/stats')[2])['periods']['today']['views'],1)
+        with app.connect() as db:self.assertEqual(db.execute('SELECT data FROM content').fetchone()[0],before)
+
     def test_invalid_data_and_secure_cookie(self):
         self.login()
         result = json.loads(self.request('/api/content')[2])
