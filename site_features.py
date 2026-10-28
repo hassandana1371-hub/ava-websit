@@ -23,6 +23,64 @@ def search_defaults():
         _SEARCH_CACHE.update(stamp=stamp,data=json.loads(match[1]) if match else {})
     return _SEARCH_CACHE['data']
 
+_CONTACT_CACHE={}
+def contact_defaults():
+    file=Path(__file__).with_name('index.html');stamp=file.stat().st_mtime_ns
+    if _CONTACT_CACHE.get('stamp')!=stamp:
+        match=re.search(r'<script id="ava-contact-defaults"[^>]*>(.*?)</script>',file.read_text(),re.S)
+        _CONTACT_CACHE.update(stamp=stamp,data=json.loads(match[1]) if match else {'revision':0,'fields':{}})
+    return _CONTACT_CACHE['data']
+
+def upgrade_contact(data):
+    defaults=contact_defaults()
+    if data.get('contactRevision',0)>=defaults['revision']:return data
+    import copy
+    upgraded=copy.deepcopy(data)
+    upgraded['contact']={**data['contact'],**copy.deepcopy(defaults['fields'])}
+    upgraded['contactRevision']=defaults['revision']
+    return upgraded
+
+def phone_number(value):
+    value=str(value).translate(str.maketrans('۰۱۲۳۴۵۶۷۸۹٠١٢٣٤٥٦٧٨٩','01234567890123456789'))
+    return ('+' if value.strip().startswith('+') else '')+''.join(c for c in value if c in '0123456789')
+
+def phone_href(value):
+    number=phone_number(value)
+    if len(number)==11 and number.startswith('0'):number='+98'+number[1:]
+    return 'tel:'+number
+
+def contact_points(data):
+    c=upgrade_contact(data)['contact'];points=[]
+    for key,fallback in [('phone','تلفن اصلی آوا'),('mobile','تماس مستقیم فروش')]:
+        number=phone_number(c.get(key,''))
+        if not number or number=='+':continue
+        display=c.get(key+'Display','')
+        if phone_href(display)!=phone_href(number):display=number
+        points.append({'label':c.get(key+'Label') or fallback,'number':number,'display':display,'note':c.get(key+'Note',''),'href':phone_href(number)})
+    return points
+
+def contact_body(data):
+    c=upgrade_contact(data)['contact'];lines=[]
+    for point in contact_points(data):
+        lines.append(point['label']+': '+point['display'])
+        if point['note']:lines.append(point['note'])
+    for location in c.get('locations',[]):lines.append(location['title']+': '+location['address'])
+    for key in ['email','address']:
+        if c.get(key):lines.append(c[key])
+    return '\n'.join(lines)
+
+def contact_html(data):
+    esc=html.escape;c=upgrade_contact(data)['contact'];out='<section class="server-contact-info" aria-label="اطلاعات تماس آوا"><h2>راه‌های ارتباطی آوا</h2>'
+    for point in contact_points(data):
+        out+='<section><h3>'+esc(point['label'])+'</h3><a dir="ltr" href="'+esc(point['href'],quote=True)+'">'+esc(point['display'])+'</a>'
+        if point['note']:out+='<p>'+esc(point['note'])+'</p>'
+        out+='</section>'
+    for location in c.get('locations',[]):out+='<section><h3>'+esc(location['title'])+'</h3><p>'+esc(location['address'])+'</p></section>'
+    if c.get('email'):out+='<p>'+esc(c['email'])+'</p>'
+    if c.get('address'):out+='<p>'+esc(c['address'])+'</p>'
+    return out+'</section>'
+
+
 def company_description(data):
     return data.get('company',{}).get('description') or 'گروه آوا در زمینهٔ فروش و اجارهٔ نمایشگر LED و تلویزیون شهری فعالیت می‌کند. محصولات و خدمات مرتبط را بررسی کنید و برای انتخاب متناسب با محل نصب یا رویداد، درخواست مشاوره و استعلام بفرستید.'
 
@@ -46,8 +104,8 @@ def pages(data):
     for c in data['productCategories']:
         ids={c['id']}|{child['id'] for child in data['productCategories'] if child.get('parentId')==c['id']}
         result['/category/'+c['id']]={'title':c['name'],'heading':c.get('banner',{}).get('title') or c['name'],'description':c['description'],'body':c['description'],'indexable':any(i['categoryId'] in ids for i in product_items),'category':c}
-    result['/contact']={'title':data['contact']['title'],'heading':data['contact']['title'],'description':data['contact']['description'],'body':'\n'.join(data['contact'].get(k,'') for k in ['address','phone','email']),'indexable':True}
-    result['/about']={'title':'دربارهٔ '+brand,'heading':'دربارهٔ '+brand,'description':company_description(data)[:320],'body':'\n'.join(filter(None,[company_description(data),data.get('company',{}).get('serviceArea',''),*[data['contact'].get(k,'') for k in ['phone','email','address']]])),'indexable':True}
+    result['/contact']={'title':data['contact']['title'],'heading':data['contact']['title'],'description':data['contact']['description'],'body':contact_body(data),'indexable':True}
+    result['/about']={'title':'دربارهٔ '+brand,'heading':'دربارهٔ '+brand,'description':company_description(data)[:320],'body':'\n'.join(filter(None,[company_description(data),data.get('company',{}).get('serviceArea',''),contact_body(data)])),'indexable':True}
     defaults=search_defaults()
     for path,p in result.items():
         default=defaults.get(path,{});custom=data.get('pageSeo',{}).get(path,{})
@@ -88,9 +146,14 @@ def structured_data(data,path,origin,all_pages=None):
            {'@type':'BreadcrumbList','@id':url+'#breadcrumb','itemListElement':[{'@type':'ListItem','position':n+1,'name':c['name'],'item':origin+c['path']} for n,c in enumerate(breadcrumb(data,path,all_pages))]}]
     graph[0]['description']=company_description(data)
     if data.get('company',{}).get('serviceArea'):graph[0]['areaServed']=data['company']['serviceArea']
-    contact={k:data['contact'].get(v,'').strip() for k,v in [('telephone','phone'),('email','email')]}
-    contact={k:v for k,v in contact.items() if v}
-    if contact:graph[0]['contactPoint']={'@type':'ContactPoint','contactType':'فروش و پشتیبانی',**contact}
+    points=contact_points(data)
+    contacts=[{'@type':'ContactPoint','contactType':point['label'],'telephone':point['href'][4:]} for point in points]
+    if data['contact'].get('email'):
+        if contacts:contacts[0]['email']=data['contact']['email']
+        else:contacts.append({'@type':'ContactPoint','contactType':'ارتباط با آوا','email':data['contact']['email']})
+    if contacts:graph[0]['contactPoint']=contacts
+    locations=upgrade_contact(data)['contact'].get('locations',[])
+    if locations:graph[0]['address']=[{'@type':'PostalAddress','name':location['title'],'streetAddress':location['address']} for location in locations]
     if path=='/about':graph[2]['mainEntity']={'@id':org}
     item=p.get('item')
     if item and p.get('kind') in ['product','service']:
@@ -130,13 +193,14 @@ def seo_html(data,path,origin):
     schema=json.dumps(structured_data(data,path,origin,all_pages),ensure_ascii=False).replace('<','\\u003c')
     head+='<script id="ava-structured-data" type="application/ld+json">'+schema+'</script>'
     crumbs=' / '.join('<a href="'+esc(c['path'],quote=True)+'">'+esc(c['name'])+'</a>' for c in breadcrumb(data,path,all_pages))
-    body='<main id="ava-seo-content" dir="rtl"><nav aria-label="مسیر صفحه">'+crumbs+'</nav><h1>'+esc(p['heading'])+'</h1><p>'+esc(description)+'</p>'
+    body='<main id="ava-seo-content" dir="rtl"><nav aria-label="مسیر صفحه">'+crumbs+'</nav><h1>'+esc(p['heading'])+'</h1><p>'+esc(company_description(data) if path=='/about' else description)+'</p>'
     copy=p.get('copy')
     if copy:
         if path!='/':body+='<h2>'+esc(copy.get('heading') or p['heading'])+'</h2>'
         body+='<p>'+esc(copy.get('intro',''))+'</p>'
         for section in copy.get('sections',[]):body+='<h2>'+esc(section['heading'])+'</h2><p>'+esc(section['body'])+'</p>'
-    if p.get('body'):body+='<div style="white-space:pre-line">'+esc(p['body'])+'</div>'
+    if path in ['/contact','/about']:body+=contact_html(data)
+    if p.get('body') and path not in ['/contact','/about']:body+='<div style="white-space:pre-line">'+esc(p['body'])+'</div>'
     specs=''.join('<tr><th>'+esc(s['label'])+'</th><td>'+esc(s['value'])+'</td></tr>' for s in p.get('specs',[]))
     if specs:body+='<h2>مشخصات فنی</h2><table>'+specs+'</table>'
     links=''.join('<li><a href="'+esc(c['path'],quote=True)+'">'+esc(c['label'])+'</a></li>' for c in related_links(data,path,all_pages))

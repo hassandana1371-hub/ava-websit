@@ -1,0 +1,25 @@
+{
+  "revision": 1,
+  "fields": {
+    "phone": "02191095715",
+    "phoneDisplay": "۰۲۱۹۱۰۹۵۷۱۵",
+    "phoneLabel": "تلفن اصلی آوا",
+    "phoneNote": "تلفن گویا؛ ارتباط با بخش‌های آوا",
+    "mobile": "09121718024",
+    "mobileDisplay": "0912 17 18 024",
+    "mobileLabel": "تماس مستقیم فروش",
+    "mobileNote": "هماهنگی و مشاوره",
+    "locations": [
+      {
+        "id": "central-warehouse",
+        "title": "انبار مرکزی",
+        "address": "خیابان آزادی، استاد معین، خیابان طوس، موسوی مطلق، پلاک ۵"
+      },
+      {
+        "id": "sales-showroom",
+        "title": "دفتر فروش و نمایشگاه",
+        "address": "تهران، خیابان ولنجک، خیابان ۷، پلاک ۶"
+      }
+    ]
+  }
+}

@@ -72,3 +72,30 @@
 .search-copy{background:#fff;border-top:1px solid #e5ebf5;border-bottom:1px solid #e5ebf5;padding-top:50px;padding-bottom:50px}.search-copy h1,.search-copy>h2{font-size:clamp(25px,2.4vw,37px);line-height:1.8;color:#213d60;margin:0 0 20px}.search-copy p{color:#5b6d84;line-height:2.4;font-size:14px}.search-copy-intro{max-width:1000px}.search-copy-sections{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:30px;margin-top:25px}.search-copy-sections h2,.search-copy-sections h3{font-size:18px;line-height:1.9;color:#294a70;margin:0 0 12px}.search-copy-links{display:flex;flex-wrap:wrap;gap:12px;margin-top:25px}.search-copy-links a{font-size:12px;line-height:2;color:#365f98;background:#eef4fc;border-radius:8px;padding:9px 15px}.search-copy-links a:hover{background:#dfeafb}.search-copy-links a:focus-visible{outline:2px solid #4664df;outline-offset:3px}@media(max-width:800px){.search-copy-sections{grid-template-columns:1fr;gap:18px}.search-copy{padding-top:30px;padding-bottom:30px}.search-copy p{font-size:13px}}
 
 .company-profile{max-width:1100px;min-height:55svh}.company-profile h1{font-size:32px;color:#213d60}.company-profile p{font-size:14px;line-height:2.5;white-space:pre-line;color:#5b6d84}.company-profile h2{font-size:21px;color:#294a70}.company-profile a{overflow-wrap:anywhere}
+/* Shared public contact presentation: central IVR, direct mobile and titled locations. */
+.contact-number-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px;margin:8px 0 18px;min-width:0}
+.contact-number-card{display:flex;flex-direction:column;align-items:flex-start;gap:12px;padding:21px 19px;background:#f3f7fd;border:1px solid #dce6f4;border-radius:13px;color:#244266;min-width:0;text-decoration:none;transition:border-color .2s,box-shadow .2s}
+.contact-number-card.primary{border-color:#98b7df;background:#eaf2ff}
+.contact-number-card:hover{border-color:#6b95cf;box-shadow:0 6px 22px #193a6412}
+.contact-number-card:focus-visible{outline:3px solid #557ce3;outline-offset:3px}
+.contact-number-label{font-size:12px;font-weight:650;line-height:1.9}
+.contact-number{font:700 clamp(23px,2vw,30px)/1.35 Arial,sans-serif;letter-spacing:.25px;white-space:nowrap;unicode-bidi:isolate;align-self:flex-start}
+.contact-number-card small{font-size:11px;line-height:2;color:#657b98}
+.contact-location-cards{display:grid;grid-template-columns:1fr;gap:12px;margin:18px 0}
+.contact-location-card{border-right:3px solid #7194c9;border-radius:6px;padding:12px 17px;background:#f5f8fc;min-width:0}
+.contact-location-card h3{font-size:14px;line-height:2;color:#254469;margin:0 0 6px}
+.contact-location-card p,.contact-additional-address{font-size:12px;line-height:2.3;white-space:pre-line;overflow-wrap:anywhere;color:#61758d;margin:0}
+.contact .contact-number-card{background:#213451;color:#eef5ff;border-color:#435c7e}
+.contact .contact-number-card.primary{background:#f0f5ff;color:#1c3d66;border-color:#adc7ed}
+.contact .contact-number-card small{color:#bdcce1}.contact .contact-number-card.primary small{color:#5f7593}
+.contact .contact-location-card{background:#1b2d47;border-color:#8caee0}.contact .contact-location-card h3{color:#f0f5ff}.contact .contact-location-card p,.contact .contact-additional-address{color:#bdcde3}
+.contact-email{display:inline-block;overflow-wrap:anywhere;font-size:13px;color:inherit;line-height:2}
+#footer-contact{flex:1 0 100%;width:100%;padding-top:28px;border-top:1px solid #e1e8f2;margin-top:10px;min-width:0}
+#footer-contact>h2{font-size:19px;line-height:1.8;color:#254469;margin:0 0 18px}
+#footer-contact .contact-number-cards{max-width:800px}
+#footer-contact .contact-location-cards{grid-template-columns:repeat(2,minmax(0,1fr))}
+#footer-contact .contact-location-card p{font-size:12px;line-height:2.3}
+.company-profile .contact-number-cards{max-width:800px}.company-profile .contact-location-card p{font-size:14px}
+.admin-location-row{border:1px solid #dce5f2;border-radius:10px;padding:20px;margin:12px 0;display:grid;gap:14px}
+@media(max-width:1100px){.contact-number-cards{grid-template-columns:1fr}.company-profile .contact-number-cards,#footer-contact .contact-number-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.company-profile .contact-number-cards,#footer-contact .contact-number-cards,#footer-contact .contact-location-cards{grid-template-columns:1fr}.contact-number-card{padding:20px}.contact-number{font-size:27px}.contact-number-label{font-size:13px}.contact-location-card p{font-size:12px}.company-profile .contact-location-card p{font-size:13px}}

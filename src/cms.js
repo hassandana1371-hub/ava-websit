@@ -166,7 +166,12 @@
   function searchSchema(path,model,origin){
     const org=origin+'/#organization',url=origin+path;
     const graph=[{'@type':'Organization','@id':org,name:data.header.nameEn||data.header.nameFa,alternateName:data.header.nameFa,url:origin+'/'},{'@type':'WebSite','@id':origin+'/#website',url:origin+'/',name:data.header.nameFa,inLanguage:'fa-IR',publisher:{'@id':org}},{'@type':path==='/about'?'AboutPage':path==='/products'||path.startsWith('/category/')?'CollectionPage':'WebPage','@id':url+'#webpage',url,name:model.title+' | AvA Groups',description:model.description,inLanguage:'fa-IR',isPartOf:{'@id':origin+'/#website'}},{'@type':'BreadcrumbList','@id':url+'#breadcrumb',itemListElement:searchTrail(path,model).map((c,n)=>({'@type':'ListItem',position:n+1,name:c.name,item:origin+c.path}))}];
-    graph[0].description=companyDescription();if(data.company?.serviceArea)graph[0].areaServed=data.company.serviceArea;const contact={};if(data.contact.phone?.trim())contact.telephone=data.contact.phone.trim();if(data.contact.email?.trim())contact.email=data.contact.email.trim();if(Object.keys(contact).length)graph[0].contactPoint={'@type':'ContactPoint',contactType:'فروش و پشتیبانی',...contact};if(path==='/about')graph[2].mainEntity={'@id':org};
+    graph[0].description=companyDescription();if(data.company?.serviceArea)graph[0].areaServed=data.company.serviceArea;
+    const contacts=contactPoints().map(point=>({'@type':'ContactPoint',contactType:point.label,telephone:point.href.slice(4)}));
+    if(data.contact.email){if(contacts.length)contacts[0].email=data.contact.email;else contacts.push({'@type':'ContactPoint',contactType:'ارتباط با آوا',email:data.contact.email});}
+    if(contacts.length)graph[0].contactPoint=contacts;
+    if(data.contact.locations?.length)graph[0].address=data.contact.locations.map(location=>({'@type':'PostalAddress',name:location.title,streetAddress:location.address}));
+    if(path==='/about')graph[2].mainEntity={'@id':org};
     if(model.item&&['product','service'].includes(model.kind)){const item=model.item,entity={'@type':model.kind==='product'?'Product':'Service','@id':url+'#entity',name:item.title,description:item.summary,url,mainEntityOfPage:{'@id':url+'#webpage'}};if(model.kind==='product'){entity.sku=item.id;if(item.model)entity.model=item.model;}else entity.provider={'@id':org};graph.push(entity);}
     return {'@context':'https://schema.org','@graph':graph};
   }
@@ -198,8 +203,19 @@
       for(const [key,label]of [['topPages','صفحات پربازدید؛ از شروع ثبت'],['topProducts','محصولات پربازدید؛ از شروع ثبت'],['contactClicks','کلیک‌های تماس؛ از شروع ثبت']]){const list=el('div',{class:'admin-panel'},el('h2',{},label));for(const row of stats[key])list.append(el('p',{},(row.path||{'contact-phone':'تلفن','contact-email':'ایمیل','contact-request':'فرم تماس','contact-link':'رفتن به تماس'}[row.event]||row.event)+' — '+(row.views||row.clicks).toLocaleString('fa-IR')));if(!stats[key].length)list.append(el('p',{},'داده‌ای ثبت نشده است.'));root.append(list);}
     }catch(e){root.textContent=e.message;}
   }
+  const contactDefaults=JSON.parse($('#ava-contact-defaults')?.textContent||'{"revision":0,"fields":{}}');
+  function phoneNumber(value){value=String(value||'').replace(/[۰-۹]/g,c=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(c)).replace(/[٠-٩]/g,c=>'٠١٢٣٤٥٦٧٨٩'.indexOf(c));return (value.trim().startsWith('+')?'+':'')+value.replace(/\D/g,'');}
+  function phoneHref(value){let number=phoneNumber(value);if(number.length===11&&number.startsWith('0'))number='+98'+number.slice(1);return 'tel:'+number;}
+  function contactPoints(){const c=data.contact;return [['phone','تلفن اصلی آوا'],['mobile','تماس مستقیم فروش']].flatMap(([key,fallback])=>{const number=phoneNumber(c[key]);if(!number||number==='+')return [];let display=c[key+'Display']||'';if(phoneHref(display)!==phoneHref(number))display=number;return [{label:c[key+'Label']||fallback,number,display,note:c[key+'Note']||'',href:phoneHref(number)}];});}
+  function contactCards(compact=false){
+    const root=el('div',{class:compact?'contact-number-cards compact':'contact-number-cards'});
+    contactPoints().forEach((point,index)=>{const card=el('a',{href:point.href,class:'contact-number-card'+(index===0?' primary':''),'data-contact-event':'contact-phone'},el('span',{class:'contact-number-label'},point.label),el('bdi',{dir:'ltr',class:'contact-number'},point.display));if(point.note)card.append(el('small',{},point.note));root.append(card);});return root;
+  }
+  function locationCards(){const root=el('div',{class:'contact-location-cards'});for(const location of data.contact.locations||[])root.append(el('section',{class:'contact-location-card','data-location':location.id},el('h3',{},location.title),el('p',{},location.address)));return root;}
+  function contactExtras(root){if(data.contact.email)root.append(el('a',{href:'mailto:'+data.contact.email,'data-contact-event':'contact-email',class:'contact-email',dir:'ltr'},data.contact.email));if(data.contact.address)root.append(el('p',{class:'contact-additional-address'},data.contact.address));}
+
   function companyDescription(){return data.company?.description||'گروه آوا در زمینهٔ فروش و اجارهٔ نمایشگر LED و تلویزیون شهری فعالیت می‌کند. محصولات و خدمات مرتبط را بررسی کنید و برای انتخاب متناسب با محل نصب یا رویداد، درخواست مشاوره و استعلام بفرستید.';}
-  function renderAbout(){const root=$('#catalog-page');root.replaceChildren();const section=el('section',{class:'content company-profile'},el('h1',{},'دربارهٔ '+data.header.nameFa),el('p',{},companyDescription()));if(data.company?.serviceArea)section.append(el('h2',{},'محدودهٔ خدمات'),el('p',{},data.company.serviceArea));const contacts=el('section',{},el('h2',{},'راه‌های ارتباطی'));if(data.contact.phone)contacts.append(el('p',{},el('a',{href:'tel:'+data.contact.phone,'data-contact-event':'contact-phone'},data.contact.phone)));if(data.contact.email)contacts.append(el('p',{},el('a',{href:'mailto:'+data.contact.email,'data-contact-event':'contact-email'},data.contact.email)));if(data.contact.address)contacts.append(el('p',{},data.contact.address));section.append(contacts,el('nav',{class:'search-copy-links'},el('a',{href:serverMode?'/products':'#products'},'محصولات نمایشگر LED'),el('a',{href:serverMode?'/services':'#services'},'خدمات و اجاره'),el('a',{href:serverMode?'/contact':'#contact'},'تماس با آوا')));root.append(section);}
+  function renderAbout(){const root=$('#catalog-page');root.replaceChildren();const section=el('section',{class:'content company-profile'},el('h1',{},'دربارهٔ '+data.header.nameFa),el('p',{},companyDescription()));if(data.company?.serviceArea)section.append(el('h2',{},'محدودهٔ خدمات'),el('p',{},data.company.serviceArea));section.append(el('h2',{},'راه‌های ارتباطی آوا'),contactCards(),locationCards());contactExtras(section);section.append(el('nav',{class:'search-copy-links'},el('a',{href:serverMode?'/products':'#products'},'محصولات نمایشگر LED'),el('a',{href:serverMode?'/services':'#services'},'خدمات و اجاره'),el('a',{href:serverMode?'/contact':'#contact'},'تماس با آوا')));root.append(section);}
   function renderCompanyEditor(root){root.innerHTML='<div class="admin-panel"><form id="company-form" class="admin-form">'+field('معرفی شرکت؛ فقط اطلاعات قابل انتشار','description',companyDescription(),{max:2500,multiline:true,rows:6})+field('محدودهٔ خدمات تأییدشده؛ در صورت مشخص‌نبودن خالی بماند','serviceArea',data.company?.serviceArea||'',{max:200})+saveButton()+'</form></div><div class="notice">نام فارسی و انگلیسی از بخش هدر و تلفن و نشانی از بخش تماس با ما خوانده می‌شوند. سابقه، گواهی، پروژه یا شهر تأییدنشده وارد نکنید.</div>';const form=$('#company-form');watchForm(form);form.onsubmit=async event=>{event.preventDefault();const next=clone(data);next.company=formValues(form);await commit(next);};}
 
   function renderFooterEditor(root){const footer=data.footer;root.innerHTML='<div class="admin-panel"><form id="footer-form" class="admin-form">'+field('متن معرفی پایین سایت','text',footer.text,{max:1000,multiline:true})+field('متن حقوق و کپی‌رایت','copyright',footer.copyright,{max:1000})+saveButton()+'</form></div>';const form=$('#footer-form');watchForm(form);form.onsubmit=async event=>{event.preventDefault();const next=clone(data);next.footer=formValues(form);await commit(next);};}
@@ -417,7 +433,11 @@
     out.servicesRevision = 1;
     out.catalogRevision = 1;
     out.productVisualRevision = 3;
-    for (const key of ['title','description','phone','email','address']) out.contact[key] = text(raw.contact[key], key === 'description' ? 2500 : 500);
+    const contact=(raw.contactRevision||0)<contactDefaults.revision?{...raw.contact,...clone(contactDefaults.fields)}:raw.contact;
+    out.contactRevision=contactDefaults.revision;
+    for (const key of ['title','description','phone','email','address']) out.contact[key]=text(contact[key],key==='description'?2500:500);
+    for(const [key,max] of [['mobile',80],['phoneDisplay',80],['mobileDisplay',80],['phoneLabel',80],['mobileLabel',80],['phoneNote',200],['mobileNote',200]])out.contact[key]=text(contact[key]||'',max);
+    const locations=contact.locations||[];if(!Array.isArray(locations)||locations.length>8)throw new Error('حداکثر ۸ نشانی قابل ثبت است.');const locationIds=new Set();out.contact.locations=locations.map(location=>{if(!isObject(location))throw new Error('نشانی معتبر نیست.');const id=text(location.id,80),title=text(location.title,120).trim(),address=text(location.address,1000).trim();if(!id||locationIds.has(id)||!title||!address)throw new Error('عنوان و متن نشانی را کامل وارد کنید.');locationIds.add(id);return {id,title,address};});
     return out;
   }
 
@@ -980,7 +1000,7 @@
     closeNavigationMenus();
     disposePageBanners();
     const h = data.header;
-    $('.ava-brand').href=serverMode?'/':'#home';$('footer>a:first-child').href=serverMode?'/':'#home';$('footer>a:last-child').href='#home';
+    $('.ava-brand').href=serverMode?'/':'#home';$('footer>a:first-child').href=serverMode?'/':'#home';$$('footer>a').at(-1).href='#home';
     let logo = $('.ava-brand .ava-mark');
     const replacement = h.logo ? el('img',{class:'ava-mark uploaded-logo',src:h.logo,alt:'لوگوی ' + h.nameFa}) : (() => {const t = document.createElement('template');t.innerHTML = defaultLogo;return t.content.firstElementChild;})();
     replacement.hidden = !h.showLogo;
@@ -1044,9 +1064,8 @@
     $('.contact>div>p').textContent = data.contact.description;
     let contacts = $('.contact-links');if (!contacts) {$('.contact>div').append(el('div',{class:'contact-links'}));contacts = $('.contact-links');}
     contacts.replaceChildren();
-    if (data.contact.phone) contacts.append(el('a',{href:'tel:'+data.contact.phone,'data-contact-event':'contact-phone'},'تلفن: '+data.contact.phone));
-    if (data.contact.email) contacts.append(el('a',{href:'mailto:'+data.contact.email,'data-contact-event':'contact-email'},'ایمیل: '+data.contact.email));
-    if (data.contact.address) contacts.append(el('span',{},'نشانی: ',data.contact.address));
+    contacts.append(contactCards(),locationCards());contactExtras(contacts);
+    $('#footer-contact')?.remove();const footerContact=el('section',{id:'footer-contact','aria-label':'تماس با آوا'},el('h2',{},'راه‌های ارتباطی آوا'),contactCards(true),locationCards());$('footer').append(footerContact);
     $('.contact>.contact-page-banner')?.remove();
     if(data.pageBanners.contact?.show) {const holder=el('section',{class:'contact-page-banner'});appendPageBanner(holder,data.pageBanners.contact,data.modules.contact.name);$('.contact').prepend(holder);}
     if(!$('#home-page-heading'))$('#home-content').prepend(el('h1',{id:'home-page-heading',class:'sr-only'},data.header.nameFa+'؛ '+data.hero.title+' '+data.hero.highlight));
@@ -1205,10 +1224,13 @@
     form.addEventListener('submit',async event => {event.preventDefault();collect();const next = clone(data);next.navigation = rows;if (await commit(next)) rows = clone(data.navigation);});paint();
   }
   function renderContactEditor(root) {
-    const c = data.contact;
-    root.innerHTML = `<div class="admin-panel"><form class="admin-form" id="contact-form"><h2>اطلاعات تماس</h2>${field('نام بخش','moduleName',data.modules.contact.name,{max:80})}${field('عنوان بخش تماس','title',c.title,{multiline:true,max:500,rows:2})}${field('توضیحات','description',c.description,{multiline:true})}<div class="admin-form-grid">${field('شمارهٔ تماس','phone',c.phone,{ltr:true,max:500})}${field('ایمیل','email',c.email,{type:'email',ltr:true,max:500})}</div>${field('نشانی','address',c.address,{multiline:true,max:500,rows:2})}${saveButton()}</form></div><div class="notice">فرم عمومی سایت در این نسخه خلاصهٔ درخواست را آماده می‌کند؛ هنوز به سامانهٔ دریافت پیام متصل نیست.</div>`;
-    const form = $('#contact-form');watchForm(form);
-    form.addEventListener('submit',async event => {event.preventDefault();const v = formValues(form);const next = clone(data);next.modules.contact.name = v.moduleName;for (const key of ['title','description','phone','email','address']) next.contact[key] = v[key];await commit(next);});
+    const c=data.contact;let locations=clone(c.locations||[]);
+    root.innerHTML=`<div class="admin-panel"><form class="admin-form" id="contact-form"><h2>اطلاعات تماس آوا</h2>${field('نام بخش','moduleName',data.modules.contact.name,{max:80})}${field('عنوان بخش تماس','title',c.title,{multiline:true,max:500,rows:2})}${field('توضیحات','description',c.description,{multiline:true,max:2500})}<h3>تلفن اصلی و گویا</h3><div class="admin-form-grid">${field('شمارهٔ تلفن اصلی','phone',c.phone,{ltr:true,max:500})}${field('نمایش شمارهٔ اصلی','phoneDisplay',c.phoneDisplay,{ltr:true,max:80})}${field('عنوان شمارهٔ اصلی','phoneLabel',c.phoneLabel,{max:80})}${field('توضیح شمارهٔ اصلی','phoneNote',c.phoneNote,{max:200})}</div><h3>تماس مستقیم</h3><div class="admin-form-grid">${field('شمارهٔ موبایل','mobile',c.mobile,{ltr:true,max:80})}${field('نمایش موبایل و فاصله‌گذاری','mobileDisplay',c.mobileDisplay,{ltr:true,max:80})}${field('عنوان موبایل','mobileLabel',c.mobileLabel,{max:80})}${field('توضیح موبایل','mobileNote',c.mobileNote,{max:200})}</div><small>نمایش شماره باید با ارقام شمارهٔ تماس یکی باشد؛ در صورت تفاوت، خود شمارهٔ تماس نمایش داده می‌شود.</small>${field('ایمیل عمومی','email',c.email,{type:'email',ltr:true,max:500})}<h3>نشانی‌ها</h3><div id="location-editor"></div><button class="admin-button secondary" type="button" id="add-location">＋ افزودن نشانی</button>${field('نشانی تکمیلی (اختیاری)','address',c.address,{multiline:true,max:500,rows:2})}${saveButton('ذخیرهٔ اطلاعات تماس')}</form></div>`;
+    const form=$('#contact-form');watchForm(form);
+    const collect=()=>{$$('[data-location-id]',form).forEach(row=>{const location=locations.find(x=>x.id===row.dataset.locationId);location.title=$('[name=locationTitle]',row).value;location.address=$('[name=locationAddress]',row).value;});};
+    const paint=()=>{const root=$('#location-editor');root.replaceChildren();locations.forEach(location=>{const row=el('div',{class:'admin-location-row','data-location-id':location.id});row.innerHTML=field('عنوان محل','locationTitle',location.title,{max:120,required:true})+field('نشانی','locationAddress',location.address,{max:1000,multiline:true,rows:3,required:true});const remove=el('button',{type:'button',class:'admin-button danger'},'حذف نشانی');remove.onclick=()=>{collect();locations=locations.filter(x=>x.id!==location.id);markDirty();paint();};row.append(remove);root.append(row);});$('#add-location').disabled=locations.length>=8;};paint();
+    $('#add-location').onclick=()=>{collect();if(locations.length>=8)return;locations.push({id:'location-'+Date.now()+'-'+Math.random().toString(36).slice(2,6),title:'',address:''});markDirty();paint();};
+    form.onsubmit=async event=>{event.preventDefault();collect();const values=formValues(form),next=clone(data);next.modules.contact.name=values.moduleName;for(const key of ['title','description','phone','phoneDisplay','phoneLabel','phoneNote','mobile','mobileDisplay','mobileLabel','mobileNote','email','address'])next.contact[key]=values[key];next.contact.locations=locations;if(await commit(next))locations=clone(data.contact.locations);};
   }
   function renderModule(root, key) {
     const module = data.modules[key];

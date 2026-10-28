@@ -45,6 +45,12 @@ def initialize():
         if not db.execute('SELECT 1 FROM content').fetchone():
             db.execute('INSERT INTO content VALUES (1,1,?)', ((ROOT / 'src/defaults.json').read_text(),))
         site_features.initialize(db)
+        db.execute('BEGIN IMMEDIATE')
+        row=db.execute('SELECT revision,data FROM content WHERE id=1').fetchone()
+        existing=json.loads(row['data']);upgraded=site_features.upgrade_contact(existing)
+        if upgraded is not existing:
+            upgraded['updatedAt']=int(time.time()*1000)
+            db.execute('UPDATE content SET revision=?,data=? WHERE id=1',(row['revision']+1,json.dumps(upgraded,ensure_ascii=False)))
     os.chmod(DB, 0o600)
 
 
@@ -154,6 +160,17 @@ def validate_content(data):
             raise ValueError('نام یا مقصد منو معتبر نیست.')
     for key in ['title','description','phone','email','address']:
         string(data['contact'].get(key), 2500 if key == 'description' else 500)
+    for key,limit in [('mobile',80),('phoneDisplay',80),('mobileDisplay',80),('phoneLabel',80),('mobileLabel',80),('phoneNote',200),('mobileNote',200)]:string(data['contact'].get(key,''),limit)
+    if type(data.get('contactRevision',1)) is not int or data.get('contactRevision',1)!=1:raise ValueError('نسخهٔ اطلاعات تماس معتبر نیست.')
+    locations=data['contact'].get('locations',[])
+    if not isinstance(locations,list) or len(locations)>8:raise ValueError('حداکثر ۸ نشانی قابل ثبت است.')
+    location_ids=set()
+    for location in locations:
+        if not isinstance(location,dict):raise ValueError('نشانی معتبر نیست.')
+        string(location.get('id'),80);string(location.get('title'),120);string(location.get('address'),1000)
+        if not location['id'] or location['id'] in location_ids or not location['title'].strip() or not location['address'].strip():raise ValueError('عنوان و متن نشانی را کامل وارد کنید.')
+        location_ids.add(location['id'])
+
     page_banners = data.get('pageBanners', {})
     if len(page_banners) > 600:
         raise ValueError('تعداد بنرها بیش از حد مجاز است.')
@@ -256,7 +273,7 @@ def validate_content(data):
         elif value is not None and not isinstance(value, (bool, int, float)):
             raise ValueError('نوع داده معتبر نیست.')
     walk(data)
-    return data
+    return site_features.upgrade_contact(data)
 
 
 def public_content(data):
