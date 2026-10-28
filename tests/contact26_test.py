@@ -29,12 +29,13 @@ class ContactTests(fixture.ServerTest):
                        (revision, json.dumps(data, ensure_ascii=False)))
 
     def assert_correct_contacts(self, data):
-        self.assertEqual(data['contactRevision'], 1)
+        self.assertEqual(data['contactRevision'], 2)
         contact = data['contact']
         self.assertEqual(contact['phone'], MAIN)
         self.assertEqual(contact['mobile'], MOBILE)
         self.assertEqual(contact['mobileDisplay'], MOBILE_DISPLAY)
-        self.assertEqual(len(contact['locations']), 2)
+        self.assertEqual(len(contact['locations']), 3)
+        self.assertEqual(next(x['address'] for x in contact['locations'] if x['id']=='factory'),'تهران، چهاردانگه، شهرک صنعتی سهند، کوچهٔ اختر')
         by_title = {location['title']: location['address']
                     for location in contact['locations']}
         self.assertEqual(by_title['انبار مرکزی'], WAREHOUSE)
@@ -131,6 +132,36 @@ class ContactTests(fixture.ServerTest):
             self.assertNotIn('openingHours', organization)
             self.assertNotIn('openingHoursSpecification', organization)
 
+    def test_factory_revision_preserves_version26_edits_and_removals(self):
+        _, previous=self.stored()
+        previous['contactRevision']=1
+        previous['contact']['phone']='02199990000'
+        previous['contact']['phoneNote']='توضیح سفارشی حفظ شود'
+        previous['contact']['mobile']=''
+        previous['contact']['mobileDisplay']=''
+        locations=[x for x in previous['contact']['locations'] if x['id']!='factory']
+        locations.extend({'id':'custom-'+str(i),'title':'محل سفارشی '+str(i),'address':'نشانی سفارشی '+str(i)} for i in range(6))
+        previous['contact']['locations']=locations
+        self.store(73,previous)
+        fixture.app.initialize()
+        revision, upgraded=self.stored()
+        self.assertEqual(revision,74)
+        self.assertEqual(upgraded['contactRevision'],2)
+        self.assertEqual(upgraded['contact']['phone'],'02199990000')
+        self.assertEqual(upgraded['contact']['mobile'],'')
+        self.assertEqual(upgraded['contact']['phoneNote'],'توضیح سفارشی حفظ شود')
+        self.assertEqual(upgraded['contact']['locations'][:-1],locations)
+        self.assertEqual(upgraded['contact']['locations'][-1]['id'],'factory')
+        self.assertEqual(upgraded['modules'],previous['modules'])
+        fixture.app.initialize()
+        self.assertEqual(self.stored(),(revision,upgraded))
+        self.login()
+        payload=json.loads(self.request('/api/content')[2])
+        payload['data']['contact']['locations']=[x for x in payload['data']['contact']['locations'] if x['id']!='factory']
+        self.assertEqual(self.request('/api/content',payload)[0],200)
+        fixture.app.initialize()
+        self.assertFalse(any(x['id']=='factory' for x in self.stored()[1]['contact']['locations']))
+
     def test_contact_extension_validation_keeps_previous_content_on_error(self):
         self.login()
         initial = json.loads(self.request('/api/content')[2])
@@ -140,7 +171,7 @@ class ContactTests(fixture.ServerTest):
         malformed = copy.deepcopy(initial)
         malformed['data']['contact']['locations'] = [
             {'id':'location-'+str(i), 'title':'عنوان', 'address':'نشانی'}
-            for i in range(9)]
+            for i in range(13)]
         self.assertEqual(self.request('/api/content', malformed)[0], 400)
         malformed = copy.deepcopy(initial)
         malformed['data']['contact']['mobileDisplay'] = {'invalid':'type'}

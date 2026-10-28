@@ -93,7 +93,7 @@
 #footer-contact{flex:1 0 100%;width:100%;padding-top:28px;border-top:1px solid #e1e8f2;margin-top:10px;min-width:0}
 #footer-contact>h2{font-size:19px;line-height:1.8;color:#254469;margin:0 0 18px}
 #footer-contact .contact-number-cards{max-width:800px}
-#footer-contact .contact-location-cards{grid-template-columns:repeat(2,minmax(0,1fr))}
+#footer-contact .contact-location-cards{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
 #footer-contact .contact-location-card p{font-size:12px;line-height:2.3}
 .company-profile .contact-number-cards{max-width:800px}.company-profile .contact-location-card p{font-size:14px}
 .admin-location-row{border:1px solid #dce5f2;border-radius:10px;padding:20px;margin:12px 0;display:grid;gap:14px}

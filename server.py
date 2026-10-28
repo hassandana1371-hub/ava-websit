@@ -161,9 +161,9 @@ def validate_content(data):
     for key in ['title','description','phone','email','address']:
         string(data['contact'].get(key), 2500 if key == 'description' else 500)
     for key,limit in [('mobile',80),('phoneDisplay',80),('mobileDisplay',80),('phoneLabel',80),('mobileLabel',80),('phoneNote',200),('mobileNote',200)]:string(data['contact'].get(key,''),limit)
-    if type(data.get('contactRevision',1)) is not int or data.get('contactRevision',1)!=1:raise ValueError('نسخهٔ اطلاعات تماس معتبر نیست.')
+    if type(data.get('contactRevision',1)) is not int or data.get('contactRevision',1) not in [1,2]:raise ValueError('نسخهٔ اطلاعات تماس معتبر نیست.')
     locations=data['contact'].get('locations',[])
-    if not isinstance(locations,list) or len(locations)>8:raise ValueError('حداکثر ۸ نشانی قابل ثبت است.')
+    if not isinstance(locations,list) or len(locations)>12:raise ValueError('حداکثر ۱۲ نشانی قابل ثبت است.')
     location_ids=set()
     for location in locations:
         if not isinstance(location,dict):raise ValueError('نشانی معتبر نیست.')

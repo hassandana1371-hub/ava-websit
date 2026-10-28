@@ -36,7 +36,12 @@ def upgrade_contact(data):
     if data.get('contactRevision',0)>=defaults['revision']:return data
     import copy
     upgraded=copy.deepcopy(data)
-    upgraded['contact']={**data['contact'],**copy.deepcopy(defaults['fields'])}
+    if data.get('contactRevision',0)<1:
+        upgraded['contact']={**data['contact'],**copy.deepcopy(defaults['fields'])}
+    else:
+        factory=next(location for location in defaults['fields']['locations'] if location['id']=='factory')
+        locations=upgraded['contact'].setdefault('locations',[])
+        if not any(location['id']=='factory' for location in locations):locations.append(copy.deepcopy(factory))
     upgraded['contactRevision']=defaults['revision']
     return upgraded
 
