@@ -23,6 +23,16 @@ def search_defaults():
         _SEARCH_CACHE.update(stamp=stamp,data=json.loads(match[1]) if match else {})
     return _SEARCH_CACHE['data']
 
+def company_description(data):
+    return data.get('company',{}).get('description') or 'گروه آوا در زمینهٔ فروش و اجارهٔ نمایشگر LED و تلویزیون شهری فعالیت می‌کند. محصولات و خدمات مرتبط را بررسی کنید و برای انتخاب متناسب با محل نصب یا رویداد، درخواست مشاوره و استعلام بفرستید.'
+
+def robots_text(origin):
+    # Named groups repeat restrictions because robots rules are not inherited.
+    groups=[]
+    for agent in ['*','OAI-SearchBot','ChatGPT-User']:
+        groups.append('User-agent: '+agent+'\nDisallow: /panel\nDisallow: /admin\nDisallow: /api/\nAllow: /\n')
+    return '\n'.join(groups)+'\nSitemap: '+origin+'/sitemap.xml\n'
+
 def pages(data):
     brand=data['header']['nameFa']
     result={'/':{'title':brand,'heading':brand,'description':data['hero']['description'],'body':data['hero']['description'],'indexable':True}}
@@ -37,6 +47,7 @@ def pages(data):
         ids={c['id']}|{child['id'] for child in data['productCategories'] if child.get('parentId')==c['id']}
         result['/category/'+c['id']]={'title':c['name'],'heading':c.get('banner',{}).get('title') or c['name'],'description':c['description'],'body':c['description'],'indexable':any(i['categoryId'] in ids for i in product_items),'category':c}
     result['/contact']={'title':data['contact']['title'],'heading':data['contact']['title'],'description':data['contact']['description'],'body':'\n'.join(data['contact'].get(k,'') for k in ['address','phone','email']),'indexable':True}
+    result['/about']={'title':'دربارهٔ '+brand,'heading':'دربارهٔ '+brand,'description':company_description(data)[:320],'body':'\n'.join(filter(None,[company_description(data),data.get('company',{}).get('serviceArea',''),*[data['contact'].get(k,'') for k in ['phone','email','address']]])),'indexable':True}
     defaults=search_defaults()
     for path,p in result.items():
         default=defaults.get(path,{});custom=data.get('pageSeo',{}).get(path,{})
@@ -73,8 +84,14 @@ def structured_data(data,path,origin,all_pages=None):
     all_pages=all_pages or pages(data);p=all_pages[path];org=origin+'/#organization';url=origin+path
     graph=[{'@type':'Organization','@id':org,'name':data['header']['nameEn'] or data['header']['nameFa'],'alternateName':data['header']['nameFa'],'url':origin+'/'},
            {'@type':'WebSite','@id':origin+'/#website','url':origin+'/','name':data['header']['nameFa'],'inLanguage':'fa-IR','publisher':{'@id':org}},
-           {'@type':'CollectionPage' if path=='/products' or path.startswith('/category/') else 'WebPage','@id':url+'#webpage','url':url,'name':p['title']+' | AvA Groups','description':p['description'][:320],'inLanguage':'fa-IR','isPartOf':{'@id':origin+'/#website'}},
+           {'@type':'AboutPage' if path=='/about' else 'CollectionPage' if path=='/products' or path.startswith('/category/') else 'WebPage','@id':url+'#webpage','url':url,'name':p['title']+' | AvA Groups','description':p['description'][:320],'inLanguage':'fa-IR','isPartOf':{'@id':origin+'/#website'}},
            {'@type':'BreadcrumbList','@id':url+'#breadcrumb','itemListElement':[{'@type':'ListItem','position':n+1,'name':c['name'],'item':origin+c['path']} for n,c in enumerate(breadcrumb(data,path,all_pages))]}]
+    graph[0]['description']=company_description(data)
+    if data.get('company',{}).get('serviceArea'):graph[0]['areaServed']=data['company']['serviceArea']
+    contact={k:data['contact'].get(v,'').strip() for k,v in [('telephone','phone'),('email','email')]}
+    contact={k:v for k,v in contact.items() if v}
+    if contact:graph[0]['contactPoint']={'@type':'ContactPoint','contactType':'فروش و پشتیبانی',**contact}
+    if path=='/about':graph[2]['mainEntity']={'@id':org}
     item=p.get('item')
     if item and p.get('kind') in ['product','service']:
         entity={'@type':'Product' if p['kind']=='product' else 'Service','@id':url+'#entity','name':item['title'],'description':item['summary'],'url':url,'mainEntityOfPage':{'@id':url+'#webpage'}}
@@ -95,6 +112,8 @@ def related_links(data,path,all_pages):
     elif path=='/services':links.extend({'path':'/service/'+i['id'],'label':i['title']} for i in data['modules']['services']['items'])
     elif p.get('kind')=='product':links.extend([{'path':'/category/'+p['item']['categoryId'],'label':'محصولات همین دسته'},{'path':'/contact','label':'استعلام محصول'}])
     elif p.get('kind')=='service':links.append({'path':'/contact','label':'درخواست این خدمت'})
+    if path in ['/','/contact']:links.append({'path':'/about','label':'معرفی گروه آوا'})
+    if path=='/about':links.extend([{'path':'/products','label':'محصولات نمایشگر LED'},{'path':'/services','label':'خدمات و اجاره'},{'path':'/contact','label':'تماس با آوا'}])
     seen=set();out=[]
     for link in links:
         if link['path']!=path and link['path'] not in seen and link['path'] in all_pages and all_pages[link['path']]['indexable']:

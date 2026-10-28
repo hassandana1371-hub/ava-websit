@@ -208,6 +208,8 @@ def validate_content(data):
             string(item.get('seoTitle',''),160);string(item.get('seoDescription',''),320)
     if not isinstance(data.get('footer',{}),dict) or not isinstance(data.get('pageSeo',{}),dict):raise ValueError('تنظیمات معتبر نیست.')
     for k in ['text','copyright']:string(data.get('footer',{}).get(k,''),1000)
+    if not isinstance(data.get('company',{}),dict):raise ValueError('معرفی شرکت معتبر نیست.')
+    string(data.get('company',{}).get('description',''),2500);string(data.get('company',{}).get('serviceArea',''),200)
     for path,seo in data.get('pageSeo',{}).items():
         string(path,180)
         if not isinstance(seo,dict):raise ValueError('سئو معتبر نیست.')
@@ -268,7 +270,7 @@ def public_content(data):
         module['items'] = [i for i in module['items'] if i.get('status') == 'published' and (key != 'products' or i.get('categoryId') in visible)]
         prefix = 'product' if key == 'products' else 'service' if key == 'services' else key
         allowed_pages.update(prefix+':'+i['id'] for i in module['items'])
-    visible_paths={'/','/contact'}|{'/'+k for k in MODULES}|{'/category/'+c for c in visible}
+    visible_paths={'/','/contact','/about'}|{'/'+k for k in MODULES}|{'/category/'+c for c in visible}
     for key,module in data['modules'].items():
         prefix='product' if key=='products' else 'service' if key=='services' else key
         visible_paths.update('/'+prefix+'/'+i['id'] for i in module['items'])
@@ -334,7 +336,7 @@ class Handler(BaseHTTPRequestHandler):
                 return self.reply(200, {'revision':row['revision'], 'data':data if session else public_content(data)})
             public=public_content(data)
             if path == '/robots.txt':
-                return self.reply(200,('User-agent: *\nAllow: /\nDisallow: /panel\nDisallow: /admin\nDisallow: /api/\nSitemap: '+self.server.origin+'/sitemap.xml\n').encode(),content_type='text/plain; charset=utf-8')
+                return self.reply(200,site_features.robots_text(self.server.origin).encode(),content_type='text/plain; charset=utf-8')
             if path == '/sitemap.xml':
                 return self.reply(200,site_features.xml_sitemap(public,self.server.origin).encode(),content_type='application/xml; charset=utf-8')
             if path in ['/', '/index.html', '/admin','/panel','/panel/'] or path in site_features.pages(public):

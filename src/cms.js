@@ -19,7 +19,7 @@
   const KEYS = ['products','services','projects','partners','software','articles','contact','catalog'];
   const CONTENT_KEYS = [...KEYS,'equipment'];
   const LABELS = {products:'محصولات',services:'خدمات',projects:'پروژه‌ها',partners:'همکاران',equipment:'فروش تجهیزات تلویزیون',software:'نرم‌افزار',articles:'مقالات',contact:'تماس با ما',catalog:'کاتالوگ'};
-  const TITLES = {stats:'آمار بازدید',footer:'فوتر سایت',seo:'تنظیمات سئو',dashboard:'پیشخوان',header:'لوگو و هدر',hero:'هیرو / تصویر اصلی',navigation:'منوها و اتصال‌ها',categories:'دسته‌بندی محصولات',banners:'بنر اختصاصی صفحات',security:'رمز و ورود',backup:'نسخهٔ پشتیبان و خروجی'};
+  const TITLES = {company:'معرفی شرکت',stats:'آمار بازدید',footer:'فوتر سایت',seo:'تنظیمات سئو',dashboard:'پیشخوان',header:'لوگو و هدر',hero:'هیرو / تصویر اصلی',navigation:'منوها و اتصال‌ها',categories:'دسته‌بندی محصولات',banners:'بنر اختصاصی صفحات',security:'رمز و ورود',backup:'نسخهٔ پشتیبان و خروجی'};
   const DESCRIPTIONS = {
     dashboard:'از اینجا ظاهر سایت را تنظیم کن و محتوای هر بخش را مدیریت کن.',
     header:'لوگو، نام فارسی و انگلیسی و شعارهای بالای سایت را جداگانه ویرایش کن.',
@@ -149,9 +149,9 @@
     if(kind==='service')item=published('services').find(i=>i.id===id);
     if(kind==='equipment'&&id)item=published('equipment').find(i=>i.id===id);
     if(kind==='category')category=publicCategories().find(c=>c.id===id);
-    const fallback=path==='/'?{title:data.header.nameFa,description:data.hero.description,heading:data.header.nameFa}:path==='/contact'?{title:data.contact.title,heading:data.contact.title,description:data.contact.description}:item?{title:item.title,heading:item.title,description:item.summary}:category?{title:category.name,heading:category.banner?.title||category.name,description:category.description}:{title:data.modules[kind]?.name||data.header.nameFa,heading:data.modules[kind]?.name||data.header.nameFa,description:data.modules[kind]?.description||data.hero.description};
+    const fallback=path==='/about'?{title:'دربارهٔ '+data.header.nameFa,heading:'دربارهٔ '+data.header.nameFa,description:companyDescription()}:path==='/'?{title:data.header.nameFa,description:data.hero.description,heading:data.header.nameFa}:path==='/contact'?{title:data.contact.title,heading:data.contact.title,description:data.contact.description}:item?{title:item.title,heading:item.title,description:item.summary}:category?{title:category.name,heading:category.banner?.title||category.name,description:category.description}:{title:data.modules[kind]?.name||data.header.nameFa,heading:data.modules[kind]?.name||data.header.nameFa,description:data.modules[kind]?.description||data.hero.description};
     const defaults=searchDefaults[path]||{},custom=data.pageSeo?.[path]||{},copy={...defaults,...Object.fromEntries(Object.entries(custom).filter(([key])=>!['title','description'].includes(key)))};
-    const indexable=path==='/'||path==='/contact'||!!item||(category?categoryCount(category.id)>0:CONTENT_KEYS.includes(kind)&&published(kind).length>0);
+    const indexable=path==='/'||path==='/contact'||path==='/about'||!!item||(category?categoryCount(category.id)>0:CONTENT_KEYS.includes(kind)&&published(kind).length>0);
     return {kind,item,category,title:item?.seoTitle||custom.title||defaults.title||fallback.title,description:(item?.seoDescription||custom.description||defaults.description||fallback.description).slice(0,320),heading:path==='/'&&copy.showContent!==false&&copy.heading?copy.heading:fallback.heading,copy:copy.showContent!==false&&(copy.intro||copy.sections?.length)?copy:null,indexable};
   }
   function searchTrail(path,model){
@@ -165,7 +165,8 @@
   }
   function searchSchema(path,model,origin){
     const org=origin+'/#organization',url=origin+path;
-    const graph=[{'@type':'Organization','@id':org,name:data.header.nameEn||data.header.nameFa,alternateName:data.header.nameFa,url:origin+'/'},{'@type':'WebSite','@id':origin+'/#website',url:origin+'/',name:data.header.nameFa,inLanguage:'fa-IR',publisher:{'@id':org}},{'@type':path==='/products'||path.startsWith('/category/')?'CollectionPage':'WebPage','@id':url+'#webpage',url,name:model.title+' | AvA Groups',description:model.description,inLanguage:'fa-IR',isPartOf:{'@id':origin+'/#website'}},{'@type':'BreadcrumbList','@id':url+'#breadcrumb',itemListElement:searchTrail(path,model).map((c,n)=>({'@type':'ListItem',position:n+1,name:c.name,item:origin+c.path}))}];
+    const graph=[{'@type':'Organization','@id':org,name:data.header.nameEn||data.header.nameFa,alternateName:data.header.nameFa,url:origin+'/'},{'@type':'WebSite','@id':origin+'/#website',url:origin+'/',name:data.header.nameFa,inLanguage:'fa-IR',publisher:{'@id':org}},{'@type':path==='/about'?'AboutPage':path==='/products'||path.startsWith('/category/')?'CollectionPage':'WebPage','@id':url+'#webpage',url,name:model.title+' | AvA Groups',description:model.description,inLanguage:'fa-IR',isPartOf:{'@id':origin+'/#website'}},{'@type':'BreadcrumbList','@id':url+'#breadcrumb',itemListElement:searchTrail(path,model).map((c,n)=>({'@type':'ListItem',position:n+1,name:c.name,item:origin+c.path}))}];
+    graph[0].description=companyDescription();if(data.company?.serviceArea)graph[0].areaServed=data.company.serviceArea;const contact={};if(data.contact.phone?.trim())contact.telephone=data.contact.phone.trim();if(data.contact.email?.trim())contact.email=data.contact.email.trim();if(Object.keys(contact).length)graph[0].contactPoint={'@type':'ContactPoint',contactType:'فروش و پشتیبانی',...contact};if(path==='/about')graph[2].mainEntity={'@id':org};
     if(model.item&&['product','service'].includes(model.kind)){const item=model.item,entity={'@type':model.kind==='product'?'Product':'Service','@id':url+'#entity',name:item.title,description:item.summary,url,mainEntityOfPage:{'@id':url+'#webpage'}};if(model.kind==='product'){entity.sku=item.id;if(item.model)entity.model=item.model;}else entity.provider={'@id':org};graph.push(entity);}
     return {'@context':'https://schema.org','@graph':graph};
   }
@@ -197,10 +198,14 @@
       for(const [key,label]of [['topPages','صفحات پربازدید؛ از شروع ثبت'],['topProducts','محصولات پربازدید؛ از شروع ثبت'],['contactClicks','کلیک‌های تماس؛ از شروع ثبت']]){const list=el('div',{class:'admin-panel'},el('h2',{},label));for(const row of stats[key])list.append(el('p',{},(row.path||{'contact-phone':'تلفن','contact-email':'ایمیل','contact-request':'فرم تماس','contact-link':'رفتن به تماس'}[row.event]||row.event)+' — '+(row.views||row.clicks).toLocaleString('fa-IR')));if(!stats[key].length)list.append(el('p',{},'داده‌ای ثبت نشده است.'));root.append(list);}
     }catch(e){root.textContent=e.message;}
   }
+  function companyDescription(){return data.company?.description||'گروه آوا در زمینهٔ فروش و اجارهٔ نمایشگر LED و تلویزیون شهری فعالیت می‌کند. محصولات و خدمات مرتبط را بررسی کنید و برای انتخاب متناسب با محل نصب یا رویداد، درخواست مشاوره و استعلام بفرستید.';}
+  function renderAbout(){const root=$('#catalog-page');root.replaceChildren();const section=el('section',{class:'content company-profile'},el('h1',{},'دربارهٔ '+data.header.nameFa),el('p',{},companyDescription()));if(data.company?.serviceArea)section.append(el('h2',{},'محدودهٔ خدمات'),el('p',{},data.company.serviceArea));const contacts=el('section',{},el('h2',{},'راه‌های ارتباطی'));if(data.contact.phone)contacts.append(el('p',{},el('a',{href:'tel:'+data.contact.phone,'data-contact-event':'contact-phone'},data.contact.phone)));if(data.contact.email)contacts.append(el('p',{},el('a',{href:'mailto:'+data.contact.email,'data-contact-event':'contact-email'},data.contact.email)));if(data.contact.address)contacts.append(el('p',{},data.contact.address));section.append(contacts,el('nav',{class:'search-copy-links'},el('a',{href:serverMode?'/products':'#products'},'محصولات نمایشگر LED'),el('a',{href:serverMode?'/services':'#services'},'خدمات و اجاره'),el('a',{href:serverMode?'/contact':'#contact'},'تماس با آوا')));root.append(section);}
+  function renderCompanyEditor(root){root.innerHTML='<div class="admin-panel"><form id="company-form" class="admin-form">'+field('معرفی شرکت؛ فقط اطلاعات قابل انتشار','description',companyDescription(),{max:2500,multiline:true,rows:6})+field('محدودهٔ خدمات تأییدشده؛ در صورت مشخص‌نبودن خالی بماند','serviceArea',data.company?.serviceArea||'',{max:200})+saveButton()+'</form></div><div class="notice">نام فارسی و انگلیسی از بخش هدر و تلفن و نشانی از بخش تماس با ما خوانده می‌شوند. سابقه، گواهی، پروژه یا شهر تأییدنشده وارد نکنید.</div>';const form=$('#company-form');watchForm(form);form.onsubmit=async event=>{event.preventDefault();const next=clone(data);next.company=formValues(form);await commit(next);};}
+
   function renderFooterEditor(root){const footer=data.footer;root.innerHTML='<div class="admin-panel"><form id="footer-form" class="admin-form">'+field('متن معرفی پایین سایت','text',footer.text,{max:1000,multiline:true})+field('متن حقوق و کپی‌رایت','copyright',footer.copyright,{max:1000})+saveButton()+'</form></div>';const form=$('#footer-form');watchForm(form);form.onsubmit=async event=>{event.preventDefault();const next=clone(data);next.footer=formValues(form);await commit(next);};}
   function renderSeoEditor(root){
     root.innerHTML='<div class="admin-panel"><form class="admin-form" id="seo-form"><label>صفحه<select id="seo-page"></select></label><div id="seo-fields"></div>'+saveButton('ذخیرهٔ متن و سئوی صفحه')+'</form></div><div class="notice">متن معرفی به بازدیدکننده هم نمایش داده می‌شود. عنوان و توضیح سئوی محصول در ویرایش همان محصول قرار دارد. عنوان‌ها و متن‌های سفارشی قبلی حفظ می‌شوند.</div>';
-    const select=$('#seo-page'),choices=[{id:'/',name:'صفحهٔ اصلی'},...CONTENT_KEYS.map(k=>({id:'/'+k,name:data.modules[k].name})),...data.productCategories.map(c=>({id:'/category/'+c.id,name:c.name})),...data.modules.services.items.map(i=>({id:'/service/'+i.id,name:i.title}))];
+    const select=$('#seo-page'),choices=[{id:'/',name:'صفحهٔ اصلی'},{id:'/about',name:'معرفی شرکت'},...CONTENT_KEYS.map(k=>({id:'/'+k,name:data.modules[k].name})),...data.productCategories.map(c=>({id:'/category/'+c.id,name:c.name})),...data.modules.services.items.map(i=>({id:'/service/'+i.id,name:i.title}))];
     select.replaceChildren(...choices.map(c=>el('option',{value:c.id},c.name)));let path=select.value;
     const paint=()=>{const seo={...searchDefaults[path],...data.pageSeo[path]};$('#seo-fields').innerHTML=field('عنوان سئو','title',seo.title||'',{max:160})+field('توضیحات سئو','description',seo.description||'',{max:320,multiline:true})+checkbox('نمایش متن معرفی و راهنمای انتخاب در صفحه','showContent',seo.showContent!==false)+field('عنوان متن معرفی','heading',seo.heading||'',{max:200})+field('متن معرفی','intro',seo.intro||'',{max:2500,multiline:true})+field('بخش‌های راهنما؛ هر خط: عنوان | توضیح','sections',(seo.sections||[]).map(c=>c.heading+' | '+c.body).join('\n'),{max:32000,multiline:true,rows:9});};paint();
     select.onchange=()=>{if(!discardAllowed()){select.value=path;return;}dirty=false;path=select.value;paint();};const form=$('#seo-form');watchForm($('#seo-fields'));
@@ -242,7 +247,7 @@
   }
   function validate(raw) {
     if (!isObject(raw) || raw.version !== 1 || !isObject(raw.header) || !isObject(raw.hero) || !isObject(raw.modules) || !isObject(raw.contact) || !Array.isArray(raw.navigation)) throw new Error('ساختار فایل پشتیبان معتبر نیست.');
-    const out = clone(seed);
+    const out = clone(seed);const company=raw.company||{};out.company={description:text(company.description||'',2500),serviceArea:text(company.serviceArea||'',200)};
     const footer=raw.footer||{text:'آوا؛ فروش و اجارهٔ نمایشگر.',copyright:''};out.footer={text:text(footer.text||'',1000),copyright:text(footer.copyright||'',1000)};out.pageSeo={};
     if(raw.pageSeo && !isObject(raw.pageSeo))throw new Error('سئو معتبر نیست.');for(const [key,value] of Object.entries(raw.pageSeo||{})){if(!/^\/(?:[a-zA-Z0-9_-]+\/?)*$/.test(key)||!isObject(value))throw new Error('صفحهٔ سئو معتبر نیست.');const seo={title:text(value.title||'',160),description:text(value.description||'',320)};
       for(const name of ['heading','intro'])if(value[name]!==undefined)seo[name]=text(value[name],name==='heading'?200:2500);
@@ -793,10 +798,10 @@
   }
   function renderCatalogRoute() {
     const [name,id] = currentHash().slice(1).split('/');
-    const isCatalog = ['products','category','product','service','equipment'].includes(name);
+    const isCatalog = ['about','products','category','product','service','equipment'].includes(name);
     $('#home-content').hidden = isCatalog;$('#catalog-page').hidden = !isCatalog;
     if (!isCatalog) return false;
-    if (name === 'products') renderCatalogue();else if (name === 'category') renderCatalogue(id || '__missing__');else if (name === 'service') renderOffering('services',id || '__missing__');else if (name === 'equipment') {if (id) renderOffering('equipment',id);else renderEquipmentList();}else renderProduct(id || '__missing__');
+    if(name==='about')renderAbout();else if (name === 'products') renderCatalogue();else if (name === 'category') renderCatalogue(id || '__missing__');else if (name === 'service') renderOffering('services',id || '__missing__');else if (name === 'equipment') {if (id) renderOffering('equipment',id);else renderEquipmentList();}else renderProduct(id || '__missing__');
     return true;
   }
   function renderOffering(key,id) {
@@ -1032,6 +1037,8 @@
       }
       section.prepend(heading);section.append(cards);sections.append(section);
     }
+    if(!$('#about-link'))$('footer>p').after(el('a',{id:'about-link',href:serverMode?'/about':'#about'},'دربارهٔ '+data.header.nameFa));
+    $('#about-link').textContent='دربارهٔ '+data.header.nameFa;
     $('footer>p').textContent=(data.footer?.text||'')+(data.footer?.copyright?' — '+data.footer.copyright:'');
     $('.contact h2').textContent = data.contact.title;
     $('.contact>div>p').textContent = data.contact.description;
@@ -1337,6 +1344,7 @@
     else if (page === 'navigation') renderNavigationEditor(root);
     else if (page === 'banners') renderBannersEditor(root);
     else if(page==='stats')renderStats(root);
+    else if(page==='company')renderCompanyEditor(root);
     else if(page==='footer')renderFooterEditor(root);
     else if(page==='seo')renderSeoEditor(root);
     else if (page === 'security') renderSecurity(root);
