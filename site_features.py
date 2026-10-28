@@ -1,4 +1,7 @@
 """Public SEO documents and persistent, first-party aggregate analytics."""
+from pathlib import Path
+import re
+_SEARCH_CACHE={}
 import datetime as dt
 import hashlib
 import html
@@ -12,38 +15,117 @@ def initialize(db):
     db.executescript('''CREATE TABLE IF NOT EXISTS site_metrics_meta(key TEXT PRIMARY KEY,value TEXT);
     CREATE TABLE IF NOT EXISTS site_metrics(day TEXT,path TEXT,visitor TEXT,event TEXT,total INTEGER,PRIMARY KEY(day,path,visitor,event));''')
 
+def search_defaults():
+    """Versioned copy is bundled in HTML; no database migration overwrites edits."""
+    file=Path(__file__).with_name('index.html');stamp=file.stat().st_mtime_ns
+    if _SEARCH_CACHE.get('stamp')!=stamp:
+        match=re.search(r'<script id="ava-search-content"[^>]*>(.*?)</script>',file.read_text(),re.S)
+        _SEARCH_CACHE.update(stamp=stamp,data=json.loads(match[1]) if match else {})
+    return _SEARCH_CACHE['data']
+
 def pages(data):
-    result={'/':{'title':data['header']['nameFa'],'description':data['hero']['description'],'body':data['hero']['description']}}
+    brand=data['header']['nameFa']
+    result={'/':{'title':brand,'heading':brand,'description':data['hero']['description'],'body':data['hero']['description'],'indexable':True}}
+    product_items=data['modules']['products']['items']
     for key,module in data['modules'].items():
-        result['/'+key]={'title':module['name'],'description':module['description'],'body':module['description']}
+        result['/'+key]={'title':module['name'],'heading':module['name'],'description':module['description'],'body':module['description'],'indexable':bool(module['items']) or key=='contact'}
         if key not in ['products','services','equipment']:continue
         prefix={'products':'product','services':'service','equipment':'equipment'}[key]
         for item in module['items']:
-            result['/'+prefix+'/'+item['id']]={'title':item.get('seoTitle') or item['title'],'description':item.get('seoDescription') or item['summary'],'body':item['body'],'specs':item.get('specifications',[]),'product':key=='products'}
+            result['/'+prefix+'/'+item['id']]={'title':item['title'],'heading':item['title'],'description':item['summary'],'body':item['body'],'specs':item.get('specifications',[]),'product':key=='products','item':item,'kind':prefix,'indexable':True}
     for c in data['productCategories']:
-        result['/category/'+c['id']]={'title':c['name'],'description':c['description'],'body':c['description']}
-    result['/contact']={'title':data['contact']['title'],'description':data['contact']['description'],'body':'\n'.join(data['contact'].get(k,'') for k in ['address','phone','email'])}
-    for path,seo in data.get('pageSeo',{}).items():
-        if path in result:
-            for field in ['title','description']:
-                if seo.get(field):result[path][field]=seo[field]
+        ids={c['id']}|{child['id'] for child in data['productCategories'] if child.get('parentId')==c['id']}
+        result['/category/'+c['id']]={'title':c['name'],'heading':c.get('banner',{}).get('title') or c['name'],'description':c['description'],'body':c['description'],'indexable':any(i['categoryId'] in ids for i in product_items),'category':c}
+    result['/contact']={'title':data['contact']['title'],'heading':data['contact']['title'],'description':data['contact']['description'],'body':'\n'.join(data['contact'].get(k,'') for k in ['address','phone','email']),'indexable':True}
+    defaults=search_defaults()
+    for path,p in result.items():
+        default=defaults.get(path,{});custom=data.get('pageSeo',{}).get(path,{})
+        for field in ['title','description']:
+            p[field]=custom.get(field) or default.get(field) or p[field]
+        # Product/service editor fields have consistent priority in SSR and browser.
+        item=p.get('item',{})
+        p['title']=item.get('seoTitle') or p['title'];p['description']=item.get('seoDescription') or p['description']
+        copy={**default,**{k:v for k,v in custom.items() if k not in ['title','description']}}
+        if copy.get('showContent',True) and (copy.get('intro') or copy.get('sections')):
+            p['copy']=copy
+        if path=='/' and p.get('copy'):p['heading']=copy.get('heading') or p['heading']
+    for p in result.values():
+        if p.get('copy'):
+            p['copy']={**p['copy'],'links':[link for link in p['copy'].get('links',[]) if link['path'] in result and result[link['path']]['indexable']]}
     return result
+
+def breadcrumb(data,path,all_pages):
+    trail=[{'name':'خانه','path':'/'}]
+    if path=='/':return trail
+    p=all_pages[path];kind=p.get('kind')
+    if path.startswith('/category/') or kind=='product':
+        trail.append({'name':data['modules']['products']['name'],'path':'/products'})
+        category=p.get('category') or next((c for c in data['productCategories'] if c['id']==p.get('item',{}).get('categoryId')),None)
+        if category:
+            parent=next((c for c in data['productCategories'] if c['id']==category.get('parentId')),None)
+            if parent:trail.append({'name':parent['name'],'path':'/category/'+parent['id']})
+            if '/category/'+category['id']!=path:trail.append({'name':category['name'],'path':'/category/'+category['id']})
+    elif kind=='service':trail.append({'name':data['modules']['services']['name'],'path':'/services'})
+    trail.append({'name':p['heading'],'path':path})
+    return trail
+
+def structured_data(data,path,origin,all_pages=None):
+    all_pages=all_pages or pages(data);p=all_pages[path];org=origin+'/#organization';url=origin+path
+    graph=[{'@type':'Organization','@id':org,'name':data['header']['nameEn'] or data['header']['nameFa'],'alternateName':data['header']['nameFa'],'url':origin+'/'},
+           {'@type':'WebSite','@id':origin+'/#website','url':origin+'/','name':data['header']['nameFa'],'inLanguage':'fa-IR','publisher':{'@id':org}},
+           {'@type':'CollectionPage' if path=='/products' or path.startswith('/category/') else 'WebPage','@id':url+'#webpage','url':url,'name':p['title']+' | AvA Groups','description':p['description'][:320],'inLanguage':'fa-IR','isPartOf':{'@id':origin+'/#website'}},
+           {'@type':'BreadcrumbList','@id':url+'#breadcrumb','itemListElement':[{'@type':'ListItem','position':n+1,'name':c['name'],'item':origin+c['path']} for n,c in enumerate(breadcrumb(data,path,all_pages))]}]
+    item=p.get('item')
+    if item and p.get('kind') in ['product','service']:
+        entity={'@type':'Product' if p['kind']=='product' else 'Service','@id':url+'#entity','name':item['title'],'description':item['summary'],'url':url,'mainEntityOfPage':{'@id':url+'#webpage'}}
+        if p['kind']=='product':
+            entity['sku']=item['id']
+            if item.get('model'):entity['model']=item['model']
+        else:entity['provider']={'@id':org}
+        graph.append(entity)
+    return {'@context':'https://schema.org','@graph':graph}
+
+def related_links(data,path,all_pages):
+    p=all_pages[path];links=list(p.get('copy',{}).get('links',[]))
+    if path=='/' and not links:links=[{'path':'/products','label':'محصولات نمایشگر LED'},{'path':'/services','label':'خدمات نمایشگر LED'}]
+    elif path=='/products' or path.startswith('/category/'):
+        category=p.get('category');ids=None
+        if category:ids={category['id']}|{c['id'] for c in data['productCategories'] if c.get('parentId')==category['id']}
+        links.extend({'path':'/product/'+i['id'],'label':i['title']} for i in data['modules']['products']['items'] if ids is None or i.get('categoryId') in ids)
+    elif path=='/services':links.extend({'path':'/service/'+i['id'],'label':i['title']} for i in data['modules']['services']['items'])
+    elif p.get('kind')=='product':links.extend([{'path':'/category/'+p['item']['categoryId'],'label':'محصولات همین دسته'},{'path':'/contact','label':'استعلام محصول'}])
+    elif p.get('kind')=='service':links.append({'path':'/contact','label':'درخواست این خدمت'})
+    seen=set();out=[]
+    for link in links:
+        if link['path']!=path and link['path'] not in seen and link['path'] in all_pages and all_pages[link['path']]['indexable']:
+            out.append(link);seen.add(link['path'])
+    return out
 
 def seo_html(data,path,origin):
     all_pages=pages(data);p=all_pages.get(path)
     if not p:return None
-    esc=html.escape
-    title=p['title']+' | AvA Groups';description=p['description'][:320]
-    head='<title>'+esc(title)+'</title><meta name="description" content="'+esc(description,quote=True)+'"><link rel="canonical" href="'+esc(origin+path,quote=True)+'"><meta property="og:title" content="'+esc(title,quote=True)+'"><meta property="og:description" content="'+esc(description,quote=True)+'"><meta property="og:url" content="'+esc(origin+path,quote=True)+'">'
-    links=''.join('<li><a href="'+esc(url,quote=True)+'">'+esc(record['title'])+'</a></li>' for url,record in all_pages.items())
+    esc=html.escape;title=p['title']+' | AvA Groups';description=p['description'][:320]
+    robots='index,follow' if p['indexable'] else 'noindex,follow'
+    head='<title>'+esc(title)+'</title><meta name="description" content="'+esc(description,quote=True)+'"><meta name="robots" content="'+robots+'"><link rel="canonical" href="'+esc(origin+path,quote=True)+'">'
+    for name,value in [('og:title',title),('og:description',description),('og:url',origin+path),('og:locale','fa_IR'),('og:type','website')]:head+='<meta property="'+name+'" content="'+esc(value,quote=True)+'">'
+    schema=json.dumps(structured_data(data,path,origin,all_pages),ensure_ascii=False).replace('<','\\u003c')
+    head+='<script id="ava-structured-data" type="application/ld+json">'+schema+'</script>'
+    crumbs=' / '.join('<a href="'+esc(c['path'],quote=True)+'">'+esc(c['name'])+'</a>' for c in breadcrumb(data,path,all_pages))
+    body='<main id="ava-seo-content" dir="rtl"><nav aria-label="مسیر صفحه">'+crumbs+'</nav><h1>'+esc(p['heading'])+'</h1><p>'+esc(description)+'</p>'
+    copy=p.get('copy')
+    if copy:
+        if path!='/':body+='<h2>'+esc(copy.get('heading') or p['heading'])+'</h2>'
+        body+='<p>'+esc(copy.get('intro',''))+'</p>'
+        for section in copy.get('sections',[]):body+='<h2>'+esc(section['heading'])+'</h2><p>'+esc(section['body'])+'</p>'
+    if p.get('body'):body+='<div style="white-space:pre-line">'+esc(p['body'])+'</div>'
     specs=''.join('<tr><th>'+esc(s['label'])+'</th><td>'+esc(s['value'])+'</td></tr>' for s in p.get('specs',[]))
-    body='<main id="ava-seo-content" dir="rtl"><h1>'+esc(p['title'])+'</h1><p>'+esc(description)+'</p><div style="white-space:pre-line">'+esc(p.get('body',''))+'</div>'
     if specs:body+='<h2>مشخصات فنی</h2><table>'+specs+'</table>'
-    body+='<nav aria-label="صفحات سایت"><ul>'+links+'</ul></nav></main>'
-    return head,body
+    links=''.join('<li><a href="'+esc(c['path'],quote=True)+'">'+esc(c['label'])+'</a></li>' for c in related_links(data,path,all_pages))
+    if links:body+='<nav aria-label="صفحات مرتبط"><ul>'+links+'</ul></nav>'
+    return head,body+'</main>'
 
 def xml_sitemap(data,origin):
-    return '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'+''.join('<url><loc>'+html.escape(origin+p)+'</loc></url>' for p in pages(data))+'</urlset>'
+    return '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'+''.join('<url><loc>'+html.escape(origin+p)+'</loc></url>' for p,record in pages(data).items() if record['indexable'])+'</urlset>'
 
 def record(db,payload,cookie_header,data,secure):
     path=payload.get('path');event=payload.get('event')

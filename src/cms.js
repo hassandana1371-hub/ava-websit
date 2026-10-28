@@ -142,13 +142,51 @@
   function setMeta(name,content){let node=$('meta[name="'+name+'"]');if(!node){node=el('meta',{name});document.head.append(node);}node.content=content;}
   let lastTrackedPath='';
   function trackEvent(event){if(!serverMode||authenticated||adminVisible||currentHash().startsWith('#admin'))return;fetch('/api/track',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:publicPath(),event}),keepalive:true}).catch(()=>{});}
+  const searchDefaults=JSON.parse($('#ava-search-content')?.textContent||'{}');
+  function searchModel(path){
+    const [kind,id]=path.slice(1).split('/');let item,category;
+    if(kind==='product')item=publicProducts().find(i=>i.id===id);
+    if(kind==='service')item=published('services').find(i=>i.id===id);
+    if(kind==='equipment'&&id)item=published('equipment').find(i=>i.id===id);
+    if(kind==='category')category=publicCategories().find(c=>c.id===id);
+    const fallback=path==='/'?{title:data.header.nameFa,description:data.hero.description,heading:data.header.nameFa}:path==='/contact'?{title:data.contact.title,heading:data.contact.title,description:data.contact.description}:item?{title:item.title,heading:item.title,description:item.summary}:category?{title:category.name,heading:category.banner?.title||category.name,description:category.description}:{title:data.modules[kind]?.name||data.header.nameFa,heading:data.modules[kind]?.name||data.header.nameFa,description:data.modules[kind]?.description||data.hero.description};
+    const defaults=searchDefaults[path]||{},custom=data.pageSeo?.[path]||{},copy={...defaults,...Object.fromEntries(Object.entries(custom).filter(([key])=>!['title','description'].includes(key)))};
+    const indexable=path==='/'||path==='/contact'||!!item||(category?categoryCount(category.id)>0:CONTENT_KEYS.includes(kind)&&published(kind).length>0);
+    return {kind,item,category,title:item?.seoTitle||custom.title||defaults.title||fallback.title,description:(item?.seoDescription||custom.description||defaults.description||fallback.description).slice(0,320),heading:path==='/'&&copy.showContent!==false&&copy.heading?copy.heading:fallback.heading,copy:copy.showContent!==false&&(copy.intro||copy.sections?.length)?copy:null,indexable};
+  }
+  function searchTrail(path,model){
+    const trail=[{name:'خانه',path:'/'}];if(path==='/')return trail;
+    if(model.category||model.kind==='product'){
+      trail.push({name:data.modules.products.name,path:'/products'});const category=model.category||categoryFor(model.item);
+      const parent=data.productCategories.find(c=>c.id===category?.parentId);if(parent)trail.push({name:parent.name,path:'/category/'+parent.id});
+      if(category&&'/category/'+category.id!==path)trail.push({name:category.name,path:'/category/'+category.id});
+    }else if(model.kind==='service')trail.push({name:data.modules.services.name,path:'/services'});
+    trail.push({name:model.heading,path});return trail;
+  }
+  function searchSchema(path,model,origin){
+    const org=origin+'/#organization',url=origin+path;
+    const graph=[{'@type':'Organization','@id':org,name:data.header.nameEn||data.header.nameFa,alternateName:data.header.nameFa,url:origin+'/'},{'@type':'WebSite','@id':origin+'/#website',url:origin+'/',name:data.header.nameFa,inLanguage:'fa-IR',publisher:{'@id':org}},{'@type':path==='/products'||path.startsWith('/category/')?'CollectionPage':'WebPage','@id':url+'#webpage',url,name:model.title+' | AvA Groups',description:model.description,inLanguage:'fa-IR',isPartOf:{'@id':origin+'/#website'}},{'@type':'BreadcrumbList','@id':url+'#breadcrumb',itemListElement:searchTrail(path,model).map((c,n)=>({'@type':'ListItem',position:n+1,name:c.name,item:origin+c.path}))}];
+    if(model.item&&['product','service'].includes(model.kind)){const item=model.item,entity={'@type':model.kind==='product'?'Product':'Service','@id':url+'#entity',name:item.title,description:item.summary,url,mainEntityOfPage:{'@id':url+'#webpage'}};if(model.kind==='product'){entity.sku=item.id;if(item.model)entity.model=item.model;}else entity.provider={'@id':org};graph.push(entity);}
+    return {'@context':'https://schema.org','@graph':graph};
+  }
+  function renderSearchCopy(path,model){
+    $$('.search-copy').forEach(node=>node.remove());const copy=model.copy;if(!copy)return;
+    const primary=path==='/'||$('#catalog-page').hidden;const section=el('section',{class:'content search-copy','aria-label':copy.heading||model.heading});
+    section.append(el(primary?'h1':'h2',{},copy.heading||model.heading),el('p',{class:'search-copy-intro'},copy.intro||''));
+    const columns=el('div',{class:'search-copy-sections'});for(const item of copy.sections||[])columns.append(el('section',{},el(primary?'h2':'h3',{},item.heading),el('p',{},item.body)));section.append(columns);
+    const links=el('nav',{'aria-label':'صفحات مرتبط',class:'search-copy-links'});for(const link of copy.links||[]){const target=searchModel(link.path);if(!target.indexable)continue;links.append(el('a',{href:serverMode?link.path:'#'+(link.path==='/'?'home':link.path.slice(1))},link.label));}if(links.children.length)section.append(links);
+    if(path==='/'){$('#home-page-heading')?.remove();$('#managed-sections').before(section);}else if(!$('#catalog-page').hidden){const layout=$('.catalog-layout',$('#catalog-page'));if(layout)layout.before(section);else $('#catalog-page').append(section);}else{const destination=document.getElementById(path.slice(1));if(destination)destination.before(section);}
+  }
   function finishPublicPage(){
     $('#ava-seo-content')?.remove();
     if(adminVisible||currentHash().startsWith('#admin')){setMeta('robots','noindex,nofollow');return;}
-    const path=publicPath(),[kind,id]=path.slice(1).split('/');let record;
-    if(kind==='product')record=publicProducts().find(i=>i.id===id);if(kind==='service')record=published('services').find(i=>i.id===id);if(kind==='category')record=publicCategories().find(i=>i.id===id);
-    const seo=data.pageSeo?.[path]||{};document.title=(record?.seoTitle||seo.title||record?.title||record?.name||data.modules[kind]?.name||data.header.nameFa)+' | AvA Groups';setMeta('description',record?.seoDescription||seo.description||record?.summary||record?.description||data.modules[kind]?.description||data.hero.description);setMeta('robots','index,follow');
-    let canonical=$('link[rel=canonical]');if(!canonical){canonical=el('link',{rel:'canonical'});document.head.append(canonical);}canonical.href=location.origin+path;
+    const path=publicPath(),model=searchModel(path),origin=JSON.parse($('#ava-site-origin')?.textContent||'null')||location.origin;
+    document.title=model.title+' | AvA Groups';setMeta('description',model.description);setMeta('robots',model.indexable?'index,follow':'noindex,follow');
+    let canonical=$('link[rel=canonical]');if(!canonical){canonical=el('link',{rel:'canonical'});document.head.append(canonical);}canonical.href=origin+path;
+    for(const [property,content]of [['og:title',document.title],['og:description',model.description],['og:url',origin+path],['og:locale','fa_IR'],['og:type','website']]){let meta=$('meta[property="'+property+'"]');if(!meta){meta=el('meta',{property});document.head.append(meta);}meta.content=content;}
+    let schema=$('#ava-structured-data');if(!schema){schema=el('script',{id:'ava-structured-data',type:'application/ld+json'});document.head.append(schema);}schema.textContent=JSON.stringify(searchSchema(path,model,origin));
+    renderSearchCopy(path,model);
+    if(!$('#home-content').hidden){if($('.search-copy h1'))$('#home-page-heading')?.remove();else {let heading=$('#home-page-heading');if(!heading){heading=el('h1',{id:'home-page-heading',class:'sr-only'});$('#home-content').prepend(heading);}heading.textContent=model.heading;}}
     if(serverMode)history.replaceState(null,'',path);
     if(lastTrackedPath!==path){trackEvent('pageview');lastTrackedPath=path;}
   }
@@ -160,7 +198,15 @@
     }catch(e){root.textContent=e.message;}
   }
   function renderFooterEditor(root){const footer=data.footer;root.innerHTML='<div class="admin-panel"><form id="footer-form" class="admin-form">'+field('متن معرفی پایین سایت','text',footer.text,{max:1000,multiline:true})+field('متن حقوق و کپی‌رایت','copyright',footer.copyright,{max:1000})+saveButton()+'</form></div>';const form=$('#footer-form');watchForm(form);form.onsubmit=async event=>{event.preventDefault();const next=clone(data);next.footer=formValues(form);await commit(next);};}
-  function renderSeoEditor(root){root.innerHTML='<div class="admin-panel"><form class="admin-form" id="seo-form"><label>صفحه<select id="seo-page"></select></label><div id="seo-fields"></div>'+saveButton('ذخیرهٔ سئوی صفحه')+'</form></div><div class="notice">عنوان و توضیح سئوی هر محصول در ویرایش همان محصول نیز قابل تنظیم است.</div>';const select=$('#seo-page');const choices=[{id:'/',name:'صفحهٔ اصلی'},...CONTENT_KEYS.map(k=>({id:'/'+k,name:data.modules[k].name})),...data.productCategories.map(c=>({id:'/category/'+c.id,name:c.name}))];select.replaceChildren(...choices.map(c=>el('option',{value:c.id},c.name)));let path=select.value;const paint=()=>{const seo=data.pageSeo[path]||{};$('#seo-fields').innerHTML=field('عنوان سئو','title',seo.title||'',{max:160})+field('توضیحات سئو','description',seo.description||'',{max:320,multiline:true});};paint();select.onchange=()=>{if(!discardAllowed()){select.value=path;return;}dirty=false;path=select.value;paint();};const form=$('#seo-form');watchForm(form);form.onsubmit=async event=>{event.preventDefault();const next=clone(data);next.pageSeo[path]={title:form.elements.title.value,description:form.elements.description.value};await commit(next);};}
+  function renderSeoEditor(root){
+    root.innerHTML='<div class="admin-panel"><form class="admin-form" id="seo-form"><label>صفحه<select id="seo-page"></select></label><div id="seo-fields"></div>'+saveButton('ذخیرهٔ متن و سئوی صفحه')+'</form></div><div class="notice">متن معرفی به بازدیدکننده هم نمایش داده می‌شود. عنوان و توضیح سئوی محصول در ویرایش همان محصول قرار دارد. عنوان‌ها و متن‌های سفارشی قبلی حفظ می‌شوند.</div>';
+    const select=$('#seo-page'),choices=[{id:'/',name:'صفحهٔ اصلی'},...CONTENT_KEYS.map(k=>({id:'/'+k,name:data.modules[k].name})),...data.productCategories.map(c=>({id:'/category/'+c.id,name:c.name})),...data.modules.services.items.map(i=>({id:'/service/'+i.id,name:i.title}))];
+    select.replaceChildren(...choices.map(c=>el('option',{value:c.id},c.name)));let path=select.value;
+    const paint=()=>{const seo={...searchDefaults[path],...data.pageSeo[path]};$('#seo-fields').innerHTML=field('عنوان سئو','title',seo.title||'',{max:160})+field('توضیحات سئو','description',seo.description||'',{max:320,multiline:true})+checkbox('نمایش متن معرفی و راهنمای انتخاب در صفحه','showContent',seo.showContent!==false)+field('عنوان متن معرفی','heading',seo.heading||'',{max:200})+field('متن معرفی','intro',seo.intro||'',{max:2500,multiline:true})+field('بخش‌های راهنما؛ هر خط: عنوان | توضیح','sections',(seo.sections||[]).map(c=>c.heading+' | '+c.body).join('\n'),{max:32000,multiline:true,rows:9});};paint();
+    select.onchange=()=>{if(!discardAllowed()){select.value=path;return;}dirty=false;path=select.value;paint();};const form=$('#seo-form');watchForm($('#seo-fields'));
+    form.onsubmit=async event=>{event.preventDefault();try{const next=clone(data),sections=form.elements.sections.value.split('\n').filter(line=>line.trim()).map(line=>{const n=line.indexOf('|');if(n<1||!line.slice(n+1).trim())throw new Error('هر بخش را در یک خط به شکل «عنوان | توضیح» بنویسید.');return {heading:line.slice(0,n).trim(),body:line.slice(n+1).trim()};});next.pageSeo[path]={title:form.elements.title.value,description:form.elements.description.value,heading:form.elements.heading.value,intro:form.elements.intro.value,showContent:form.elements.showContent.checked,sections};await commit(next);}catch(e){toast(e.message,true);}};
+  }
+
 
   function isObject(value) { return value !== null && typeof value === 'object' && !Array.isArray(value); }
   function text(value, max = 2000) {
@@ -198,7 +244,11 @@
     if (!isObject(raw) || raw.version !== 1 || !isObject(raw.header) || !isObject(raw.hero) || !isObject(raw.modules) || !isObject(raw.contact) || !Array.isArray(raw.navigation)) throw new Error('ساختار فایل پشتیبان معتبر نیست.');
     const out = clone(seed);
     const footer=raw.footer||{text:'آوا؛ فروش و اجارهٔ نمایشگر.',copyright:''};out.footer={text:text(footer.text||'',1000),copyright:text(footer.copyright||'',1000)};out.pageSeo={};
-    if(raw.pageSeo && !isObject(raw.pageSeo))throw new Error('سئو معتبر نیست.');for(const [key,value] of Object.entries(raw.pageSeo||{})){if(!/^\/(?:[a-zA-Z0-9_-]+\/?)*$/.test(key)||!isObject(value))throw new Error('صفحهٔ سئو معتبر نیست.');out.pageSeo[key]={title:text(value.title||'',160),description:text(value.description||'',320)};}
+    if(raw.pageSeo && !isObject(raw.pageSeo))throw new Error('سئو معتبر نیست.');for(const [key,value] of Object.entries(raw.pageSeo||{})){if(!/^\/(?:[a-zA-Z0-9_-]+\/?)*$/.test(key)||!isObject(value))throw new Error('صفحهٔ سئو معتبر نیست.');const seo={title:text(value.title||'',160),description:text(value.description||'',320)};
+      for(const name of ['heading','intro'])if(value[name]!==undefined)seo[name]=text(value[name],name==='heading'?200:2500);
+      if(value.showContent!==undefined){if(typeof value.showContent!=='boolean')throw new Error('تنظیم نمایش متن معتبر نیست.');seo.showContent=value.showContent;}
+      if(value.sections!==undefined){if(!Array.isArray(value.sections)||value.sections.length>12)throw new Error('بخش‌های متن معتبر نیست.');seo.sections=value.sections.map(row=>({heading:text(row.heading,200),body:text(row.body,2500)}));}
+      out.pageSeo[key]=seo;}
     if (raw.trailerRevision !== 1) {
       raw = clone(raw);
       raw.productCategories = raw.productCategories || clone(seed.productCategories);

@@ -212,6 +212,13 @@ def validate_content(data):
         string(path,180)
         if not isinstance(seo,dict):raise ValueError('سئو معتبر نیست.')
         string(seo.get('title',''),160);string(seo.get('description',''),320)
+        string(seo.get('heading',''),200);string(seo.get('intro',''),2500)
+        if 'showContent' in seo and type(seo['showContent']) is not bool:raise ValueError('نمایش متن معتبر نیست.')
+        sections=seo.get('sections',[])
+        if not isinstance(sections,list) or len(sections)>12:raise ValueError('بخش‌های متن معتبر نیست.')
+        for section in sections:
+            if not isinstance(section,dict):raise ValueError('متن بخش معتبر نیست.')
+            string(section.get('heading'),200);string(section.get('body'),2500)
     for slide in hero['slides']:
         link=slide.get('clickUrl','')
         string(link,2000)
@@ -335,7 +342,7 @@ class Handler(BaseHTTPRequestHandler):
                 html = bundled
                 seed = json.dumps(public_content(data), ensure_ascii=False).replace('<', '\\u003c')
                 html = re.sub(r'(<script id="ava-initial-data" type="application/json">).*?(</script>)', lambda m:m[1]+seed+m[2], html, flags=re.S)
-                html = html.replace('<head>', '<head><script id="ava-server-mode" type="application/json">true</script>', 1)
+                html = html.replace('<head>', '<head><script id="ava-server-mode" type="application/json">true</script><script id="ava-site-origin" type="application/json">'+json.dumps(self.server.origin).replace('<','\\u003c')+'</script>', 1)
                 if path.startswith(('/panel','/admin')):
                     html=html.replace('<head>','<head><meta name="robots" content="noindex,nofollow">',1)
                 else:
