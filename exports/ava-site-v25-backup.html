@@ -1641,7 +1641,7 @@ copyButton.addEventListener('click', async function () {
       try {const session = await api('/api/session');authenticated=session.authenticated;csrf=session.csrf;serverReady=true;const result=await api('/api/content');data=validate(result.data);serverRevision=result.revision;
         $('.local-badge').textContent='متصل به سرور';$('.sidebar-note').textContent='تغییرات پس از ذخیره روی سرور نگهداری می‌شوند. از بخش پشتیبان خروجی بگیرید.';
         $('#admin-logout').hidden=false;
-      } catch(error) {renderLogin(error.message);return;}
+      } catch(error) {if(!currentHash().startsWith('#admin')&&$('#ava-seo-content'))return;renderLogin(error.message);return;}
     }
     data=validate(data);renderPublic();renderSidebar();route();document.documentElement.dataset.avaRoute=currentHash() || '#home';
   }
