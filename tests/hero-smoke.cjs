@@ -13,10 +13,10 @@ seed.hero.showMotionLogo=false;
  try{
   const page=await browser.newPage({viewport:{width:1440,height:900},reducedMotion:'no-preference',acceptDownloads:true});page.on('pageerror',e=>errors.push(e.message));
   await page.goto(base);await page.evaluate(()=>document.fonts.ready);
-  assert.equal(await page.locator('#hero a,#hero h1,#hero p,.hero-slider-footer,.hero-slide-choices,.hero-shade').count(),0);
+  assert.equal(await page.locator('#hero a:not(.hero-image-link),#hero h1,#hero p,.hero-slider-footer,.hero-slide-choices,.hero-shade').count(),0);
   assert.equal((await page.locator('#hero').innerText()).trim(),'');assert.equal(await page.locator('.hero-scene').count(),5);
   assert.equal(await page.locator('#hero').evaluate(n=>n.getBoundingClientRect().bottom),900);
-  assert(await page.locator('.hero-scene').evaluateAll(images=>images.every(i=>i.complete&&i.naturalWidth>=1600&&i.src.startsWith('data:image/webp;base64,'))));
+  await page.locator('.hero-scene').evaluateAll(images=>Promise.all(images.map(i=>i.decode())));assert(await page.locator('.hero-scene').evaluateAll(images=>images.every(i=>i.complete&&i.naturalWidth>=1600&&i.src.startsWith('data:image/webp;base64,'))));
   await page.mouse.move(500,450);
   await page.evaluate(()=>{window.heroChanges=[];let previous='';new MutationObserver(()=>{const active=document.querySelector('.hero-slide[aria-hidden=false]');const alt=active.querySelector('img').alt;if(alt!==previous){previous=alt;window.heroChanges.push({alt,time:performance.now()});}}).observe(document.querySelector('#hero-viewport'),{subtree:true,attributes:true,attributeFilter:['aria-hidden']});});
   await page.waitForFunction(()=>window.heroChanges.length>=6,{},{timeout:14000});
@@ -44,10 +44,10 @@ seed.hero.showMotionLogo=false;
 
   for(const width of [320,390,768]){
    const p=await browser.newPage({viewport:{width,height:900},reducedMotion:'reduce'});p.on('pageerror',e=>errors.push(e.message));await p.goto(base);await p.evaluate(()=>document.fonts.ready);
-   assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth),width);assert.equal(await p.locator('#hero').evaluate(n=>n.getBoundingClientRect().bottom),900);
+   assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth),width);assert.equal(await p.locator('#hero').evaluate(n=>n.getBoundingClientRect().height),width<=760?Math.max(200,Math.min(440,width*.625)):900-(await p.locator('.site-header').boundingBox()).height);
    const image=await p.locator('.hero-slide[aria-hidden=false] img').boundingBox(),hero=await p.locator('#hero').boundingBox();assert.equal(image.width,hero.width);assert.equal(image.height,hero.height);
    assert.equal((await p.locator('#hero').innerText()).trim(),'');await p.waitForTimeout(1200);assert.equal(await p.locator('.hero-slide').first().getAttribute('aria-hidden'),'false');await p.screenshot({path:`/tmp/ava-v14-${width}.png`});await p.close();
   }
-  assert.deepEqual(errors,[]);console.log('PASS full image fill, no controls/text or horizontal overflow at 320/390/768, reduced motion and no browser errors');
+  assert.deepEqual(errors,[]);console.log('PASS responsive image frame, no overlay text or horizontal overflow at 320/390/768, reduced motion and no browser errors');
  }finally{await browser.close();await new Promise(r=>server.close(r));}
 })().catch(e=>{console.error(e);process.exit(1);});

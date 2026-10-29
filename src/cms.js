@@ -37,6 +37,7 @@
   const productImages = {...JSON.parse($('#ava-product-images').textContent),...Object.fromEntries(Object.entries(heroImages).filter(([name])=>name.startsWith('trailer-')))};
   const legacyProductVisuals = JSON.parse($('#ava-product-visual-history').textContent);
   const heroMotionDocument = JSON.parse($('#ava-hero-motion').textContent);
+  const softwareCatalog = JSON.parse($('#ava-software-catalog').textContent);
   let heroController;
   const serverMode = !!$('#ava-server-mode');
   let authenticated = !serverMode, csrf = '', serverRevision = 0, serverReady = !serverMode, saving = false;
@@ -336,7 +337,8 @@
     out.hero.slides = slides.map(slide => {
       if (!isObject(slide) || !/^[a-zA-Z0-9_-]{1,80}$/.test(slide.id) || slideIds.has(slide.id)) throw new Error('شناسهٔ اسلاید معتبر یا یکتا نیست.');
       slideIds.add(slide.id);
-      const result = {id:slide.id,clickUrl:clickURL(slide.clickUrl)};
+      if (slide.linkEnabled !== undefined && typeof slide.linkEnabled !== 'boolean') throw new Error('تنظیم لینک اسلاید معتبر نیست.');
+      const result = {id:slide.id,clickUrl:clickURL(slide.clickUrl),linkEnabled:slide.linkEnabled !== false};
       for (const key of ['eyebrow','title','highlight','description','imageAlt','primaryLabel','secondaryLabel']) result[key] = text(slide[key],key === 'description' ? 2500 : 200);
       if (!result.title.trim()) throw new Error('عنوان اسلاید نمی‌تواند خالی باشد.');
       result.image = imageData(slide.image);
@@ -367,6 +369,10 @@
     for (const key of CONTENT_KEYS) {
       let module = key === 'equipment' && raw.modules[key] === undefined ? seed.modules.equipment : raw.modules[key];
       if (!isObject(module) || !Array.isArray(module.items) || module.items.length > 500) throw new Error('اطلاعات یکی از بخش‌ها معتبر نیست.');
+      if (key === 'software' && (raw.softwareRevision || 0) < softwareCatalog.revision) {
+        module = {...module,items:[...module.items,...clone(softwareCatalog.items).filter(item => !module.items.some(existing => existing.id === item.id))]};
+        if (module.items.length > 500) throw new Error('تعداد نرم‌افزارها بیش از حد مجاز است.');
+      }
       if (key === 'products' && raw.catalogRevision !== 1) {
         const old = module.items.filter(item => !(item.id === 'initial-display' && item.title === 'فروش نمایشگر' && !item.image && !item.model && !item.body));
         module = {...module,items:[...old,...seed.modules.products.items.filter(item => !old.some(existing => existing.id === item.id))]};
@@ -437,6 +443,7 @@
     if((raw.contactRevision||0)<1)contact={...contact,...clone(contactDefaults.fields)};
     else if(raw.contactRevision<contactDefaults.revision){contact=clone(contact);contact.locations=contact.locations||[];if(!contact.locations.some(location=>location.id==='factory'))contact.locations.push(clone(contactDefaults.fields.locations.find(location=>location.id==='factory')));}
     out.contactRevision=contactDefaults.revision;
+    out.softwareRevision=softwareCatalog.revision;
     for (const key of ['title','description','phone','email','address']) out.contact[key]=text(contact[key],key==='description'?2500:500);
     for(const [key,max] of [['mobile',80],['phoneDisplay',80],['mobileDisplay',80],['phoneLabel',80],['mobileLabel',80],['phoneNote',200],['mobileNote',200]])out.contact[key]=text(contact[key]||'',max);
     const locations=contact.locations||[];if(!Array.isArray(locations)||locations.length>12)throw new Error('حداکثر ۱۲ نشانی قابل ثبت است.');const locationIds=new Set();out.contact.locations=locations.map(location=>{if(!isObject(location))throw new Error('نشانی معتبر نیست.');const id=text(location.id,80),title=text(location.title,120).trim(),address=text(location.address,1000).trim();if(!id||locationIds.has(id)||!title||!address)throw new Error('عنوان و متن نشانی را کامل وارد کنید.');locationIds.add(id);return {id,title,address};});
@@ -522,6 +529,10 @@
     else {link.target = '_blank';link.rel = 'noopener noreferrer';}
     return link;
   }
+  function softwareLinkLabel(item) {
+    if (!softwareCatalog.items.some(source => source.id === item.id && source.url === item.url)) return 'وب‌سایت نرم‌افزار';
+    return item.id === 'novastudio' ? 'مرجع رسمی و سازگاری' : 'دانلود از سایت رسمی';
+  }
   function openDetail(key, item) {
     if (key === 'products') {location.hash = 'product/' + item.id;return;}
     if (key === 'services') {location.hash = 'service/' + item.id;return;}
@@ -533,7 +544,7 @@
     if (item.summary) root.append(el('p',{class:'detail-text'},item.summary));
     if (item.body) root.append(el('div',{class:'detail-text'},item.body));
     if (item.file) root.append(visibleLink('دریافت کاتالوگ',item.file,item.id + '.pdf'));
-    else if (item.url) root.append(visibleLink(['software','catalog'].includes(key) ? 'دریافت فایل' : 'پیوند مرتبط',item.url));
+    else if (item.url) root.append(visibleLink(key === 'software' ? softwareLinkLabel(item) : key === 'catalog' ? 'دریافت فایل' : 'پیوند مرتبط',item.url));
     $('#content-detail').showModal();
   }
   function emptyModule(key) {
@@ -678,7 +689,7 @@
     if (productImage(item)) media.append(el('img',{src:productImage(item),alt:item.title,loading:'lazy'}));
     else media.append(el('div',{class:'product-no-image','aria-hidden':'true'},el('span',{},'▦'),el('small',{},'تصویر محصول')));
     const content = el('div',{class:'product-card-content'},el('span',{class:'product-category-label'},category?.name || ''),el('h3',{},item.title));
-    if (item.model) content.append(el('span',{class:'product-model',dir:'auto'},item.model));
+    content.append(el('span',{class:'product-model',dir:'auto',...(item.model ? {} : {'aria-hidden':'true'})},item.model || ''));
     if (item.imageCaption) media.append(el('span',{class:'product-image-caption'},item.imageCaption));
     content.append(el('p',{},item.summary),productPrice(item),el('span',{class:'product-card-link'},'مشخصات و جزئیات',el('span',{'aria-hidden':'true'},'←')));
     link.append(media,content);return link;
@@ -864,6 +875,18 @@
     if (!list.children.length) list.append(el('p',{class:'managed-empty'},'هنوز تجهیزی در این بخش منتشر نشده است.'));
     root.append(heading,list);document.title = module.name + ' | ' + (data.header.nameFa || 'آوا');
   }
+  function heroDestination(slide) {
+    if (slide.linkEnabled === false) return '';
+    if (slide.clickUrl) return slide.clickUrl;
+    const defaults = {'display-wall':'urban','transparent-film':'transparent','flexible-display':'urban-flexible','led-floor':'led-floor','mobile-led-trailer':'led-trailers'};
+    const categoryId = slide.categoryId === 'rental-flexible' && slide.id === 'flexible-display' ? 'urban-flexible' : slide.categoryId || defaults[slide.id];
+    return publicCategories().some(category => category.id === categoryId) ? '/category/' + categoryId : '';
+  }
+  function heroHref(url) {
+    if (!serverMode && /^\/(?:product|category|service|equipment)\/[A-Za-z0-9_-]+$/.test(url)) return '#' + url.slice(1);
+    if (!serverMode && /^\/(?:products|services|software|contact|about)\/?$/.test(url)) return '#' + url.slice(1).replace(/\/$/,'');
+    return url;
+  }
   function renderHero() {
     heroController?.dispose();
     const hero = data.hero,root = $('#hero'),viewport = $('#hero-viewport');
@@ -890,7 +913,7 @@
       },{signal});
       frame.srcdoc = heroMotionDocument;slideNode(0,true).append(frame);
     }
-    hero.slides.forEach((slide,number) => {const node=slideNode(number+Number(hasMotion));node.append(el('img',{class:'hero-scene',src:slide.image || heroImages[slide.asset],alt:slide.imageAlt,draggable:'false',decoding:'async',fetchpriority:number===0?'high':'low',loading:number===0?'eager':'lazy'}));if(slide.clickUrl){node.append(el('a',{class:'hero-image-link',draggable:'false',href:slide.clickUrl,'aria-label':slide.title}));}});
+    hero.slides.forEach((slide,number) => {const node=slideNode(number+Number(hasMotion));node.append(el('img',{class:'hero-scene',src:slide.image || heroImages[slide.asset],alt:slide.imageAlt,draggable:'false',decoding:'async',fetchpriority:number===0?'high':'low',loading:number===0?'eager':'lazy'}));const destination=heroDestination(slide);if(destination){node.append(el('a',{class:'hero-image-link',draggable:'false',href:heroHref(destination),'aria-label':slide.title}));}});
     const controls = el('div',{class:'hero-controls'});
     const previous = el('button',{type:'button',class:'hero-arrow hero-previous','aria-label':'اسلاید قبلی'});
     const next = el('button',{type:'button',class:'hero-arrow hero-next','aria-label':'اسلاید بعدی'});
@@ -963,8 +986,11 @@
     },{signal});
     function clearDrag() {root.classList.remove('is-dragging');nodes[index].style.transform = '';if(previewIndex !== null && previewIndex !== index){nodes[previewIndex].style.transform = '';nodes[previewIndex].hidden = true;}previewIndex = null;}
     viewport.addEventListener('pointerdown',event => {
+      clearTimeout(suppressHeroClickTimer);
+      suppressHeroClick = false;
       if (count < 2 || !event.isPrimary || (event.pointerType === 'mouse' && event.button !== 0)) return;
-      normalize();pointer = {id:event.pointerId,x:event.clientX,y:event.clientY,dx:0,dy:0,horizontal:false};schedule();
+      if (animations.length || previewIndex !== null) normalize();
+      pointer = {id:event.pointerId,x:event.clientX,y:event.clientY,dx:0,dy:0,horizontal:false,type:event.pointerType,started:performance.now(),link:event.target.closest('a.hero-image-link')};schedule();
     },{signal});
     viewport.addEventListener('pointermove',event => {
       if(!pointer || pointer.id !== event.pointerId) return;
@@ -977,12 +1003,18 @@
       if(hasMotion && newPreview === 0 && previousPreview !== 0) refreshMotion(3500);
       nodes[previewIndex].style.transform = 'translateX('+(direction*viewport.clientWidth+pointer.dx)+'px)';
     },{signal,passive:false});
-    let suppressHeroClick=false;
+    let suppressHeroClick=false,suppressHeroClickTimer;
     viewport.addEventListener('click',event=>{if(suppressHeroClick){event.preventDefault();event.stopPropagation();suppressHeroClick=false;}},{signal,capture:true});
     viewport.addEventListener('pointerup',event => {
       if(!pointer || pointer.id !== event.pointerId) return;
-      const drag = pointer;suppressHeroClick=drag.horizontal;setTimeout(()=>{suppressHeroClick=false;},400);pointer = null;clearDrag();
+      const drag = pointer;suppressHeroClick=drag.horizontal;clearTimeout(suppressHeroClickTimer);suppressHeroClickTimer=setTimeout(()=>{suppressHeroClick=false;},400);pointer = null;clearDrag();
       if(viewport.hasPointerCapture(event.pointerId)) viewport.releasePointerCapture(event.pointerId);
+      // Mobile browsers may suppress the compatibility click immediately after
+      // a swipe. Activate a short, stationary touch once, while keeping native
+      // anchors for mouse, keyboard and long-press menus.
+      if(drag.type === 'touch' && !drag.horizontal && Math.abs(drag.dx)<10 && Math.abs(drag.dy)<10 && performance.now()-drag.started<500 && drag.link && nodes[index].contains(drag.link)) {
+        event.preventDefault();drag.link.click();suppressHeroClick=true;
+      }
       if(drag.horizontal && Math.abs(drag.dx)>Math.min(100,viewport.clientWidth*.16)){const direction = drag.dx < 0 ? 1 : -1;go((index+count+direction)%count,direction,true,drag.dx);}else schedule();
     },{signal});
     function cancelDrag(){if(!pointer)return;pointer = null;clearDrag();schedule();}
@@ -1056,6 +1088,7 @@
         card.append(el('h3',{},item.title),el('p',{},item.summary));
         const button = el('button',{type:'button',class:'card-action'},'مشاهدهٔ جزئیات ↖');
         button.addEventListener('click',() => openDetail(key,item));card.append(button);cards.append(card);
+        if (key === 'software' && item.url) {card.classList.add('software-card');card.append(visibleLink(softwareLinkLabel(item),item.url));}
       }
       section.prepend(heading);section.append(cards);sections.append(section);
     }
@@ -1189,6 +1222,7 @@
       for (const slide of slides) {
         const row = $('[data-slide-id="' + slide.id + '"]',form);
         for (const key of textFields) slide[key] = $('[name="' + key + '"]',row).value;
+        slide.linkEnabled = $('[name=linkEnabled]',row).checked;
       }
     }
     function paint() {
@@ -1199,6 +1233,14 @@
         const body = el('div',{class:'hero-editor-slide-body'});
         body.innerHTML = `<div class="hero-editor-media"><div class="media-preview"></div><div><label class="upload-button">انتخاب عکس این اسلاید<input type="file" data-slide-image accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"></label><button type="button" class="text-button" data-reset-image>بازگشت به تصویر مفهومی</button><small>حداکثر ۵ مگابایت؛ عکس افقی و عریض بهترین نتیجه را می‌دهد.</small></div></div>${field('مقصد کلیک عکس؛ مثل /product/indoor-125 یا https://…','clickUrl',slide.clickUrl||'',{max:2000,ltr:true})}${field('نام اسلاید در پنل','title',slide.title,{max:200,required:true})}${field('توضیح تصویر برای دسترس‌پذیری','imageAlt',slide.imageAlt,{max:200})}<div class="hero-editor-order"><button class="admin-button secondary" type="button" data-move-slide="-1" ${index === 0 ? 'disabled' : ''}>↑ زودتر</button><button class="admin-button secondary" type="button" data-move-slide="1" ${index === slides.length-1 ? 'disabled' : ''}>↓ دیرتر</button><button class="admin-button danger" type="button" data-delete-slide ${slides.length === 1 ? 'disabled' : ''}>حذف اسلاید</button></div>`;
         row.append(body);list.append(row);imagePreview($('.media-preview',row),slide.image || heroImages[slide.asset]);
+        const input = $('[name=clickUrl]',row);
+        const destination = el('select',{'aria-label':'انتخاب مقصد اسلاید'},el('option',{value:''},'انتخاب محصول، خدمت یا دسته…'));
+        for (const [label,items] of [['دسته‌ها',publicCategories().map(c=>({title:categoryLabel(c),url:'/category/'+c.id}))],['محصولات',publicProducts().map(p=>({title:p.title,url:'/product/'+p.id}))],['خدمات',published('services').map(s=>({title:s.title,url:'/service/'+s.id}))]]) {
+          destination.append(el('optgroup',{label},items.map(item=>el('option',{value:item.url},item.title))));
+        }
+        const linkOptions=el('div',{class:'hero-link-options'});linkOptions.innerHTML=checkbox('لینک عکس فعال باشد','linkEnabled',slide.linkEnabled !== false);
+        linkOptions.append(el('label',{},'مقصد آماده',destination),el('small',{},'لینک دلخواه را در کادر زیر وارد کنید. کادر خالی، دستهٔ مرتبط اسلاید اولیه را باز می‌کند.'));
+        input.closest('label').before(linkOptions);destination.value=heroDestination(slide);destination.onchange=()=>{if(destination.value){input.value=destination.value;$('[name=linkEnabled]',row).checked=true;markDirty();}};
         $('[name=title]',row).addEventListener('input',() => {summary.textContent = 'اسلاید ' + (index+1).toLocaleString('fa-IR') + ' — ' + $('[name=title]',row).value;});
         $('[data-slide-image]',row).addEventListener('change',async event => {try {const image = await readImage(event.target.files[0]);if(!image) return;slide.image = image;markDirty();imagePreview($('.media-preview',row),image);}catch(error){toast(error.message,true);}event.target.value = '';});
         $('[data-reset-image]',row).addEventListener('click',() => {slide.image = '';markDirty();imagePreview($('.media-preview',row),heroImages[slide.asset]);});
@@ -1207,7 +1249,7 @@
       });
       $('#add-hero-slide').disabled = slides.length >= 8;
     }
-    $('#add-hero-slide').addEventListener('click',() => {if(slides.length >= 8) return;collect();slides.push({...clone(seed.hero.slides[0]),id:'slide-' + (typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : Date.now()),title:'اسلاید تازه',highlight:'',image:'',categoryId:''});markDirty();paint();const last = $('.hero-editor-slide:last-child',form);last.open = true;last.scrollIntoView({block:'center',behavior:'instant'});});
+    $('#add-hero-slide').addEventListener('click',() => {if(slides.length >= 8) return;collect();slides.push({...clone(seed.hero.slides[0]),id:'slide-' + (typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : Date.now()),title:'اسلاید تازه',highlight:'',image:'',categoryId:'',clickUrl:'',linkEnabled:true});markDirty();paint();const last = $('.hero-editor-slide:last-child',form);last.open = true;last.scrollIntoView({block:'center',behavior:'instant'});});
     form.addEventListener('submit',async event => {event.preventDefault();collect();const next = clone(data);next.hero.slides = slides;next.hero.show = form.elements.show.checked;next.hero.showMotionLogo = form.elements.showMotionLogo.checked;next.hero.autoplay = true;next.hero.interval = Number(form.elements.interval.value)*1000;for (const key of ['eyebrow','title','highlight','description','image','imageAlt','primaryLabel','primaryTarget','secondaryLabel','secondaryTarget']) next.hero[key] = slides[0][key];if(await commit(next,'اسلایدر ذخیره شد.')) {slides = clone(data.hero.slides);paint();}});
     paint();
   }
@@ -1416,6 +1458,9 @@
     if (document.startViewTransition) {
       pageTransition?.skipTransition();$('#public-site').setAttribute('aria-busy','true');
       const transition = document.startViewTransition(update);pageTransition = transition;
+      // Skipping an in-flight visual transition rejects ready, while the route
+      // update still succeeds. Handle that optional animation promise too.
+      transition.ready.catch(() => {});
       transition.finished.then(() => {if(pageTransition === transition){pageTransition = null;finish();}},() => {if(pageTransition === transition){pageTransition = null;finish();}});
     } else {
       update();const content = $('#catalog-page').hidden ? $('#home-content') : $('#catalog-page');

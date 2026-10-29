@@ -1,0 +1,3 @@
+d41f3b81b5382ac32918ed97f54fec6fd22db641c77eafe241387065afa40f59  ava-site-v28-backup.zip
+4756b8f30642087be2678624f95883b2ee1dab774d9c606ab75e4a30343e4bcd  ava-site-v28-complete.zip
+c56ed429055a26e728ca0ed94b453bd6c3637317be64b70af3901aa21ca8cfad  ava-site-v28-server-update.zip

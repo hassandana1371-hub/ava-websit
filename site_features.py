@@ -45,6 +45,27 @@ def upgrade_contact(data):
     upgraded['contactRevision']=defaults['revision']
     return upgraded
 
+_SOFTWARE_CACHE={}
+def software_defaults():
+    file=Path(__file__).with_name('index.html');stamp=file.stat().st_mtime_ns
+    if _SOFTWARE_CACHE.get('stamp')!=stamp:
+        match=re.search(r'<script id="ava-software-catalog"[^>]*>(.*?)</script>',file.read_text(),re.S)
+        _SOFTWARE_CACHE.update(stamp=stamp,data=json.loads(match[1]) if match else {'revision':0,'items':[]})
+    return _SOFTWARE_CACHE['data']
+
+def upgrade_software(data):
+    """Add missing catalogue entries once, without replacing administrator edits."""
+    defaults=software_defaults()
+    if data.get('softwareRevision',0)>=defaults['revision']:return data
+    import copy
+    upgraded=copy.deepcopy(data);items=upgraded['modules']['software']['items']
+    ids={item['id'] for item in items}
+    additions=[copy.deepcopy(item) for item in defaults['items'] if item['id'] not in ids]
+    if len(items)+len(additions)>500:
+        raise ValueError('برای افزودن نرم‌افزارها، تعداد موارد بخش نرم‌افزار باید کمتر از ۵۰۰ باشد.')
+    items.extend(additions);upgraded['softwareRevision']=defaults['revision']
+    return upgraded
+
 def phone_number(value):
     value=str(value).translate(str.maketrans('۰۱۲۳۴۵۶۷۸۹٠١٢٣٤٥٦٧٨٩','01234567890123456789'))
     return ('+' if value.strip().startswith('+') else '')+''.join(c for c in value if c in '0123456789')

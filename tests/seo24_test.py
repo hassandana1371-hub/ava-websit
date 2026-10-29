@@ -151,18 +151,23 @@ class SEO24Test(unittest.TestCase):
     def test_empty_sections_and_hidden_products_do_not_enter_the_sitemap(self):
         paths = self.sitemap_paths()
         self.assertTrue(set(self.TARGETS) <= paths)
-        for empty in ['/articles', '/software', '/category/uncategorized']:
+        self.assertIn('/software', paths)  # The v28 catalogue is now populated.
+        for empty in ['/articles', '/category/uncategorized']:
             self.assertNotIn(empty, paths)
         document, _, _ = self.get_document('/articles')
         self.assertEqual(document.meta['robots'], 'noindex,follow')
 
         self.login()
         content = json.loads(self.request('/api/content')[2])
+        content['data']['modules']['software']['items'] = []
         product = next(item for item in content['data']['modules']['products']['items']
                        if item['id'] == 'indoor-125')
         product['status'] = 'draft'
         self.assertEqual(self.request('/api/content', content)[0], 200)
         self.cookie = self.csrf = ''
+        self.assertNotIn('/software', self.sitemap_paths())
+        empty_software, _, _ = self.get_document('/software')
+        self.assertEqual(empty_software.meta['robots'], 'noindex,follow')
         self.assertNotIn('/product/indoor-125', self.sitemap_paths())
         self.assertEqual(self.request('/product/indoor-125')[0], 404)
         _, visible, _ = self.get_document('/category/urban-indoor')

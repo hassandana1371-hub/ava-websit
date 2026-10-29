@@ -47,7 +47,7 @@ def initialize():
         site_features.initialize(db)
         db.execute('BEGIN IMMEDIATE')
         row=db.execute('SELECT revision,data FROM content WHERE id=1').fetchone()
-        existing=json.loads(row['data']);upgraded=site_features.upgrade_contact(existing)
+        existing=json.loads(row['data']);upgraded=site_features.upgrade_software(site_features.upgrade_contact(existing))
         if upgraded is not existing:
             upgraded['updatedAt']=int(time.time()*1000)
             db.execute('UPDATE content SET revision=?,data=? WHERE id=1',(row['revision']+1,json.dumps(upgraded,ensure_ascii=False)))
@@ -240,6 +240,7 @@ def validate_content(data):
             string(section.get('heading'),200);string(section.get('body'),2500)
     for slide in hero['slides']:
         link=slide.get('clickUrl','')
+        if 'linkEnabled' in slide and type(slide['linkEnabled']) is not bool:raise ValueError('تنظیم لینک اسلاید معتبر نیست.')
         string(link,2000)
         if link and not (link.startswith('#') or (link.startswith('/') and not link.startswith('//')) or urlsplit(link).scheme in ['https','http']):raise ValueError('مقصد هیرو معتبر نیست.')
     def walk(value, key='', depth=0):
@@ -273,7 +274,8 @@ def validate_content(data):
         elif value is not None and not isinstance(value, (bool, int, float)):
             raise ValueError('نوع داده معتبر نیست.')
     walk(data)
-    return site_features.upgrade_contact(data)
+    if 'softwareRevision' in data and (type(data['softwareRevision']) is not int or data['softwareRevision'] not in [0,1]):raise ValueError('نسخهٔ بخش نرم‌افزار معتبر نیست.')
+    return site_features.upgrade_software(site_features.upgrade_contact(data))
 
 
 def public_content(data):

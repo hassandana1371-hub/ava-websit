@@ -10,7 +10,7 @@ const root=path.resolve(__dirname,'..');
   const page=await browser.newPage({viewport:{width:1440,height:900},acceptDownloads:true});page.on('pageerror',e=>errors.push(e.message));
   await page.goto(base);const frame=page.locator('.hero-motion-frame');await frame.waitFor();await page.waitForFunction(()=>document.querySelector('.hero-motion-frame')?.contentDocument?.getAnimations().length===12);
   assert.equal(await page.locator('.hero-slide').count(),6);assert.equal(await page.locator('.hero-slide[aria-hidden=false]').getAttribute('class'),'hero-slide hero-motion-slide');
-  assert.equal(await page.locator('.hero-arrow').count(),2);assert.equal(await page.locator('.hero-dot').count(),6);assert.equal(await page.locator('#hero a,.hero-slider-footer').count(),0);assert.equal(await frame.getAttribute('sandbox'),'allow-same-origin');
+  assert.equal(await page.locator('.hero-arrow').count(),2);assert.equal(await page.locator('.hero-dot').count(),6);assert.equal(await page.locator('#hero a:not(.hero-image-link),.hero-slider-footer').count(),0);assert.equal(await frame.getAttribute('sandbox'),'allow-same-origin');
   const timings=await frame.evaluate(f=>f.contentDocument.getAnimations().map(a=>({duration:a.effect.getTiming().duration,iterations:a.effect.getTiming().iterations,end:a.effect.getComputedTiming().endTime})));
   assert(timings.every(t=>t.duration===7000&&t.iterations===2));assert.equal(Math.max(...timings.map(t=>t.end)),14120);
   await page.waitForFunction(()=>{const f=document.querySelector('.hero-motion-frame');return f.contentDocument.querySelector('.stage').getAnimations()[0].effect.getComputedTiming().currentIteration===1;},{},{timeout:9000});
@@ -32,7 +32,7 @@ const root=path.resolve(__dirname,'..');
   console.log('PASS panel toggle, standalone HTML export with embedded SVG and static reduced-motion presentation');
   for(const width of [320,390]){
    const p=await browser.newPage({viewport:{width,height:900},reducedMotion:'reduce'});p.on('pageerror',e=>errors.push(e.message));await p.goto(base);await p.waitForFunction(()=>document.querySelector('.hero-motion-frame')?.contentDocument?.getAnimations().length===12);
-   assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth),width);const bounds=await p.locator('.hero-motion-frame').boundingBox();assert.equal(bounds.width,width);assert.equal(bounds.y+bounds.height,900);await p.screenshot({path:`/tmp/ava-v16-motion-${width}.png`});await p.close();
+   assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth),width);const bounds=await p.locator('.hero-motion-frame').boundingBox();assert.equal(bounds.width,width);assert.equal(bounds.height,Math.max(200,Math.min(440,width*.625)));await p.screenshot({path:`/tmp/ava-v16-motion-${width}.png`});await p.close();
   }
   assert.deepEqual(errors,[]);console.log('PASS mobile logo fits at 320/390, no horizontal overflow or browser errors');
  }finally{await browser.close();await new Promise(r=>server.close(r));}

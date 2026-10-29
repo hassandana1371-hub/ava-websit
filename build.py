@@ -28,6 +28,7 @@ replacements = {
     '<!--CMS_DATA-->': '<script id="ava-contact-defaults" type="application/json">' + (SRC/'contact-defaults.json').read_text().replace('<','\\u003c') + '</script>\n' + '<script id="ava-search-content" type="application/json">' + (SRC/'seo-content.json').read_text().replace('<','\\u003c') + '</script>\n' + '<script id="ava-initial-data" type="application/json">' + encoded + '</script>\n<script id="ava-hero-images" type="application/json">' + json.dumps(hero_images) + '</script>\n<script id="ava-product-images" type="application/json">' + json.dumps(product_images) + '</script>\n<script id="ava-product-visual-history" type="application/json">' + visual_history + '</script>\n<script id="ava-hero-motion" type="application/json">' + json.dumps(motion_document).replace('<', '\\u003c') + '</script>',
     '<!--CMS_SCRIPT-->': '<script>\n' + (SRC / 'cms.js').read_text() + '\n</script>',
 }
+replacements['<!--CMS_DATA-->'] = '<script id="ava-software-catalog" type="application/json">' + (SRC/'software-catalog.json').read_text().replace('<','\\u003c') + '</script>\n' + replacements['<!--CMS_DATA-->']
 for marker, content in replacements.items():
     if page.count(marker) != 1:
         raise ValueError('Expected exactly one ' + marker)
