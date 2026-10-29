@@ -1,12 +1,10 @@
-# سایت آوا ـ نسخهٔ ۲۸
+# سایت آوا ـ نسخهٔ ۲۹
 
-- [بستهٔ کامل نسخهٔ ۲۸](https://github.com/hassandana1371-hub/ava-websit/raw/refs/heads/main/exports/ava-site-v28-complete.zip)
-- [آپدیت سرور موجود](https://github.com/hassandana1371-hub/ava-websit/raw/refs/heads/main/exports/ava-site-v28-server-update.zip)
-- [پیش‌نمایش آفلاین](https://github.com/hassandana1371-hub/ava-websit/raw/refs/heads/main/exports/ava-site-v28-backup.zip)
-- [نمای هیروی موبایل](ava-v28-mobile-preview.png)
-- [نمای نرم‌افزارها](ava-v28-software-preview.png)
-- [نمای کارت‌های منتخب](ava-v28-cards-preview.png)
+- [بستهٔ کامل نسخهٔ ۲۹](https://github.com/hassandana1371-hub/ava-websit/raw/refs/heads/main/exports/ava-site-v29-complete.zip)
+- [آپدیت سرور](https://github.com/hassandana1371-hub/ava-websit/raw/refs/heads/main/exports/ava-site-v29-server-update.zip)
+- [پیش‌نمایش آفلاین](https://github.com/hassandana1371-hub/ava-websit/raw/refs/heads/main/exports/ava-site-v29-backup.zip)
+- [راهنمای نصب و بررسی جست‌وجوی گوگل](../SEARCH-UPDATE-v29-fa.md)
 
-هیروی موبایل با عکس کامل و لینک قابل تنظیم در پنل؛ کارت‌های هم‌اندازه؛ NovaLCT، NovaStudio، vMix، Resolume، OBS، CasparCG و Xibo با مراجع رسمی. برای NovaStudio دانلود جدید تأیید نشده و مرجع سازنده درج شده؛ برای vMix و Resolume شمارهٔ نسخهٔ جاری تأیید نشده و صفحهٔ رسمی نسخهٔ جاری لینک شده است.
+نام «تلویزیون شهری آوا» در عنوان و تیتر اصلی، راهنمای اختصاصی ویدئووال و محتوای مرتبط نمایشگر غول پیکر روی صفحات موجود. هشت صفحه متادیتا و معرفی اختصاصی دارند. همهٔ امکانات، محتوا، تماس و نرم‌افزارهای نسخهٔ ۲۸ حفظ شده‌اند. ویرایش‌های سفارشی پنل بازنویسی نمی‌شوند.
 
-شمارهٔ گویا ۰۲۱۹۱۰۹۵۷۱۵ و موبایل `0912 17 18 024`، هر سه نشانی و اطلاعات قبلی حفظ می‌شوند. راهنمای UPDATE-v28-fa.md داخل بسته است. فقط index.html، server.py و site_features.py برای آپدیت لازم‌اند. نسخه روی سرور واقعی نصب نشده و دیتابیس زنده در بسته نیست. نسخه‌های قبلی حفظ شده‌اند.
+نسبت به نسخهٔ ۲۸، فایل اجرایی تغییرکرده فقط index.html است؛ بستهٔ آپدیت شامل index.html، server.py و site_features.py برای یک‌دستی است. دیتابیس داخل بسته نیست. این اصلاح تازه روی سرور نصب نشده و رتبهٔ زنده اندازه‌گیری یا تضمین نشده است. نسخه‌های قبلی در این پوشه حفظ شده‌اند.

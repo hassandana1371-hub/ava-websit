@@ -79,6 +79,7 @@ class SEO24Test(unittest.TestCase):
     TARGETS = (
         '/', '/products', '/category/urban', '/category/urban-indoor',
         '/category/urban-outdoor', '/services', '/service/initial-rental',
+        '/service/service-videowall',
     )
 
     def get_document(self, path):
@@ -107,6 +108,7 @@ class SEO24Test(unittest.TestCase):
                 self.assertEqual(document.title_count, 1)
                 self.assertEqual(document.title, config['title'] + ' | AvA Groups')
                 self.assertEqual(document.meta['description'], config['description'])
+                self.assertEqual(document.meta['ava-site-release'], '29')
                 self.assertEqual(document.meta['robots'], 'index,follow')
                 self.assertEqual(document.canonical, [self.server.origin + path])
                 self.assertEqual(document.meta['og:url'], self.server.origin + path)
@@ -147,6 +149,56 @@ class SEO24Test(unittest.TestCase):
                 if path.startswith('/service/'):
                     self.assertIn('Service', types)
                 check(schema)
+
+    def test_brand_and_display_topics_have_relevant_public_destinations(self):
+        home, visible, _ = self.get_document('/')
+        self.assertIn('تلویزیون شهری آوا', home.title)
+        self.assertIn('گروه آوا (AvA Groups)', visible.text)
+        self.assertIn('/service/service-videowall', visible.links)
+        wall, body, _ = self.get_document('/service/service-videowall')
+        self.assertIn('ویدئووال آوا', wall.title)
+        self.assertIn('ویدیو وال', body.text)
+        self.assertIn('LCD', body.text)
+        self.assertIn('LED', body.text)
+        self.assertIn('/category/urban-outdoor', body.links)
+        self.assertIn('/contact', body.links)
+        outdoor, body, _ = self.get_document('/category/urban-outdoor')
+        self.assertIn('نمایشگر غول پیکر', outdoor.title)
+        self.assertIn('شرایط', body.text)
+
+    def test_service_custom_seo_priority_and_draft_visibility(self):
+        self.login()
+        content = json.loads(self.request('/api/content')[2])
+        path = '/service/service-videowall'
+        service = next(item for item in content['data']['modules']['services']['items']
+                       if item['id'] == 'service-videowall')
+        service['seoTitle'] = 'عنوان اختصاصی ویرایشگر خدمت'
+        service['seoDescription'] = 'توضیح اختصاصی ویرایشگر خدمت'
+        content['data'].setdefault('pageSeo', {})[path] = {
+            'title': 'عنوان سفارشی سئوی صفحه',
+            'description': 'توضیح سفارشی سئوی صفحه',
+            'intro': 'متن سفارشی ویدئووال باید حفظ شود',
+        }
+        self.assertEqual(self.request('/api/content', content)[0], 200)
+        document, visible, _ = self.get_document(path)
+        self.assertEqual(document.title, service['seoTitle'] + ' | AvA Groups')
+        self.assertEqual(document.meta['description'], service['seoDescription'])
+        self.assertIn('متن سفارشی ویدئووال باید حفظ شود', visible.text)
+        content = json.loads(self.request('/api/content')[2])
+        service = next(item for item in content['data']['modules']['services']['items']
+                       if item['id'] == 'service-videowall')
+        service['seoTitle'] = service['seoDescription'] = ''
+        self.assertEqual(self.request('/api/content', content)[0], 200)
+        document, _, _ = self.get_document(path)
+        self.assertEqual(document.title, 'عنوان سفارشی سئوی صفحه | AvA Groups')
+        content = json.loads(self.request('/api/content')[2])
+        next(item for item in content['data']['modules']['services']['items']
+             if item['id'] == 'service-videowall')['status'] = 'draft'
+        self.assertEqual(self.request('/api/content', content)[0], 200)
+        self.cookie = self.csrf = ''
+        self.assertNotIn(path, self.sitemap_paths())
+        self.assertEqual(self.request(path)[0], 404)
+        self.assertNotIn(path, self.get_document('/')[1].links)
 
     def test_empty_sections_and_hidden_products_do_not_enter_the_sitemap(self):
         paths = self.sitemap_paths()
