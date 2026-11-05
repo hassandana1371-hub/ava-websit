@@ -164,6 +164,35 @@ def breadcrumb(data,path,all_pages):
     trail.append({'name':p['heading'],'path':path})
     return trail
 
+def catalogue_products(data,path,page):
+    if path!='/products' and not path.startswith('/category/'):return []
+    categories={c['id']:c for c in data['productCategories']}
+    def visible(category):
+        return bool(category and category.get('visible') and (not category.get('parentId') or categories.get(category['parentId'],{}).get('visible')))
+    selected=page.get('category')
+    ids=({selected['id']}|{c['id'] for c in categories.values() if c.get('parentId')==selected['id']}) if selected else None
+    return [item for item in data['modules']['products']['items'] if item['status']=='published' and visible(categories.get(item.get('categoryId'))) and (ids is None or item.get('categoryId') in ids)]
+
+def product_price_text(item):
+    amount=item.get('priceAmount')
+    if amount is None or item.get('priceKind')=='quote':return 'استعلام قیمت'
+    number=f'{amount:,}'.translate(str.maketrans('0123456789,','۰۱۲۳۴۵۶۷۸۹٬'))
+    label='قیمت فروش' if item.get('priceKind')=='sale' else 'قیمت مرجع'
+    return label+' '+item.get('priceUnit','هر ماژول')+': '+number+' تومان'
+
+def catalogue_html(data,path,page):
+    items=catalogue_products(data,path,page)
+    if not items:return ''
+    esc=html.escape
+    out='<section class="server-catalogue" aria-label="محصولات قابل بررسی"><h2>مدل‌ها و قیمت‌های ثبت‌شده</h2><p>قیمت هر ماژول با هزینهٔ نمایشگر کامل یکسان نیست؛ واحد و تاریخ قیمت هر مدل را بررسی کنید.</p><ul class="server-product-list">'
+    for item in items:
+        out+='<li><h3><a href="/product/'+esc(item['id'],quote=True)+'">'+esc(item['title'])+'</a></h3>'
+        if item.get('model'):out+='<p dir="auto">'+esc(item['model'])+'</p>'
+        out+='<p>'+esc(item['summary'])+'</p><p>'+esc(product_price_text(item))+'</p>'
+        if item.get('priceDate') and item.get('priceKind')!='quote' and item.get('priceAmount') is not None:out+='<p>تاریخ قیمت ثبت‌شده: <bdi dir="ltr">'+esc(item['priceDate'])+'</bdi></p>'
+        out+='</li>'
+    return out+'</ul></section>'
+
 def structured_data(data,path,origin,all_pages=None):
     all_pages=all_pages or pages(data);p=all_pages[path];org=origin+'/#organization';url=origin+path
     graph=[{'@type':'Organization','@id':org,'name':data['header']['nameEn'] or data['header']['nameFa'],'alternateName':data['header']['nameFa'],'url':origin+'/'},
@@ -181,6 +210,11 @@ def structured_data(data,path,origin,all_pages=None):
     locations=upgrade_contact(data)['contact'].get('locations',[])
     if locations:graph[0]['address']=[{'@type':'PostalAddress','name':location['title'],'streetAddress':location['address']} for location in locations]
     if path=='/about':graph[2]['mainEntity']={'@id':org}
+    items=catalogue_products(data,path,p)
+    if items:
+        list_id=url+'#products'
+        graph[2]['mainEntity']={'@id':list_id}
+        graph.append({'@type':'ItemList','@id':list_id,'name':'محصولات '+p['heading'],'numberOfItems':len(items),'itemListElement':[{'@type':'ListItem','position':n+1,'name':item['title'],'url':origin+'/product/'+item['id']} for n,item in enumerate(items)]})
     item=p.get('item')
     if item and p.get('kind') in ['product','service']:
         entity={'@type':'Product' if p['kind']=='product' else 'Service','@id':url+'#entity','name':item['title'],'description':item['summary'],'url':url,'mainEntityOfPage':{'@id':url+'#webpage'}}
@@ -220,6 +254,7 @@ def seo_html(data,path,origin):
     head+='<script id="ava-structured-data" type="application/ld+json">'+schema+'</script>'
     crumbs=' / '.join('<a href="'+esc(c['path'],quote=True)+'">'+esc(c['name'])+'</a>' for c in breadcrumb(data,path,all_pages))
     body='<main id="ava-seo-content" dir="rtl"><nav aria-label="مسیر صفحه">'+crumbs+'</nav><h1>'+esc(p['heading'])+'</h1><p>'+esc(company_description(data) if path=='/about' else description)+'</p>'
+    body+=catalogue_html(data,path,p)
     copy=p.get('copy')
     if copy:
         if path!='/':body+='<h2>'+esc(copy.get('heading') or p['heading'])+'</h2>'
@@ -227,6 +262,9 @@ def seo_html(data,path,origin):
         for section in copy.get('sections',[]):body+='<h2>'+esc(section['heading'])+'</h2><p>'+esc(section['body'])+'</p>'
     if path in ['/contact','/about']:body+=contact_html(data)
     if p.get('body') and path not in ['/contact','/about']:body+='<div style="white-space:pre-line">'+esc(p['body'])+'</div>'
+    if p.get('product'):
+        body+='<p>'+esc(product_price_text(p['item']))+'</p>'
+        if p['item'].get('priceDate') and p['item'].get('priceKind')!='quote' and p['item'].get('priceAmount') is not None:body+='<p>تاریخ قیمت ثبت‌شده: <bdi dir="ltr">'+esc(p['item']['priceDate'])+'</bdi></p>'
     specs=''.join('<tr><th>'+esc(s['label'])+'</th><td>'+esc(s['value'])+'</td></tr>' for s in p.get('specs',[]))
     if specs:body+='<h2>مشخصات فنی</h2><table>'+specs+'</table>'
     links=''.join('<li><a href="'+esc(c['path'],quote=True)+'">'+esc(c['label'])+'</a></li>' for c in related_links(data,path,all_pages))

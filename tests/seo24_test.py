@@ -108,7 +108,7 @@ class SEO24Test(unittest.TestCase):
                 self.assertEqual(document.title_count, 1)
                 self.assertEqual(document.title, config['title'] + ' | AvA Groups')
                 self.assertEqual(document.meta['description'], config['description'])
-                self.assertEqual(document.meta['ava-site-release'], '29')
+                self.assertEqual(document.meta['ava-site-release'], '30')
                 self.assertEqual(document.meta['robots'], 'index,follow')
                 self.assertEqual(document.canonical, [self.server.origin + path])
                 self.assertEqual(document.meta['og:url'], self.server.origin + path)

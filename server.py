@@ -305,7 +305,7 @@ class Handler(BaseHTTPRequestHandler):
         # Never log cookies, request bodies or passwords.
         super().log_message(fmt, *args)
 
-    def reply(self, code, value, cookie=None, content_type='application/json; charset=utf-8'):
+    def reply(self, code, value, cookie=None, content_type='application/json; charset=utf-8', location=None):
         body = value if isinstance(value, bytes) else json.dumps(value, ensure_ascii=False).encode()
         compressed=len(body)>1024 and ('text/' in content_type or 'json' in content_type or 'xml' in content_type) and 'gzip' in self.headers.get('Accept-Encoding','')
         if compressed:body=gzip.compress(body,compresslevel=3)
@@ -318,10 +318,11 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header('X-Content-Type-Options', 'nosniff')
         self.send_header('X-Frame-Options', 'SAMEORIGIN')
         self.send_header('Referrer-Policy', 'strict-origin-when-cross-origin')
+        if location is not None:self.send_header('Location',location)
         if cookie:
             self.send_header('Set-Cookie', cookie)
         self.end_headers()
-        self.wfile.write(body)
+        if self.command!='HEAD':self.wfile.write(body)
 
     def session(self, db):
         try:
@@ -333,6 +334,9 @@ class Handler(BaseHTTPRequestHandler):
 
     def valid_host(self):
         return self.headers.get('Host', '') == urlsplit(self.server.origin).netloc
+
+    def do_HEAD(self):
+        self.do_GET()
 
     def do_GET(self):
         if not self.valid_host():
@@ -354,6 +358,10 @@ class Handler(BaseHTTPRequestHandler):
             if path == '/api/content':
                 return self.reply(200, {'revision':row['revision'], 'data':data if session else public_content(data)})
             public=public_content(data)
+            if path=='/index.html' or (path!='/' and path.endswith('/') and path.rstrip('/') in site_features.pages(public)):
+                target='/' if path=='/index.html' else path.rstrip('/')
+                query=urlsplit(self.path).query
+                return self.reply(301,b'',content_type='text/plain; charset=utf-8',location=target+('?' + query if query else ''))
             if path == '/robots.txt':
                 return self.reply(200,site_features.robots_text(self.server.origin).encode(),content_type='text/plain; charset=utf-8')
             if path == '/sitemap.xml':

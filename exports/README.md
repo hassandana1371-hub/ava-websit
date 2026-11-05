@@ -1,10 +1,11 @@
-# سایت آوا ـ نسخهٔ ۲۹
+# سایت آوا ـ نسخهٔ ۳۰
 
-- [بستهٔ کامل نسخهٔ ۲۹](https://github.com/hassandana1371-hub/ava-websit/raw/refs/heads/main/exports/ava-site-v29-complete.zip)
-- [آپدیت سرور](https://github.com/hassandana1371-hub/ava-websit/raw/refs/heads/main/exports/ava-site-v29-server-update.zip)
-- [پیش‌نمایش آفلاین](https://github.com/hassandana1371-hub/ava-websit/raw/refs/heads/main/exports/ava-site-v29-backup.zip)
-- [راهنمای نصب و بررسی جست‌وجوی گوگل](../SEARCH-UPDATE-v29-fa.md)
+- [بستهٔ کامل](https://github.com/hassandana1371-hub/ava-websit/raw/refs/heads/main/exports/ava-site-v30-complete.zip)
+- [آپدیت سرور](https://github.com/hassandana1371-hub/ava-websit/raw/refs/heads/main/exports/ava-site-v30-server-update.zip)
+- [پیش‌نمایش آفلاین](https://github.com/hassandana1371-hub/ava-websit/raw/refs/heads/main/exports/ava-site-v30-backup.zip)
+- [راهنمای نصب و محدودیت دسترسی گوگل](../SEARCH-PURCHASE-v30-fa.md)
+- [نمای موبایل بدون JavaScript](ava-v30-nojs-preview.png)
 
-نام «تلویزیون شهری آوا» در عنوان و تیتر اصلی، راهنمای اختصاصی ویدئووال و محتوای مرتبط نمایشگر غول پیکر روی صفحات موجود. هشت صفحه متادیتا و معرفی اختصاصی دارند. همهٔ امکانات، محتوا، تماس و نرم‌افزارهای نسخهٔ ۲۸ حفظ شده‌اند. ویرایش‌های سفارشی پنل بازنویسی نمی‌شوند.
+صفحهٔ خرید تلویزیون شهری با راهنمای کاربردی، فهرست مدل‌ها و قیمت مرجع/تاریخ در HTML اولیه، ItemList واقعی، HEAD و هدایت آدرس‌های تکراری آماده شده است. ابزار اختیاری check_seo.py وضعیت فنی عمومی را بررسی می‌کند و آمار گوگل نیست.
 
-نسبت به نسخهٔ ۲۸، فایل اجرایی تغییرکرده فقط index.html است؛ بستهٔ آپدیت شامل index.html، server.py و site_features.py برای یک‌دستی است. دیتابیس داخل بسته نیست. این اصلاح تازه روی سرور نصب نشده و رتبهٔ زنده اندازه‌گیری یا تضمین نشده است. نسخه‌های قبلی در این پوشه حفظ شده‌اند.
+هر سه فایل index.html، server.py و site_features.py برای آپدیت لازم‌اند. دیتابیس داخل بسته نیست؛ اطلاعات و سامانهٔ انبار حفظ می‌شوند. این نسخه روی سرور نصب نشده و اقدامی داخل حساب گوگل ثبت نشده است؛ دسترسی شبکه و حساب/مرورگر لازم فراهم نیست. رتبهٔ واقعی اندازه‌گیری یا تضمین نشده است. نسخه‌های قبلی حفظ شده‌اند.

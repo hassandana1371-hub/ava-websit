@@ -91,6 +91,15 @@
 .software-card{display:flex;flex-direction:column;min-width:0}.software-card .entry-meta{line-height:2;overflow-wrap:anywhere}.software-card .button{font-size:12px;margin-top:16px;align-self:flex-start}.software-card .card-action{margin-top:auto}
 .software-card>.button,.software-card>.button:hover{color:#fff}
 
+/* Useful catalogue fallback is visible before scripts run or when JS is off. */
+#ava-seo-content>h1{font-size:clamp(30px,4vw,48px);line-height:1.7;margin:25px 0 18px;letter-spacing:0}
+#ava-seo-content>nav{font-size:12px;line-height:2}#ava-seo-content>p{font-size:14px;line-height:2.3}
+.server-product-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;list-style:none;padding:0}
+.server-product-list li{border:1px solid #dce6f4;border-radius:12px;padding:20px;background:#fff;min-width:0}
+.server-product-list h3{font-size:17px;line-height:2;margin:0 0 12px}.server-product-list p{font-size:13px;line-height:2.2;overflow-wrap:anywhere}
+.server-catalogue>h2{font-size:24px}.server-catalogue>p{line-height:2.2;color:#526b8d}
+@media(max-width:700px){.server-product-list{grid-template-columns:1fr}}
+
 .hero-image-link{position:absolute;inset:0;z-index:1}.hero-image-link:focus-visible{outline:3px solid white;outline-offset:-5px}.page-banner .catalog-heading h2{color:white;font-size:clamp(30px,4vw,66px);line-height:1.7}#ava-seo-content{padding:35px;max-width:1200px;margin:auto}#ava-seo-content p{line-height:2.2}
 
 .search-copy{background:#fff;border-top:1px solid #e5ebf5;border-bottom:1px solid #e5ebf5;padding-top:50px;padding-bottom:50px}.search-copy h1,.search-copy>h2{font-size:clamp(25px,2.4vw,37px);line-height:1.8;color:#213d60;margin:0 0 20px}.search-copy p{color:#5b6d84;line-height:2.4;font-size:14px}.search-copy-intro{max-width:1000px}.search-copy-sections{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:30px;margin-top:25px}.search-copy-sections h2,.search-copy-sections h3{font-size:18px;line-height:1.9;color:#294a70;margin:0 0 12px}.search-copy-links{display:flex;flex-wrap:wrap;gap:12px;margin-top:25px}.search-copy-links a{font-size:12px;line-height:2;color:#365f98;background:#eef4fc;border-radius:8px;padding:9px 15px}.search-copy-links a:hover{background:#dfeafb}.search-copy-links a:focus-visible{outline:2px solid #4664df;outline-offset:3px}@media(max-width:800px){.search-copy-sections{grid-template-columns:1fr;gap:18px}.search-copy{padding-top:30px;padding-bottom:30px}.search-copy p{font-size:13px}}

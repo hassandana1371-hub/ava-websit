@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
-<meta name="ava-site-release" content="29">
+<meta name="ava-site-release" content="30">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#10172b">
@@ -999,6 +999,15 @@ h1,h2,h3{letter-spacing:0}
 .software-card{display:flex;flex-direction:column;min-width:0}.software-card .entry-meta{line-height:2;overflow-wrap:anywhere}.software-card .button{font-size:12px;margin-top:16px;align-self:flex-start}.software-card .card-action{margin-top:auto}
 .software-card>.button,.software-card>.button:hover{color:#fff}
 
+/* Useful catalogue fallback is visible before scripts run or when JS is off. */
+#ava-seo-content>h1{font-size:clamp(30px,4vw,48px);line-height:1.7;margin:25px 0 18px;letter-spacing:0}
+#ava-seo-content>nav{font-size:12px;line-height:2}#ava-seo-content>p{font-size:14px;line-height:2.3}
+.server-product-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;list-style:none;padding:0}
+.server-product-list li{border:1px solid #dce6f4;border-radius:12px;padding:20px;background:#fff;min-width:0}
+.server-product-list h3{font-size:17px;line-height:2;margin:0 0 12px}.server-product-list p{font-size:13px;line-height:2.2;overflow-wrap:anywhere}
+.server-catalogue>h2{font-size:24px}.server-catalogue>p{line-height:2.2;color:#526b8d}
+@media(max-width:700px){.server-product-list{grid-template-columns:1fr}}
+
 .hero-image-link{position:absolute;inset:0;z-index:1}.hero-image-link:focus-visible{outline:3px solid white;outline-offset:-5px}.page-banner .catalog-heading h2{color:white;font-size:clamp(30px,4vw,66px);line-height:1.7}#ava-seo-content{padding:35px;max-width:1200px;margin:auto}#ava-seo-content p{line-height:2.2}
 
 .search-copy{background:#fff;border-top:1px solid #e5ebf5;border-bottom:1px solid #e5ebf5;padding-top:50px;padding-bottom:50px}.search-copy h1,.search-copy>h2{font-size:clamp(25px,2.4vw,37px);line-height:1.8;color:#213d60;margin:0 0 20px}.search-copy p{color:#5b6d84;line-height:2.4;font-size:14px}.search-copy-intro{max-width:1000px}.search-copy-sections{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:30px;margin-top:25px}.search-copy-sections h2,.search-copy-sections h3{font-size:18px;line-height:1.9;color:#294a70;margin:0 0 12px}.search-copy-links{display:flex;flex-wrap:wrap;gap:12px;margin-top:25px}.search-copy-links a{font-size:12px;line-height:2;color:#365f98;background:#eef4fc;border-radius:8px;padding:9px 15px}.search-copy-links a:hover{background:#dfeafb}.search-copy-links a:focus-visible{outline:2px solid #4664df;outline-offset:3px}@media(max-width:800px){.search-copy-sections{grid-template-columns:1fr;gap:18px}.search-copy{padding-top:30px;padding-bottom:30px}.search-copy p{font-size:13px}}
@@ -1407,7 +1416,7 @@ copyButton.addEventListener('click', async function () {
       },
       {
         "path": "/category/urban",
-        "label": "تلویزیون شهری داخلی و خارجی"
+        "label": "راهنمای خرید تلویزیون شهری و مدل‌ها"
       },
       {
         "path": "/service/initial-rental",
@@ -1466,44 +1475,56 @@ copyButton.addEventListener('click', async function () {
     ]
   },
   "/category/urban": {
-    "title": "تلویزیون شهری داخلی و خارجی؛ مشخصات و انتخاب",
-    "description": "تلویزیون شهری آوا را برای فضای داخلی، خارجی یا نمایشگر بزرگ LED بررسی کنید؛ راهنمای انتخاب دات‌پیچ، ابعاد و نور محیط، مقایسه محصولات و استعلام خرید.",
-    "heading": "تلویزیون شهری؛ انتخاب بر اساس محیط و فاصلهٔ دید",
-    "intro": "تلویزیون شهری یک سطح تصویر بزرگ است که از کنار هم قرارگرفتن اجزای نمایشگر LED شکل می‌گیرد. این ساختار برای ابعاد مختلف، از نمایشگر سالن تا نمایشگر غول پیکر محیطی، قابل بررسی است؛ اندازهٔ نهایی باید با وضوح موردنیاز و شرایط سازه هماهنگ شود. در کاتالوگ آوا از زیرگروه داخلی، خارجی یا Flexible وارد شوید و مدل‌ها را بر اساس فاصلهٔ مخاطب، نور محیط، نوع محتوا و امکان نگهداری مقایسه کنید.",
+    "title": "خرید تلویزیون شهری؛ مدل‌ها و عوامل قیمت",
+    "description": "برای خرید تلویزیون شهری، مدل‌های داخلی و خارجی، دات‌پیچ، ابعاد و قیمت مرجع هر ماژول را مقایسه کنید؛ راهنمای برآورد نمایشگر کامل و استعلام از گروه آوا.",
+    "heading": "راهنمای خرید تلویزیون شهری و مقایسهٔ مدل‌ها",
+    "intro": "برای خرید تلویزیون شهری، از محل نصب، ابعاد تصویر و فاصلهٔ مخاطب شروع کنید. تلویزیون شهری از کنار هم قرارگرفتن ماژول‌ها و تجهیزات نمایشگر LED ساخته می‌شود؛ بنابراین انتخاب یک ماژول یا دیدن قیمت آن، به‌تنهایی مشخصات و هزینهٔ یک نمایشگر کامل را تعیین نمی‌کند. مدل‌های داخلی، خارجی و Flexible آوا را در فهرست این صفحه بررسی کنید؛ سپس با مشخص‌کردن نیاز پروژه، قیمت و اقلام پیشنهاد را استعلام کنید.",
     "sections": [
       {
-        "heading": "تلویزیون شهری داخلی یا خارجی؟",
-        "body": "در فضای داخلی، فاصلهٔ تماشا و خوانایی متن و تصویر اهمیت زیادی دارند. در محیط باز، نور روز و شرایط محیطی نیز به معیارهای انتخاب اضافه می‌شوند. عنوان داخلی یا خارجی، جای بررسی مشخصات واقعی مدل را نمی‌گیرد؛ روشنایی، شرایط نصب و نیازهای برق و کنترل تصویر را برای محصول انتخابی مرور کنید."
+        "heading": "خرید تلویزیون شهری داخلی یا فضای باز؟",
+        "body": "محل نصب، اولین معیار انتخاب است. برای سالن یا فروشگاه، فاصلهٔ نزدیک مخاطب، خوانایی نوشته‌ها و روشنایی سازگار با فضا را بررسی کنید. در فضای باز، نور روز، شرایط آب‌وهوایی و مشخصات حفاظت محیطی مدل هم اهمیت دارند. ابعاد یکسان، دلیل بر یکسان‌بودن ماژول داخلی و خارجی نیست؛ درجهٔ حفاظت، روشنایی، برق و شرایط سازه را برای همان محصول تطبیق دهید."
       },
       {
-        "heading": "دات‌پیچ و ابعاد تصویر را با هم بررسی کنید",
-        "body": "دات‌پیچ به فاصلهٔ مرکز پیکسل‌ها اشاره دارد. در ابعاد ثابت، فاصلهٔ کمتر میان پیکسل‌ها می‌تواند تعداد پیکسل بیشتری در سطح تصویر ایجاد کند؛ اما انتخاب باید با فاصلهٔ مخاطب، نوع محتوای نمایشی و بودجه هماهنگ باشد. برای مقایسهٔ دو گزینه، ابعاد نهایی و رزولوشن حاصل از چیدمان ماژول‌ها را نیز بپرسید."
+        "heading": "دات‌پیچ، ابعاد و رزولوشن چه ارتباطی دارند؟",
+        "body": "دات‌پیچ فاصلهٔ مرکز دو پیکسل بر حسب میلی‌متر است. تعداد پیکسل در هر ضلع تقریباً از تقسیم طول همان ضلع به میلی‌متر بر دات‌پیچ به دست می‌آید؛ مثلاً یک ضلع چهارمتری با P4 حدود ۱۰۰۰ پیکسل و با P2 حدود ۲۰۰۰ پیکسل دارد. این مثال محاسباتی است؛ ابعاد اجرایی باید با آرایش و اندازهٔ ماژول و کابینت هماهنگ شوند. برای متن، جدول و ارائه، رزولوشن حاصل و فاصلهٔ مخاطب را همراه با محتوای واقعی آزمایش کنید."
       },
       {
-        "heading": "نصب ثابت یا استفادهٔ موقت در رویداد؟",
-        "body": "برای نصب دائمی، مسیر دسترسی به قطعات و برنامهٔ نگهداری را از ابتدا در نظر بگیرید. اگر نیاز شما مربوط به یک برنامه یا رویداد محدود است، خدمات اجارهٔ تلویزیون شهری هم قابل بررسی است. شرایط اجرای هر دو روش به محل، زمان و امکانات پروژه وابسته است."
+        "heading": "قیمت تلویزیون شهری؛ هر ماژول یا نمایشگر کامل؟",
+        "body": "قیمت‌های مرجع کاتالوگ با واحد و تاریخ ثبت خودشان نمایش داده می‌شوند؛ این ارقام قیمت قطعی امروز یا هزینهٔ هر مترمربع نمایشگر نصب‌شده نیستند. مبلغ ماژول ضرب در تعداد موردنیاز، فقط بخشی از برآورد است. کابینت یا سازه، کارت دریافت، کنترلر، منبع تغذیه، کابل‌کشی، حمل و نصب نیز باید در پیشنهاد مشخص شوند. برای مقایسهٔ دو پیشنهاد، ابعاد، دات‌پیچ، تجهیزات همراه و محدودهٔ اجرای یکسان را مبنا قرار دهید."
+      },
+      {
+        "heading": "چه اطلاعاتی برای استعلام خرید ارسال کنیم؟",
+        "body": "عرض و ارتفاع تقریبی تصویر، عکس یا نقشهٔ محل نصب، فضای داخلی یا خارجی، فاصلهٔ نزدیک‌ترین مخاطب و نوع محتوای پخش را آماده کنید. زمان موردنظر اجرا و مسیر دسترسی برای نصب و سرویس را هم توضیح دهید. اگر قرار است نمایشگر موجود را تکمیل کنید، مدل ماژول، کارت دریافت و کنترلر فعلی را بفرستید تا سازگاری بررسی شود؛ نام یک دات‌پیچ به‌تنهایی برای تشخیص سازگاری کافی نیست."
+      },
+      {
+        "heading": "پیش از نهایی‌کردن سفارش چه چیزهایی روشن باشد؟",
+        "body": "ابعاد و رزولوشن نهایی، مدل دقیق قطعات، تجهیزات کنترل تصویر و اقلام شامل پیشنهاد را مکتوب کنید. شرایط برق، تهویه، مهار سازه و روش دسترسی برای سرویس باید با محل نصب سازگار باشند. شرایط ضمانت، آموزش اپراتور، زمان تأمین و پشتیبانی را برای همان سفارش بپرسید؛ در این صفحه موجودی قطعی یا شرایط ضمانت یکسان برای همهٔ مدل‌ها اعلام نشده است."
+      },
+      {
+        "heading": "خرید برای نصب ثابت یا اجاره برای رویداد؟",
+        "body": "برای استفادهٔ مداوم، هزینهٔ خرید را در کنار نصب، مصرف برق و نگهداری بررسی کنید. اگر نیاز مربوط به یک نمایشگاه، همایش یا برنامهٔ محدود است، شرایط اجارهٔ تلویزیون شهری را هم مقایسه کنید. نمایشگر Flexible برای بعضی سطوح منحنی و تریلر LED برای بعضی اجراهای سیار قابل بررسی‌اند؛ انتخاب راهکار به شکل محل، مدت استفاده و امکانات پروژه بستگی دارد."
       }
     ],
     "links": [
       {
         "path": "/category/urban-indoor",
-        "label": "تلویزیون شهری داخلی؛ مدل‌ها و مشخصات"
+        "label": "مدل‌های تلویزیون شهری داخلی"
       },
       {
         "path": "/category/urban-outdoor",
-        "label": "تلویزیون شهری خارجی؛ مدل‌ها و مشخصات"
+        "label": "مدل‌های تلویزیون شهری فضای باز"
       },
       {
         "path": "/category/urban-flexible",
-        "label": "نمایشگر LED منعطف یا Flexible"
+        "label": "نمایشگرهای LED منعطف"
+      },
+      {
+        "path": "/contact",
+        "label": "درخواست استعلام خرید تلویزیون شهری"
       },
       {
         "path": "/service/initial-rental",
-        "label": "بررسی اجاره تلویزیون شهری"
-      },
-      {
-        "path": "/service/service-videowall",
-        "label": "طراحی و نصب ویدئووال برای تصویر بزرگ"
+        "label": "بررسی اجاره برای استفادهٔ موقت"
       }
     ]
   },
@@ -1529,7 +1550,7 @@ copyButton.addEventListener('click', async function () {
     "links": [
       {
         "path": "/category/urban",
-        "label": "مقایسهٔ کاربردهای تلویزیون شهری"
+        "label": "راهنمای خرید تلویزیون شهری و مدل‌ها"
       },
       {
         "path": "/category/conference-home",
@@ -1567,7 +1588,7 @@ copyButton.addEventListener('click', async function () {
     "links": [
       {
         "path": "/category/urban",
-        "label": "راهنمای انتخاب تلویزیون شهری آوا"
+        "label": "راهنمای خرید تلویزیون شهری و مدل‌ها"
       },
       {
         "path": "/category/urban-indoor",
@@ -1973,6 +1994,7 @@ copyButton.addEventListener('click', async function () {
     }else if(model.kind==='service')trail.push({name:data.modules.services.name,path:'/services'});
     trail.push({name:model.heading,path});return trail;
   }
+  function catalogueSearchProducts(path,model){return path==='/products'?publicProducts():model.category?publicProducts().filter(item=>categoryContains(model.category.id,item)):[];}
   function searchSchema(path,model,origin){
     const org=origin+'/#organization',url=origin+path;
     const graph=[{'@type':'Organization','@id':org,name:data.header.nameEn||data.header.nameFa,alternateName:data.header.nameFa,url:origin+'/'},{'@type':'WebSite','@id':origin+'/#website',url:origin+'/',name:data.header.nameFa,inLanguage:'fa-IR',publisher:{'@id':org}},{'@type':path==='/about'?'AboutPage':path==='/products'||path.startsWith('/category/')?'CollectionPage':'WebPage','@id':url+'#webpage',url,name:model.title+' | AvA Groups',description:model.description,inLanguage:'fa-IR',isPartOf:{'@id':origin+'/#website'}},{'@type':'BreadcrumbList','@id':url+'#breadcrumb',itemListElement:searchTrail(path,model).map((c,n)=>({'@type':'ListItem',position:n+1,name:c.name,item:origin+c.path}))}];
@@ -1982,6 +2004,8 @@ copyButton.addEventListener('click', async function () {
     if(contacts.length)graph[0].contactPoint=contacts;
     if(data.contact.locations?.length)graph[0].address=data.contact.locations.map(location=>({'@type':'PostalAddress',name:location.title,streetAddress:location.address}));
     if(path==='/about')graph[2].mainEntity={'@id':org};
+    const products=catalogueSearchProducts(path,model);
+    if(products.length){const listId=url+'#products';graph[2].mainEntity={'@id':listId};graph.push({'@type':'ItemList','@id':listId,name:'محصولات '+model.heading,numberOfItems:products.length,itemListElement:products.map((item,n)=>({'@type':'ListItem',position:n+1,name:item.title,url:origin+'/product/'+item.id}))});}
     if(model.item&&['product','service'].includes(model.kind)){const item=model.item,entity={'@type':model.kind==='product'?'Product':'Service','@id':url+'#entity',name:item.title,description:item.summary,url,mainEntityOfPage:{'@id':url+'#webpage'}};if(model.kind==='product'){entity.sku=item.id;if(item.model)entity.model=item.model;}else entity.provider={'@id':org};graph.push(entity);}
     return {'@context':'https://schema.org','@graph':graph};
   }
@@ -1991,7 +2015,7 @@ copyButton.addEventListener('click', async function () {
     section.append(el(primary?'h1':'h2',{},copy.heading||model.heading),el('p',{class:'search-copy-intro'},copy.intro||''));
     const columns=el('div',{class:'search-copy-sections'});for(const item of copy.sections||[])columns.append(el('section',{},el(primary?'h2':'h3',{},item.heading),el('p',{},item.body)));section.append(columns);
     const links=el('nav',{'aria-label':'صفحات مرتبط',class:'search-copy-links'});for(const link of copy.links||[]){const target=searchModel(link.path);if(!target.indexable)continue;links.append(el('a',{href:serverMode?link.path:'#'+(link.path==='/'?'home':link.path.slice(1))},link.label));}if(links.children.length)section.append(links);
-    if(path==='/'){$('#home-page-heading')?.remove();$('#managed-sections').before(section);}else if(!$('#catalog-page').hidden){const layout=$('.catalog-layout',$('#catalog-page'));if(layout)layout.before(section);else $('#catalog-page').append(section);}else{const destination=document.getElementById(path.slice(1));if(destination)destination.before(section);}
+    if(path==='/'){$('#home-page-heading')?.remove();$('#managed-sections').before(section);}else if(!$('#catalog-page').hidden){const layout=$('.catalog-layout',$('#catalog-page'));if(layout)layout.after(section);else $('#catalog-page').append(section);}else{const destination=document.getElementById(path.slice(1));if(destination)destination.before(section);}
   }
   function finishPublicPage(){
     $('#ava-seo-content')?.remove();

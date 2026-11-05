@@ -164,6 +164,7 @@
     }else if(model.kind==='service')trail.push({name:data.modules.services.name,path:'/services'});
     trail.push({name:model.heading,path});return trail;
   }
+  function catalogueSearchProducts(path,model){return path==='/products'?publicProducts():model.category?publicProducts().filter(item=>categoryContains(model.category.id,item)):[];}
   function searchSchema(path,model,origin){
     const org=origin+'/#organization',url=origin+path;
     const graph=[{'@type':'Organization','@id':org,name:data.header.nameEn||data.header.nameFa,alternateName:data.header.nameFa,url:origin+'/'},{'@type':'WebSite','@id':origin+'/#website',url:origin+'/',name:data.header.nameFa,inLanguage:'fa-IR',publisher:{'@id':org}},{'@type':path==='/about'?'AboutPage':path==='/products'||path.startsWith('/category/')?'CollectionPage':'WebPage','@id':url+'#webpage',url,name:model.title+' | AvA Groups',description:model.description,inLanguage:'fa-IR',isPartOf:{'@id':origin+'/#website'}},{'@type':'BreadcrumbList','@id':url+'#breadcrumb',itemListElement:searchTrail(path,model).map((c,n)=>({'@type':'ListItem',position:n+1,name:c.name,item:origin+c.path}))}];
@@ -173,6 +174,8 @@
     if(contacts.length)graph[0].contactPoint=contacts;
     if(data.contact.locations?.length)graph[0].address=data.contact.locations.map(location=>({'@type':'PostalAddress',name:location.title,streetAddress:location.address}));
     if(path==='/about')graph[2].mainEntity={'@id':org};
+    const products=catalogueSearchProducts(path,model);
+    if(products.length){const listId=url+'#products';graph[2].mainEntity={'@id':listId};graph.push({'@type':'ItemList','@id':listId,name:'محصولات '+model.heading,numberOfItems:products.length,itemListElement:products.map((item,n)=>({'@type':'ListItem',position:n+1,name:item.title,url:origin+'/product/'+item.id}))});}
     if(model.item&&['product','service'].includes(model.kind)){const item=model.item,entity={'@type':model.kind==='product'?'Product':'Service','@id':url+'#entity',name:item.title,description:item.summary,url,mainEntityOfPage:{'@id':url+'#webpage'}};if(model.kind==='product'){entity.sku=item.id;if(item.model)entity.model=item.model;}else entity.provider={'@id':org};graph.push(entity);}
     return {'@context':'https://schema.org','@graph':graph};
   }
@@ -182,7 +185,7 @@
     section.append(el(primary?'h1':'h2',{},copy.heading||model.heading),el('p',{class:'search-copy-intro'},copy.intro||''));
     const columns=el('div',{class:'search-copy-sections'});for(const item of copy.sections||[])columns.append(el('section',{},el(primary?'h2':'h3',{},item.heading),el('p',{},item.body)));section.append(columns);
     const links=el('nav',{'aria-label':'صفحات مرتبط',class:'search-copy-links'});for(const link of copy.links||[]){const target=searchModel(link.path);if(!target.indexable)continue;links.append(el('a',{href:serverMode?link.path:'#'+(link.path==='/'?'home':link.path.slice(1))},link.label));}if(links.children.length)section.append(links);
-    if(path==='/'){$('#home-page-heading')?.remove();$('#managed-sections').before(section);}else if(!$('#catalog-page').hidden){const layout=$('.catalog-layout',$('#catalog-page'));if(layout)layout.before(section);else $('#catalog-page').append(section);}else{const destination=document.getElementById(path.slice(1));if(destination)destination.before(section);}
+    if(path==='/'){$('#home-page-heading')?.remove();$('#managed-sections').before(section);}else if(!$('#catalog-page').hidden){const layout=$('.catalog-layout',$('#catalog-page'));if(layout)layout.after(section);else $('#catalog-page').append(section);}else{const destination=document.getElementById(path.slice(1));if(destination)destination.before(section);}
   }
   function finishPublicPage(){
     $('#ava-seo-content')?.remove();
