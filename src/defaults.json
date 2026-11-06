@@ -1770,7 +1770,7 @@
     "email": "",
     "address": "",
     "phoneDisplay": "۰۲۱۹۱۰۹۵۷۱۵",
-    "phoneLabel": "تلفن اصلی آوا",
+    "phoneLabel": "شماره تماس",
     "phoneNote": "تلفن گویا؛ ارتباط با بخش‌های آوا",
     "mobile": "09121718024",
     "mobileDisplay": "0912 17 18 024",
@@ -2295,6 +2295,6 @@
       ]
     }
   },
-  "contactRevision": 2,
+  "contactRevision": 3,
   "softwareRevision": 1
 }

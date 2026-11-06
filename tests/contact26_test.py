@@ -29,7 +29,7 @@ class ContactTests(fixture.ServerTest):
                        (revision, json.dumps(data, ensure_ascii=False)))
 
     def assert_correct_contacts(self, data):
-        self.assertEqual(data['contactRevision'], 2)
+        self.assertEqual(data['contactRevision'], 3)
         contact = data['contact']
         self.assertEqual(contact['phone'], MAIN)
         self.assertEqual(contact['mobile'], MOBILE)
@@ -113,10 +113,11 @@ class ContactTests(fixture.ServerTest):
             self.assertIn('href="tel:+982191095715"', visible)
             self.assertIn('href="tel:+989121718024"', visible)
             self.assertIn(MOBILE_DISPLAY, visible)
-            self.assertIn(WAREHOUSE, visible)
-            self.assertIn(OFFICE, visible)
-            self.assertIn('انبار مرکزی', visible)
-            self.assertIn('دفتر فروش و نمایشگاه', visible)
+            if path=='/contact':
+                self.assertIn(WAREHOUSE,visible);self.assertIn(OFFICE,visible)
+            else:
+                self.assertNotIn(WAREHOUSE,visible);self.assertNotIn(OFFICE,visible)
+            self.assertIn('شماره تماس',visible)
             self.assertNotIn('02166048740', visible)
 
             schema = json.loads(re.search(
@@ -146,7 +147,7 @@ class ContactTests(fixture.ServerTest):
         fixture.app.initialize()
         revision, upgraded=self.stored()
         self.assertEqual(revision,74)
-        self.assertEqual(upgraded['contactRevision'],2)
+        self.assertEqual(upgraded['contactRevision'],3)
         self.assertEqual(upgraded['contact']['phone'],'02199990000')
         self.assertEqual(upgraded['contact']['mobile'],'')
         self.assertEqual(upgraded['contact']['phoneNote'],'توضیح سفارشی حفظ شود')

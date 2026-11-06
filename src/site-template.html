@@ -259,16 +259,17 @@ html{scroll-behavior:auto}
 <span class="kicker">فصل بعدی، با شما</span>
 <h2>خرید یا اجارهٔ نمایشگر؟<br><em>از نیازتان بگویید.</em></h2>
 <p>نوع درخواست، ابعاد تقریبی، شهر و زمان موردنیازتان را بنویسید.</p>
-<small>این نسخهٔ نمایشی به سامانهٔ ارسال پیام متصل نیست. فرم فقط خلاصهٔ درخواست را آماده می‌کند.</small>
+<small>نام، شماره تماس و متن درخواست را وارد کنید تا مسئول سایت پیگیری کند.</small>
 </div>
 <form id="request-form">
 <label for="name">نام شما</label>
 <input id="name" name="customer" autocomplete="name" placeholder="نام و نام خانوادگی" maxlength="100" required>
-<label for="message">دربارهٔ پروژه</label>
+<label for="request-phone">شماره تماس</label><input id="request-phone" name="phone" type="tel" autocomplete="tel" dir="ltr" maxlength="40" required><label class="request-honeypot" aria-hidden="true">وب‌سایت<input name="website" tabindex="-1" autocomplete="off"></label>
+<label for="message">متن درخواست</label>
 <textarea id="message" name="project" placeholder="خرید یا اجاره؟ چه ابعادی، در کدام شهر و برای چه زمانی؟" rows="4" maxlength="2000" required></textarea>
-<button class="button" type="submit">آماده‌کردن خلاصهٔ درخواست ↖</button>
+<button class="button" type="submit">ارسال درخواست ↖</button>
 <p id="result" role="status"></p>
-<button id="copy" type="button" hidden>کپی خلاصهٔ درخواست</button>
+
 </form>
 </section>
 </main>
@@ -282,47 +283,7 @@ html{scroll-behavior:auto}
 </div>
 <!--CMS_SHELL-->
 
-<script>
-const form = document.querySelector('#request-form');
-const result = document.querySelector('#result');
-const copyButton = document.querySelector('#copy');
-let summary = '';
 
-form.addEventListener('submit', function (event) {
-  event.preventDefault();
-
-  const name = form.elements.customer.value.trim();
-  const project = form.elements.project.value.trim();
-
-  if (!name || !project) {
-    result.textContent = 'لطفاً نام و توضیح پروژه را وارد کنید.';
-    copyButton.hidden = true;
-    return;
-  }
-
-  summary = 'درخواست همکاری با آوا\nنام: ' + name +
-    '\nدربارهٔ پروژه: ' + project;
-
-  result.textContent = summary +
-    '\n\nخلاصه آماده است؛ هنوز پیامی ارسال نشده است.';
-  copyButton.hidden = false;
-  copyButton.textContent = 'کپی خلاصهٔ درخواست';
-});
-
-copyButton.addEventListener('click', async function () {
-  try {
-    await navigator.clipboard.writeText(summary);
-    copyButton.textContent = 'خلاصه کپی شد ✓';
-  } catch (error) {
-    const selection = window.getSelection();
-    const range = document.createRange();
-    range.selectNodeContents(result);
-    selection.removeAllRanges();
-    selection.addRange(range);
-    copyButton.textContent = 'متن انتخاب شد؛ آن را کپی کنید';
-  }
-});
-</script>
 <!--CMS_DATA-->
 <!--CMS_SCRIPT-->
 </body>

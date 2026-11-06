@@ -18,8 +18,8 @@ def generate(content,origin='https://avagroups.ir',channel='social',campaign='av
     categories={c['id']:c for c in data['productCategories']}
     visible={c['id'] for c in categories.values() if c.get('visible') and not c.get('parentId')}
     visible.update(c['id'] for c in categories.values() if c.get('visible') and c.get('parentId') in visible)
-    products=[p for p in data['modules']['products']['items'] if p.get('status')=='published' and p.get('categoryId') in visible]
-    services=[s for s in data['modules']['services']['items'] if s.get('status')=='published']
+    products=[] if data['modules']['products'].get('visible') is False else [p for p in data['modules']['products']['items'] if p.get('status')=='published' and p.get('categoryId') in visible]
+    services=[] if data['modules']['services'].get('visible') is False else [s for s in data['modules']['services']['items'] if s.get('status')=='published']
     def add(key,title,path,text):
         link=origin.rstrip('/')+path+'?'+urlencode({'utm_source':channel,'utm_medium':'organic_social','utm_campaign':campaign,'utm_content':key})
         posts.append({'id':key,'day':1+len(posts)*2,'title':title,'landing_page':origin.rstrip('/')+path,'tracked_link':link,'text':text+'\n\n'+brand+('\nجزئیات از لینک بیو یا استوری' if channel=='instagram' else '\nمشخصات و هماهنگی:\n'+link),'status':'draft'})

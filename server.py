@@ -19,7 +19,7 @@ import sqlite3
 import time
 from http.cookies import SimpleCookie, CookieError
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from urllib.parse import urlsplit
+from urllib.parse import urlsplit, parse_qs
 
 ROOT = Path(__file__).resolve().parent
 DB = Path(os.environ.get('AVA_DATA_DIR', str(ROOT / 'private-data'))) / 'ava.sqlite3'
@@ -41,6 +41,9 @@ def initialize():
         CREATE TABLE IF NOT EXISTS content (id INTEGER PRIMARY KEY CHECK(id=1), revision INTEGER, data TEXT);
         CREATE TABLE IF NOT EXISTS sessions (token TEXT PRIMARY KEY, csrf TEXT, expires REAL);
         CREATE TABLE IF NOT EXISTS attempts (address TEXT, created REAL);
+        CREATE TABLE IF NOT EXISTS service_requests(id INTEGER PRIMARY KEY AUTOINCREMENT,created REAL NOT NULL,customer TEXT NOT NULL,phone TEXT NOT NULL,message TEXT NOT NULL,source_path TEXT NOT NULL,source_title TEXT NOT NULL,unread INTEGER NOT NULL DEFAULT 1,request_key TEXT UNIQUE NOT NULL);
+        CREATE TABLE IF NOT EXISTS request_limits(address TEXT,created REAL);
+        CREATE INDEX IF NOT EXISTS request_limits_address ON request_limits(address,created);
         ''')
         if not db.execute('SELECT 1 FROM content').fetchone():
             db.execute('INSERT INTO content VALUES (1,1,?)', ((ROOT / 'src/defaults.json').read_text(),))
@@ -161,7 +164,7 @@ def validate_content(data):
     for key in ['title','description','phone','email','address']:
         string(data['contact'].get(key), 2500 if key == 'description' else 500)
     for key,limit in [('mobile',80),('phoneDisplay',80),('mobileDisplay',80),('phoneLabel',80),('mobileLabel',80),('phoneNote',200),('mobileNote',200)]:string(data['contact'].get(key,''),limit)
-    if type(data.get('contactRevision',1)) is not int or data.get('contactRevision',1) not in [1,2]:raise ValueError('نسخهٔ اطلاعات تماس معتبر نیست.')
+    if type(data.get('contactRevision',1)) is not int or data.get('contactRevision',1) not in [1,2,3]:raise ValueError('نسخهٔ اطلاعات تماس معتبر نیست.')
     locations=data['contact'].get('locations',[])
     if not isinstance(locations,list) or len(locations)>12:raise ValueError('حداکثر ۱۲ نشانی قابل ثبت است.')
     location_ids=set()
@@ -184,6 +187,7 @@ def validate_content(data):
             raise ValueError('ساختار محتوای بخش معتبر نیست.')
         string(module.get('name'), 80)
         string(module.get('description'), 1000)
+        if 'visible' in module and type(module['visible']) is not bool:raise ValueError('وضعیت نمایش بخش معتبر نیست.')
         if key == 'products':
             banner(module.get('banner'))
         seen = set()
@@ -197,6 +201,13 @@ def validate_content(data):
                 raise ValueError('دستهٔ محصول معتبر نیست.')
             for field, limit in [('summary',700),('body',20000),('meta',200),('fileName',160)]:
                 string(item.get(field, ''), limit)
+            if key=='projects':
+                gallery=item.get('gallery',[])
+                if not isinstance(gallery,list) or len(gallery)>12:raise ValueError('حداکثر ۱۲ تصویر تکمیلی برای پروژه مجاز است.')
+                for photo in gallery:
+                    if not isinstance(photo,dict):raise ValueError('تصویر پروژه معتبر نیست.')
+                    string(photo.get('alt',''),200)
+                    if not isinstance(photo.get('image'),str) or not photo['image']:raise ValueError('تصویر پروژه خالی است.')
             if item.get('banner') is not None:
                 banner(item['banner'])
             if key == 'products':
@@ -286,6 +297,7 @@ def public_content(data):
     data['productCategories'] = [c for c in categories if c['id'] in visible]
     allowed_pages = set(MODULES) | {'category:'+c for c in visible}
     for key, module in data['modules'].items():
+        if module.get('visible') is False:module['items']=[]
         module['items'] = [i for i in module['items'] if i.get('status') == 'published' and (key != 'products' or i.get('categoryId') in visible)]
         prefix = 'product' if key == 'products' else 'service' if key == 'services' else key
         allowed_pages.update(prefix+':'+i['id'] for i in module['items'])
@@ -347,6 +359,17 @@ class Handler(BaseHTTPRequestHandler):
             blob,mime=assets[path];return self.reply(200,blob,content_type=mime)
         with connect() as db:
             session = self.session(db)
+            if path in ['/api/requests','/api/requests/summary']:
+                if not session:return self.reply(401,{'error':'ورود لازم است.'})
+                counts=db.execute('SELECT COUNT(*) AS total,COALESCE(SUM(unread),0) AS unread FROM service_requests').fetchone()
+                result=dict(counts)
+                if path=='/api/requests':
+                    try:
+                        offset=int(parse_qs(urlsplit(self.path).query).get('offset',['0'])[0])
+                        if not 0<=offset<=10000000:raise ValueError()
+                    except ValueError:return self.reply(400,{'error':'شمارهٔ صفحه معتبر نیست.'})
+                    result['items']=[dict(row) for row in db.execute('SELECT id,created,customer,phone,message,source_path,source_title,unread FROM service_requests ORDER BY id DESC LIMIT 50 OFFSET ?',(offset,))]
+                return self.reply(200,result)
             if path == '/api/stats':
                 if not session:return self.reply(401, {'error':'ورود لازم است.'})
                 return self.reply(200,site_features.statistics(db))
@@ -391,7 +414,7 @@ class Handler(BaseHTTPRequestHandler):
             return self.reply(415, {'error':'نوع درخواست معتبر نیست.'})
         try:
             size = int(self.headers.get('Content-Length', '0'))
-            if size <= 0 or size > MAX_BODY:
+            if size <= 0 or size > (10000 if urlsplit(self.path).path=='/api/requests' else MAX_BODY):
                 return self.reply(413, {'error':'حجم درخواست بیش از حد مجاز است.'})
             payload = json.loads(self.rfile.read(size), parse_constant=lambda value: (_ for _ in ()).throw(ValueError('عدد معتبر نیست.')))
             if not isinstance(payload, dict):
@@ -400,6 +423,25 @@ class Handler(BaseHTTPRequestHandler):
             return self.reply(400, {'error':'درخواست JSON معتبر نیست.'})
         path = urlsplit(self.path).path
         with connect() as db:
+            if path=='/api/requests':
+                if size>10000:return self.reply(413,{'error':'متن درخواست بیش از حد مجاز است.'})
+                if payload.get('website'):return self.reply(200,{'ok':True})
+                customer=payload.get('customer','');phone=payload.get('phone','');message=payload.get('message','');source=payload.get('source','/contact');key=payload.get('requestKey','')
+                if not all(isinstance(x,str) for x in [customer,phone,message,source,key]):return self.reply(400,{'error':'اطلاعات درخواست معتبر نیست.'})
+                customer=customer.strip();message=message.strip()
+                normalized=site_features.phone_number(phone)
+                if not customer or len(customer)>100 or not message or len(message)>4000 or len(phone)>40 or not re.fullmatch(r'[+0-9۰-۹٠-٩()\s-]+',phone) or not re.fullmatch(r'\+?\d{8,15}',normalized):return self.reply(400,{'error':'نام، شماره تماس معتبر و متن درخواست را کامل کنید.'})
+                if not re.fullmatch(r'[A-Za-z0-9_-]{8,80}',key):return self.reply(400,{'error':'شناسهٔ ارسال معتبر نیست؛ صفحه را تازه کنید.'})
+                pages=site_features.pages(public_content(json.loads(db.execute('SELECT data FROM content').fetchone()[0])))
+                if source not in pages or not (source=='/contact' or source.startswith(('/service/','/product/','/equipment/'))):return self.reply(400,{'error':'خدمت یا محصول انتخاب‌شده در دسترس نیست.'})
+                now=time.time();address=hashlib.sha256(self.client_address[0].encode()).hexdigest()
+                db.execute('BEGIN IMMEDIATE')
+                if db.execute('SELECT 1 FROM service_requests WHERE request_key=?',(key,)).fetchone():return self.reply(200,{'ok':True})
+                db.execute('DELETE FROM request_limits WHERE created<?',(now-600,))
+                if db.execute('SELECT COUNT(*) FROM request_limits WHERE address=?',(address,)).fetchone()[0]>=30:return self.reply(429,{'error':'تعداد درخواست‌ها زیاد است؛ چند دقیقه بعد دوباره تلاش کنید.'})
+                db.execute('INSERT INTO request_limits VALUES (?,?)',(address,now))
+                db.execute('INSERT INTO service_requests(created,customer,phone,message,source_path,source_title,request_key) VALUES (?,?,?,?,?,?,?)',(now,customer,normalized,message,source,pages[source]['heading'][:200],key))
+                db.commit();return self.reply(201,{'ok':True})
             if path == '/api/track':
                 if len(json.dumps(payload))>1000:return self.reply(400, {'error':'رویداد بزرگ است.'})
                 if self.session(db):return self.reply(200, {'ok':True,'ignored':True})
@@ -436,6 +478,12 @@ class Handler(BaseHTTPRequestHandler):
                 db.execute('DELETE FROM sessions WHERE token=?', (session['token'],))
                 db.commit()
                 return self.reply(200, {'ok':True}, self.make_cookie('', 0))
+            if path=='/api/requests/update':
+                id=payload.get('id');action=payload.get('action')
+                if type(id) is not int or id<1 or action not in ['read','unread','delete']:return self.reply(400,{'error':'عملیات درخواست معتبر نیست.'})
+                if action=='delete':db.execute('DELETE FROM service_requests WHERE id=?',(id,))
+                else:db.execute('UPDATE service_requests SET unread=? WHERE id=?',(int(action=='unread'),id))
+                db.commit();return self.reply(200,{'ok':True})
             if path == '/api/password':
                 account = db.execute('SELECT * FROM account').fetchone()
                 if not check_password(str(payload.get('currentPassword', ''))[:257], account):

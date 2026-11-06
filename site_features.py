@@ -38,10 +38,11 @@ def upgrade_contact(data):
     upgraded=copy.deepcopy(data)
     if data.get('contactRevision',0)<1:
         upgraded['contact']={**data['contact'],**copy.deepcopy(defaults['fields'])}
-    else:
+    elif data.get('contactRevision',0)<2:
         factory=next(location for location in defaults['fields']['locations'] if location['id']=='factory')
         locations=upgraded['contact'].setdefault('locations',[])
         if not any(location['id']=='factory' for location in locations):locations.append(copy.deepcopy(factory))
+    if data.get('contactRevision',0)<3 and upgraded['contact'].get('phoneLabel')=='تلفن اصلی آوا':upgraded['contact']['phoneLabel']='شماره تماس'
     upgraded['contactRevision']=defaults['revision']
     return upgraded
 
@@ -77,7 +78,7 @@ def phone_href(value):
 
 def contact_points(data):
     c=upgrade_contact(data)['contact'];points=[]
-    for key,fallback in [('phone','تلفن اصلی آوا'),('mobile','تماس مستقیم فروش')]:
+    for key,fallback in [('phone','شماره تماس'),('mobile','تماس مستقیم فروش')]:
         number=phone_number(c.get(key,''))
         if not number or number=='+':continue
         display=c.get(key+'Display','')
@@ -85,25 +86,25 @@ def contact_points(data):
         points.append({'label':c.get(key+'Label') or fallback,'number':number,'display':display,'note':c.get(key+'Note',''),'href':phone_href(number)})
     return points
 
-def contact_body(data):
+def contact_body(data,include_locations=True):
     c=upgrade_contact(data)['contact'];lines=[]
     for point in contact_points(data):
         lines.append(point['label']+': '+point['display'])
         if point['note']:lines.append(point['note'])
-    for location in c.get('locations',[]):lines.append(location['title']+': '+location['address'])
-    for key in ['email','address']:
+    for location in c.get('locations',[]) if include_locations else []:lines.append(location['title']+': '+location['address'])
+    for key in (['email','address'] if include_locations else ['email']):
         if c.get(key):lines.append(c[key])
     return '\n'.join(lines)
 
-def contact_html(data):
+def contact_html(data,include_locations=True):
     esc=html.escape;c=upgrade_contact(data)['contact'];out='<section class="server-contact-info" aria-label="اطلاعات تماس آوا"><h2>راه‌های ارتباطی آوا</h2>'
     for point in contact_points(data):
         out+='<section><h3>'+esc(point['label'])+'</h3><a dir="ltr" href="'+esc(point['href'],quote=True)+'">'+esc(point['display'])+'</a>'
         if point['note']:out+='<p>'+esc(point['note'])+'</p>'
         out+='</section>'
-    for location in c.get('locations',[]):out+='<section><h3>'+esc(location['title'])+'</h3><p>'+esc(location['address'])+'</p></section>'
+    for location in c.get('locations',[]) if include_locations else []:out+='<section><h3>'+esc(location['title'])+'</h3><p>'+esc(location['address'])+'</p></section>'
     if c.get('email'):out+='<p>'+esc(c['email'])+'</p>'
-    if c.get('address'):out+='<p>'+esc(c['address'])+'</p>'
+    if include_locations and c.get('address'):out+='<p>'+esc(c['address'])+'</p>'
     return out+'</section>'
 
 
@@ -131,7 +132,7 @@ def pages(data):
         ids={c['id']}|{child['id'] for child in data['productCategories'] if child.get('parentId')==c['id']}
         result['/category/'+c['id']]={'title':c['name'],'heading':c.get('banner',{}).get('title') or c['name'],'description':c['description'],'body':c['description'],'indexable':any(i['categoryId'] in ids for i in product_items),'category':c}
     result['/contact']={'title':data['contact']['title'],'heading':data['contact']['title'],'description':data['contact']['description'],'body':contact_body(data),'indexable':True}
-    result['/about']={'title':'دربارهٔ '+brand,'heading':'دربارهٔ '+brand,'description':company_description(data)[:320],'body':'\n'.join(filter(None,[company_description(data),data.get('company',{}).get('serviceArea',''),contact_body(data)])),'indexable':True}
+    result['/about']={'title':'دربارهٔ '+brand,'heading':'دربارهٔ '+brand,'description':company_description(data)[:320],'body':'\n'.join(filter(None,[company_description(data),data.get('company',{}).get('serviceArea',''),contact_body(data,False)])),'indexable':True}
     defaults=search_defaults()
     for path,p in result.items():
         default=defaults.get(path,{});custom=data.get('pageSeo',{}).get(path,{})
@@ -208,7 +209,7 @@ def structured_data(data,path,origin,all_pages=None):
         else:contacts.append({'@type':'ContactPoint','contactType':'ارتباط با آوا','email':data['contact']['email']})
     if contacts:graph[0]['contactPoint']=contacts
     locations=upgrade_contact(data)['contact'].get('locations',[])
-    if locations:graph[0]['address']=[{'@type':'PostalAddress','name':location['title'],'streetAddress':location['address']} for location in locations]
+    if locations and path=='/contact':graph[0]['address']=[{'@type':'PostalAddress','name':location['title'],'streetAddress':location['address']} for location in locations]
     if path=='/about':graph[2]['mainEntity']={'@id':org}
     items=catalogue_products(data,path,p)
     if items:
@@ -260,7 +261,7 @@ def seo_html(data,path,origin):
         if path!='/':body+='<h2>'+esc(copy.get('heading') or p['heading'])+'</h2>'
         body+='<p>'+esc(copy.get('intro',''))+'</p>'
         for section in copy.get('sections',[]):body+='<h2>'+esc(section['heading'])+'</h2><p>'+esc(section['body'])+'</p>'
-    if path in ['/contact','/about']:body+=contact_html(data)
+    if path in ['/contact','/about']:body+=contact_html(data,path=='/contact')
     if p.get('body') and path not in ['/contact','/about']:body+='<div style="white-space:pre-line">'+esc(p['body'])+'</div>'
     if p.get('product'):
         body+='<p>'+esc(product_price_text(p['item']))+'</p>'

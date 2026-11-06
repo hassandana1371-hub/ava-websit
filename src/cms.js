@@ -19,7 +19,7 @@
   const KEYS = ['products','services','projects','partners','software','articles','contact','catalog'];
   const CONTENT_KEYS = [...KEYS,'equipment'];
   const LABELS = {products:'محصولات',services:'خدمات',projects:'پروژه‌ها',partners:'همکاران',equipment:'فروش تجهیزات تلویزیون',software:'نرم‌افزار',articles:'مقالات',contact:'تماس با ما',catalog:'کاتالوگ'};
-  const TITLES = {company:'معرفی شرکت',stats:'آمار بازدید',footer:'فوتر سایت',seo:'تنظیمات سئو',dashboard:'پیشخوان',header:'لوگو و هدر',hero:'هیرو / تصویر اصلی',navigation:'منوها و اتصال‌ها',categories:'دسته‌بندی محصولات',banners:'بنر اختصاصی صفحات',security:'رمز و ورود',backup:'نسخهٔ پشتیبان و خروجی'};
+  const TITLES = {requests:'درخواست‌ها',company:'معرفی شرکت',stats:'آمار بازدید',footer:'فوتر سایت',seo:'تنظیمات سئو',dashboard:'پیشخوان',header:'لوگو و هدر',hero:'هیرو / تصویر اصلی',navigation:'منوها و اتصال‌ها',categories:'دسته‌بندی محصولات',banners:'بنر اختصاصی صفحات',security:'رمز و ورود',backup:'نسخهٔ پشتیبان و خروجی'};
   const DESCRIPTIONS = {
     dashboard:'از اینجا ظاهر سایت را تنظیم کن و محتوای هر بخش را مدیریت کن.',
     header:'لوگو، نام فارسی و انگلیسی و شعارهای بالای سایت را جداگانه ویرایش کن.',
@@ -52,6 +52,7 @@
   let adminVisible = false;
   let toastTimer;
   let editingModule = '';
+  let entryGallery = [],requestsLastUnread = -1;
   let entryImage = '';
   let entryImageAsset = '';
   let entryImageStyle = '';
@@ -75,10 +76,10 @@
   }
   function renderLogin(error = '') {
     $('#ava-seo-content')?.remove();setMeta('robots','noindex,nofollow');
-    adminVisible=false;$('#public-site').hidden=true;$('#admin-app').hidden=true;
+    adminVisible=false;$('#public-site').hidden=true;$('#admin-app').hidden=true;$('#admin-content').replaceChildren();
     const root=$('#admin-login');root.hidden=false;
     root.innerHTML=`<div class="login-card"><a href="#home" class="login-back">گروه آوا ↗</a><span class="admin-eyebrow">AVA GROUP / CONTENT STUDIO</span><h1>ورود به مدیریت سایت</h1><p>برای مدیریت محصولات، خدمات و بنرهای سایت وارد شوید.</p><form id="login-form" class="admin-form"><label>رمز مدیر<input type="password" name="password" autocomplete="current-password" required maxlength="256"></label><p role="alert" class="form-error" id="login-error">${escapeHTML(error)}</p><button class="admin-button" type="submit">ورود به پنل</button></form><small>رمز اولیه را هنگام راه‌اندازی سرور تعیین کنید؛ پس از ورود از بخش «رمز و ورود» قابل تغییر است.</small></div>`;
-    $('#login-form').onsubmit=async event=>{event.preventDefault();const button=$('button[type=submit]',event.currentTarget);button.disabled=true;try {const session=await api('/api/login',{password:event.currentTarget.elements.password.value});csrf=session.csrf;authenticated=true;serverReady=true;const result=await api('/api/content');data=validate(result.data);serverRevision=result.revision;root.hidden=true;dirty=false;renderPublic();route();}catch(e){$('#login-error').textContent=e.message;}finally{button.disabled=false;}};
+    $('#login-form').onsubmit=async event=>{event.preventDefault();const button=$('button[type=submit]',event.currentTarget);button.disabled=true;try {const session=await api('/api/login',{password:event.currentTarget.elements.password.value});csrf=session.csrf;authenticated=true;requestsLastUnread=-1;serverReady=true;const result=await api('/api/content');data=validate(result.data);serverRevision=result.revision;root.hidden=true;dirty=false;renderPublic();route();}catch(e){$('#login-error').textContent=e.message;}finally{button.disabled=false;}};
   }
   function renderSecurity(root) {
     if (!serverMode) {root.innerHTML='<div class="notice">ورود با رمز در نسخهٔ سروری فعال می‌شود. برای راه‌اندازی، بستهٔ سرور و راهنمای نصب را استفاده کنید؛ فایل HTML مستقل برای پیش‌نمایش و خروجی آفلاین است.</div>';return;}
@@ -172,7 +173,7 @@
     const contacts=contactPoints().map(point=>({'@type':'ContactPoint',contactType:point.label,telephone:point.href.slice(4)}));
     if(data.contact.email){if(contacts.length)contacts[0].email=data.contact.email;else contacts.push({'@type':'ContactPoint',contactType:'ارتباط با آوا',email:data.contact.email});}
     if(contacts.length)graph[0].contactPoint=contacts;
-    if(data.contact.locations?.length)graph[0].address=data.contact.locations.map(location=>({'@type':'PostalAddress',name:location.title,streetAddress:location.address}));
+    if(path==='/contact'&&data.contact.locations?.length)graph[0].address=data.contact.locations.map(location=>({'@type':'PostalAddress',name:location.title,streetAddress:location.address}));
     if(path==='/about')graph[2].mainEntity={'@id':org};
     const products=catalogueSearchProducts(path,model);
     if(products.length){const listId=url+'#products';graph[2].mainEntity={'@id':listId};graph.push({'@type':'ItemList','@id':listId,name:'محصولات '+model.heading,numberOfItems:products.length,itemListElement:products.map((item,n)=>({'@type':'ListItem',position:n+1,name:item.title,url:origin+'/product/'+item.id}))});}
@@ -210,16 +211,16 @@
   const contactDefaults=JSON.parse($('#ava-contact-defaults')?.textContent||'{"revision":0,"fields":{}}');
   function phoneNumber(value){value=String(value||'').replace(/[۰-۹]/g,c=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(c)).replace(/[٠-٩]/g,c=>'٠١٢٣٤٥٦٧٨٩'.indexOf(c));return (value.trim().startsWith('+')?'+':'')+value.replace(/\D/g,'');}
   function phoneHref(value){let number=phoneNumber(value);if(number.length===11&&number.startsWith('0'))number='+98'+number.slice(1);return 'tel:'+number;}
-  function contactPoints(){const c=data.contact;return [['phone','تلفن اصلی آوا'],['mobile','تماس مستقیم فروش']].flatMap(([key,fallback])=>{const number=phoneNumber(c[key]);if(!number||number==='+')return [];let display=c[key+'Display']||'';if(phoneHref(display)!==phoneHref(number))display=number;return [{label:c[key+'Label']||fallback,number,display,note:c[key+'Note']||'',href:phoneHref(number)}];});}
+  function contactPoints(){const c=data.contact;return [['phone','شماره تماس'],['mobile','تماس مستقیم فروش']].flatMap(([key,fallback])=>{const number=phoneNumber(c[key]);if(!number||number==='+')return [];let display=c[key+'Display']||'';if(phoneHref(display)!==phoneHref(number))display=number;return [{label:c[key+'Label']||fallback,number,display,note:c[key+'Note']||'',href:phoneHref(number)}];});}
   function contactCards(compact=false){
     const root=el('div',{class:compact?'contact-number-cards compact':'contact-number-cards'});
     contactPoints().forEach((point,index)=>{const card=el('a',{href:point.href,class:'contact-number-card'+(index===0?' primary':''),'data-contact-event':'contact-phone'},el('span',{class:'contact-number-label'},point.label),el('bdi',{dir:'ltr',class:'contact-number'},point.display));if(point.note)card.append(el('small',{},point.note));root.append(card);});return root;
   }
   function locationCards(){const root=el('div',{class:'contact-location-cards'});for(const location of data.contact.locations||[])root.append(el('section',{class:'contact-location-card','data-location':location.id},el('h3',{},location.title),el('p',{},location.address)));return root;}
-  function contactExtras(root){if(data.contact.email)root.append(el('a',{href:'mailto:'+data.contact.email,'data-contact-event':'contact-email',class:'contact-email',dir:'ltr'},data.contact.email));if(data.contact.address)root.append(el('p',{class:'contact-additional-address'},data.contact.address));}
+  function contactExtras(root,includeAddress=true){if(data.contact.email)root.append(el('a',{href:'mailto:'+data.contact.email,'data-contact-event':'contact-email',class:'contact-email',dir:'ltr'},data.contact.email));if(includeAddress&&data.contact.address)root.append(el('p',{class:'contact-additional-address'},data.contact.address));}
 
   function companyDescription(){return data.company?.description||'گروه آوا در زمینهٔ فروش و اجارهٔ نمایشگر LED و تلویزیون شهری فعالیت می‌کند. محصولات و خدمات مرتبط را بررسی کنید و برای انتخاب متناسب با محل نصب یا رویداد، درخواست مشاوره و استعلام بفرستید.';}
-  function renderAbout(){const root=$('#catalog-page');root.replaceChildren();const section=el('section',{class:'content company-profile'},el('h1',{},'دربارهٔ '+data.header.nameFa),el('p',{},companyDescription()));if(data.company?.serviceArea)section.append(el('h2',{},'محدودهٔ خدمات'),el('p',{},data.company.serviceArea));section.append(el('h2',{},'راه‌های ارتباطی آوا'),contactCards(),locationCards());contactExtras(section);section.append(el('nav',{class:'search-copy-links'},el('a',{href:serverMode?'/products':'#products'},'محصولات نمایشگر LED'),el('a',{href:serverMode?'/services':'#services'},'خدمات و اجاره'),el('a',{href:serverMode?'/contact':'#contact'},'تماس با آوا')));root.append(section);}
+  function renderAbout(){const root=$('#catalog-page');root.replaceChildren();const section=el('section',{class:'content company-profile'},el('h1',{},'دربارهٔ '+data.header.nameFa),el('p',{},companyDescription()));if(data.company?.serviceArea)section.append(el('h2',{},'محدودهٔ خدمات'),el('p',{},data.company.serviceArea));section.append(el('h2',{},'راه‌های ارتباطی آوا'),contactCards());contactExtras(section,false);section.append(el('nav',{class:'search-copy-links'},el('a',{href:serverMode?'/products':'#products'},'محصولات نمایشگر LED'),el('a',{href:serverMode?'/services':'#services'},'خدمات و اجاره'),el('a',{href:serverMode?'/contact':'#contact'},'تماس با آوا')));root.append(section);}
   function renderCompanyEditor(root){root.innerHTML='<div class="admin-panel"><form id="company-form" class="admin-form">'+field('معرفی شرکت؛ فقط اطلاعات قابل انتشار','description',companyDescription(),{max:2500,multiline:true,rows:6})+field('محدودهٔ خدمات تأییدشده؛ در صورت مشخص‌نبودن خالی بماند','serviceArea',data.company?.serviceArea||'',{max:200})+saveButton()+'</form></div><div class="notice">نام فارسی و انگلیسی از بخش هدر و تلفن و نشانی از بخش تماس با ما خوانده می‌شوند. سابقه، گواهی، پروژه یا شهر تأییدنشده وارد نکنید.</div>';const form=$('#company-form');watchForm(form);form.onsubmit=async event=>{event.preventDefault();const next=clone(data);next.company=formValues(form);await commit(next);};}
 
   function renderFooterEditor(root){const footer=data.footer;root.innerHTML='<div class="admin-panel"><form id="footer-form" class="admin-form">'+field('متن معرفی پایین سایت','text',footer.text,{max:1000,multiline:true})+field('متن حقوق و کپی‌رایت','copyright',footer.copyright,{max:1000})+saveButton()+'</form></div>';const form=$('#footer-form');watchForm(form);form.onsubmit=async event=>{event.preventDefault();const next=clone(data);next.footer=formValues(form);await commit(next);};}
@@ -381,13 +382,15 @@
         module = {...module,items:[...old,...seed.modules.products.items.filter(item => !old.some(existing => existing.id === item.id))]};
         if (module.items.length > 500) throw new Error('تعداد محصولات بیش از حد مجاز است.');
       }
+      if(module.visible!==undefined&&typeof module.visible!=='boolean')throw new Error('وضعیت نمایش بخش معتبر نیست.');
       const ids = new Set();
-      out.modules[key] = {name:text(module.name, 80),description:text(module.description, 1000),items:module.items.map(item => {
+      out.modules[key] = {name:text(module.name, 80),description:text(module.description, 1000),visible:module.visible !== false,items:module.items.map(item => {
         if (!isObject(item) || typeof item.id !== 'string' || !/^[a-zA-Z0-9_-]{1,80}$/.test(item.id) || ids.has(item.id) || !['draft','published'].includes(item.status)) throw new Error('شناسه یا وضعیت محتوا معتبر نیست.');
         ids.add(item.id);
         const title = text(item.title, 160).trim();
         if (!title) throw new Error('عنوان محتوا را وارد کن.');
         const result = {id:item.id,title,summary:text(item.summary,700),body:text(item.body,20000),meta:text(item.meta,200),image:imageData(item.image),url:httpURL(item.url),file:pdfData(item.file || ''),fileName:text(item.fileName || '',160),status:item.status,seoTitle:text(item.seoTitle||'',160),seoDescription:text(item.seoDescription||'',320),imageAsset:Object.hasOwn(productImages,item.imageAsset) ? item.imageAsset : ''};
+        if (key === 'projects') {if(item.gallery!==undefined&&(!Array.isArray(item.gallery)||item.gallery.length>12))throw new Error('حداکثر ۱۲ تصویر تکمیلی مجاز است.');result.gallery=(item.gallery||[]).map(photo=>{if(!isObject(photo))throw new Error('تصویر پروژه معتبر نیست.');const image=imageData(photo.image);if(!image)throw new Error('تصویر پروژه خالی است.');return {image,alt:text(photo.alt||'',200)};});}
         if (item.banner) result.banner = validateBanner(item.banner);
         if (key === 'products') {
           if (item.categoryId !== undefined && !categoryIds.has(item.categoryId)) throw new Error('دستهٔ یکی از محصولات وجود ندارد.');
@@ -444,7 +447,8 @@
     out.productVisualRevision = 3;
     let contact=raw.contact;
     if((raw.contactRevision||0)<1)contact={...contact,...clone(contactDefaults.fields)};
-    else if(raw.contactRevision<contactDefaults.revision){contact=clone(contact);contact.locations=contact.locations||[];if(!contact.locations.some(location=>location.id==='factory'))contact.locations.push(clone(contactDefaults.fields.locations.find(location=>location.id==='factory')));}
+    else if(raw.contactRevision<2){contact=clone(contact);contact.locations=contact.locations||[];if(!contact.locations.some(location=>location.id==='factory'))contact.locations.push(clone(contactDefaults.fields.locations.find(location=>location.id==='factory')));}
+    if((raw.contactRevision||0)<3&&contact.phoneLabel==='تلفن اصلی آوا')contact={...contact,phoneLabel:'شماره تماس'};
     out.contactRevision=contactDefaults.revision;
     out.softwareRevision=softwareCatalog.revision;
     for (const key of ['title','description','phone','email','address']) out.contact[key]=text(contact[key],key==='description'?2500:500);
@@ -516,7 +520,7 @@
     download('ava-site-and-panel.html', output, 'text/html;charset=utf-8');
     toast('نسخهٔ کامل سایت و پنل، همراه با محتوای ذخیره‌شده، آماده شد.');
   }
-  function published(key) { return data.modules[key].items.filter(item => item.status === 'published'); }
+  function published(key) { return data.modules[key].visible===false?[]:data.modules[key].items.filter(item => item.status === 'published'); }
   function categoryVisible(category) {return category.visible && (!category.parentId || data.productCategories.some(parent => parent.id === category.parentId && parent.visible));}
   function publicProducts() {return published('products').filter(item => data.productCategories.some(category => category.id === item.categoryId && categoryVisible(category)));}
   function publicCategories() {return data.productCategories.filter(category => categoryVisible(category) && (category.id !== 'uncategorized' || publicProducts().some(item => item.categoryId === category.id)));}
@@ -536,13 +540,51 @@
     if (!softwareCatalog.items.some(source => source.id === item.id && source.url === item.url)) return 'وب‌سایت نرم‌افزار';
     return item.id === 'novastudio' ? 'مرجع رسمی و سازگاری' : 'دانلود از سایت رسمی';
   }
+
+  function renderProjectGallery(root,item){
+    const photos=[...(item.image?[{image:item.image,alt:item.title}]:[]),...(item.gallery||[])].filter((photo,index,all)=>all.findIndex(x=>x.image===photo.image)===index);
+    if(!photos.length)return;
+    let index=0;const holder=el('section',{class:'project-gallery','aria-label':'تصاویر پروژه'}),stage=el('button',{type:'button',class:'project-stage','aria-label':'نمایش بزرگ تصویر پروژه'}),image=el('img',{alt:item.title}),counter=el('span',{class:'project-counter'}),thumbs=el('div',{class:'project-thumbnails'});
+    stage.append(image);stage.onclick=()=>{$('#product-image-full').src=photos[index].image;$('#product-image-full').alt=photos[index].alt||item.title;$('#product-image-dialog').setAttribute('aria-label','نمایش بزرگ تصویر پروژه');$('#product-image-dialog').showModal();};
+    const paint=()=>{image.src=photos[index].image;image.alt=photos[index].alt||item.title;counter.textContent=(index+1).toLocaleString('fa-IR')+' / '+photos.length.toLocaleString('fa-IR');$$('button',thumbs).forEach((b,n)=>b.setAttribute('aria-current',String(n===index)));};
+    photos.forEach((photo,n)=>{const b=el('button',{type:'button','aria-label':'تصویر '+(n+1)},el('img',{src:photo.image,alt:photo.alt||item.title,loading:'lazy'}));b.onclick=()=>{index=n;paint();};thumbs.append(b);});
+    const controls=el('div',{class:'project-gallery-controls'});for(const [label,delta] of [['تصویر قبلی',-1],['تصویر بعدی',1]]){const b=el('button',{type:'button',class:'admin-button secondary'},label);b.onclick=()=>{index=(index+photos.length+delta)%photos.length;paint();};controls.append(b);}controls.append(counter);holder.append(stage,el('p',{class:'project-gallery-hint'},'برای نمایش بزرگ‌تر، روی تصویر بزنید.'));if(photos.length>1)holder.append(controls,thumbs);root.append(holder);paint();
+  }
+  function paintProjectGalleryEditor(){
+    const root=$('#project-gallery-list');root.replaceChildren();entryGallery.forEach((photo,index)=>{const row=el('div',{class:'project-editor-photo'},el('img',{src:photo.image,alt:photo.alt||'تصویر تکمیلی'}));const caption=el('input',{type:'text',value:photo.alt||'',maxlength:'200','aria-label':'توضیح تصویر '+(index+1)});caption.oninput=()=>{photo.alt=caption.value;markDirty();};row.append(caption);
+      for(const [label,delta] of [['↑',-1],['↓',1]]){const b=el('button',{type:'button',class:'admin-button secondary','aria-label':'جابجایی تصویر '+(index+1)+' '+label},label);b.disabled=index+delta<0||index+delta>=entryGallery.length;b.onclick=()=>{[entryGallery[index],entryGallery[index+delta]]=[entryGallery[index+delta],entryGallery[index]];markDirty();paintProjectGalleryEditor();};row.append(b);}
+      const remove=el('button',{type:'button',class:'admin-button danger'},'حذف تصویر');remove.onclick=()=>{entryGallery.splice(index,1);markDirty();paintProjectGalleryEditor();};row.append(remove);root.append(row);
+    });$('#project-gallery-count').textContent=entryGallery.length.toLocaleString('fa-IR')+' تصویر تکمیلی';
+  }
+  async function refreshRequestSummary(){
+    if(!serverMode||!authenticated||!adminVisible)return;
+    try{const counts=await api('/api/requests/summary');if(!authenticated||!adminVisible)return;const badge=$('#request-badge');badge.textContent=counts.unread?counts.unread.toLocaleString('fa-IR'):'';badge.hidden=!counts.unread;if(counts.unread>0&&(requestsLastUnread<0||counts.unread>requestsLastUnread))toast(counts.unread.toLocaleString('fa-IR')+' درخواست خوانده‌نشده دارید؛ بخش درخواست‌ها را باز کنید.');requestsLastUnread=counts.unread;}catch{}
+  }
+  async function renderRequests(root,offset=0){
+    if(!serverMode){root.replaceChildren(el('div',{class:'notice'},'ثبت و دریافت درخواست‌ها در نسخهٔ سروری فعال است.'));return;}
+    root.replaceChildren(el('p',{},'در حال دریافت درخواست‌ها…'));
+    try{const result=await api('/api/requests?offset='+offset);if(currentPage!=='requests'||!adminVisible||!authenticated)return;root.replaceChildren(el('h2',{},'درخواست‌ها؛ '+result.unread.toLocaleString('fa-IR')+' خوانده‌نشده'));const refresh=el('button',{type:'button',class:'admin-button secondary'},'تازه‌سازی');refresh.onclick=()=>renderRequests(root,offset);root.append(refresh);if(!result.items.length)root.append(el('p',{},'درخواستی در این صفحه وجود ندارد.'));
+      for(const item of result.items){const card=el('article',{class:'inbox-request'+(item.unread?' unread':''),'data-request-id':item.id},el('h3',{},item.customer),el('a',{href:phoneHref(item.phone),dir:'ltr'},item.phone),el('p',{},item.source_title),el('time',{},new Date(item.created*1000).toLocaleString('fa-IR',{timeZone:'Asia/Tehran'})),el('p',{class:'request-message'},item.message));
+        const actions=el('div',{class:'request-actions'});for(const [label,action] of [[item.unread?'علامت‌گذاری خوانده‌شده':'علامت‌گذاری خوانده‌نشده',item.unread?'read':'unread'],['حذف درخواست','delete']]){const button=el('button',{type:'button',class:'admin-button '+(action==='delete'?'danger':'secondary')},label);button.onclick=async()=>{if(action==='delete'&&!confirm('این درخواست حذف شود؟'))return;button.disabled=true;try{await api('/api/requests/update',{id:item.id,action});await refreshRequestSummary();renderRequests(root,offset);}catch(error){toast(error.message,true);button.disabled=false;}};actions.append(button);}card.append(actions);root.append(card);
+      }
+      const pager=el('div',{class:'request-actions'});if(offset){const previous=el('button',{type:'button',class:'admin-button secondary'},'صفحهٔ قبل');previous.onclick=()=>renderRequests(root,Math.max(0,offset-50));pager.append(previous);}if(offset+50<result.total){const next=el('button',{type:'button',class:'admin-button secondary'},'صفحهٔ بعد');next.onclick=()=>renderRequests(root,offset+50);pager.append(next);}root.append(pager);
+    }catch(error){if(currentPage==='requests')root.replaceChildren(el('p',{role:'alert'},error.message));}
+  }
+  let requestKey='';
+  async function submitRequest(event){
+    event.preventDefault();const form=event.currentTarget,result=$('#result'),button=$('button[type=submit]',form);if(!serverMode){result.textContent='ارسال درخواست در نسخهٔ سروری فعال است؛ این فایل آفلاین پیامی ارسال نمی‌کند.';return;}if(!form.reportValidity())return;
+    requestKey=requestKey||(typeof crypto.randomUUID==='function'?crypto.randomUUID():'request-'+Date.now()+'-'+Math.random().toString(36).slice(2));button.disabled=true;result.textContent='در حال ارسال…';
+    try{await api('/api/requests',{customer:form.elements.customer.value,phone:form.elements.phone.value,message:form.elements.project.value,website:form.elements.website.value,source:form.dataset.source||'/contact',requestKey});form.reset();form.dataset.source='/contact';requestKey='';result.textContent='درخواست شما ثبت شد؛ مسئول سایت برای پیگیری با شما تماس می‌گیرد.';trackEvent('contact-request');}catch(error){result.textContent=error.message;}finally{button.disabled=false;}
+  }
+
   function openDetail(key, item) {
     if (key === 'products') {location.hash = 'product/' + item.id;return;}
     if (key === 'services') {location.hash = 'service/' + item.id;return;}
     if (key === 'equipment') {location.hash = 'equipment/' + item.id;return;}
     const root = $('#detail-body');
     root.replaceChildren(el('span',{class:'kicker'},data.modules[key].name),el('h2',{id:'detail-title'},item.title));
-    if (item.image) root.append(el('img',{src:item.image,alt:item.title}));
+    $('#content-detail').classList.toggle('project-detail',key==='projects');
+    if(key==='projects')renderProjectGallery(root,item);else if (item.image) root.append(el('img',{src:item.image,alt:item.title}));
     if (item.meta) root.append(el('p',{class:'kicker'},item.meta));
     if (item.summary) root.append(el('p',{class:'detail-text'},item.summary));
     if (item.body) root.append(el('div',{class:'detail-text'},item.body));
@@ -779,7 +821,7 @@
     if (productImage(item)) {
       const openImage = el('button',{type:'button',class:'product-image-open','aria-label':'بزرگ‌نمایی تصویر ' + item.title},el('img',{src:productImage(item),alt:item.title}));
       openImage.append(el('span',{class:'product-zoom-hint','aria-hidden':'true'},'＋'));
-      openImage.addEventListener('click',() => {$('#product-image-full').src = productImage(item);$('#product-image-full').alt = item.title;$('#product-image-dialog').showModal();});media.append(openImage);
+      openImage.addEventListener('click',() => {$('#product-image-dialog').setAttribute('aria-label','نمایش بزرگ تصویر محصول');$('#product-image-full').src = productImage(item);$('#product-image-full').alt = item.title;$('#product-image-dialog').showModal();});media.append(openImage);
     }
     else media.append(el('div',{class:'product-no-image'},el('span',{'aria-hidden':'true'},'▦'),el('small',{},'تصویر این محصول هنوز اضافه نشده است.')));
     if (item.imageCaption) media.append(el('span',{class:'product-image-caption'},item.imageCaption));
@@ -793,7 +835,7 @@
     const actions = el('div',{class:'product-main-actions'});
     const consult = el('a',{href:'#contact',class:'button'},'استعلام این محصول');
     consult.addEventListener('click',() => {
-      $('#request-form').elements.project.value = 'درخواست مشاوره دربارهٔ محصول «' + item.title + '»' + (item.model ? ' — ' + item.model : '');
+      $('#request-form').dataset.source='/product/'+item.id;$('#request-form').elements.project.value = 'درخواست مشاوره دربارهٔ محصول «' + item.title + '»' + (item.model ? ' — ' + item.model : '');
     });
     actions.append(consult);info.append(actions);hero.append(media,info);container.append(hero);
     const tablist = el('div',{class:'product-tabs',role:'tablist','aria-label':'اطلاعات محصول'});
@@ -861,7 +903,7 @@
     if (item.url) body.append(visibleLink('اطلاعات بیشتر',item.url));
     const aside = el('aside',{class:'service-request-card'},el('span',{class:'catalog-kicker'},equipment ? 'انتخاب بر اساس سازگاری' : 'از نیاز پروژه شروع کنیم'),el('h2',{},(equipment ? 'استعلام ' : 'درخواست ') + item.title),el('p',{},equipment ? 'مدل یا برند، تعداد و مشخصات تجهیزات فعلی را بنویسید تا سازگاری و شرایط تأمین بررسی شوند.' : 'محل اجرا، زمان موردنیاز و توضیح کوتاهی از پروژه را آماده کنید تا دربارهٔ شرایط انجام کار هماهنگی شود.'));
     const request = el('a',{href:'#contact',class:'button'},equipment ? 'استعلام قیمت و موجودی' : 'درخواست این خدمت');
-    request.addEventListener('click',() => {$('#request-form').elements.project.value = equipment ? 'استعلام تجهیز «' + item.title + '»\nمدل یا برند: \nتعداد: \nمشخصات تجهیزات فعلی: \nشهر و زمان موردنیاز: ' : 'درخواست خدمت «' + item.title + '»\nمحل اجرا: \nزمان موردنیاز: \nتوضیح پروژه: ';});
+    request.addEventListener('click',() => {$('#request-form').dataset.source=(equipment?'/equipment/':'/service/')+item.id;$('#request-form').elements.project.value = equipment ? 'استعلام تجهیز «' + item.title + '»\nمدل یا برند: \nتعداد: \nمشخصات تجهیزات فعلی: \nشهر و زمان موردنیاز: ' : 'درخواست خدمت «' + item.title + '»\nمحل اجرا: \nزمان موردنیاز: \nتوضیح پروژه: ';});
     aside.append(request,el('small',{},equipment ? 'قیمت و موجودی پس از بررسی مدل و تعداد مشخص می‌شوند.' : 'شرایط، هزینه و زمان‌بندی پس از بررسی پروژه مشخص می‌شوند.'));
     layout.append(body,aside);container.append(heading,layout);root.append(container);document.title = item.title + ' | ' + (data.header.nameFa || 'آوا');
   }
@@ -872,7 +914,7 @@
     const list = el('div',{class:'equipment-list cards'});
     for (const item of published('equipment')) {
       const card = el('article',{class:'card managed-card'});
-      if (item.image) card.append(el('img',{src:item.image,alt:item.title,loading:'lazy'}));else card.append(el('div',{class:'icon','aria-hidden':'true'},'▦'));
+      if (item.image || (key==='projects'&&item.gallery?.length)) card.append(el('img',{src:item.image||item.gallery[0].image,alt:item.title,loading:'lazy'}));else card.append(el('div',{class:'icon','aria-hidden':'true'},'▦'));
       card.append(el('span',{class:'entry-meta',dir:'auto'},item.meta),el('h3',{},item.title),el('p',{},item.summary),el('a',{href:'#equipment/' + item.id,class:'card-action'},'معرفی و استعلام تجهیز ←'));list.append(card);
     }
     if (!list.children.length) list.append(el('p',{class:'managed-empty'},'هنوز تجهیزی در این بخش منتشر نشده است.'));
@@ -1057,7 +1099,7 @@
     const nav = $('#navigation');
     const drawer = $('#drawer-links');
     nav.replaceChildren();drawer.replaceChildren();
-    for (const row of data.navigation.filter(row => row.visible)) {
+    for (const row of data.navigation.filter(row => row.visible && data.modules[row.target]?.visible !== false)) {
       if (row.target === 'products') nav.append(productMenu(row));
       else if (row.target === 'services') nav.append(servicesMenu(row));
       else if (row.target === 'partners') nav.append(partnersMenu(row));
@@ -1085,7 +1127,7 @@
       for (const item of items) {
         if (key === 'services' && item.id === 'led-trailer-rental') {section.append(trailerServiceFeature(item));continue;}
         const card = el('article',{class:'card managed-card'});
-        if (item.image) card.append(el('img',{src:item.image,alt:item.title,loading:'lazy'}));
+        if (item.image || (key==='projects'&&item.gallery?.length)) card.append(el('img',{src:item.image||item.gallery[0].image,alt:item.title,loading:'lazy'}));
         else card.append(el('div',{class:'icon','aria-hidden':'true'},key === 'products' ? '▦' : '◈'));
         if (item.meta) card.append(el('span',{class:'entry-meta'},item.meta));
         card.append(el('h3',{},item.title),el('p',{},item.summary));
@@ -1103,7 +1145,7 @@
     let contacts = $('.contact-links');if (!contacts) {$('.contact>div').append(el('div',{class:'contact-links'}));contacts = $('.contact-links');}
     contacts.replaceChildren();
     contacts.append(contactCards(),locationCards());contactExtras(contacts);
-    $('#footer-contact')?.remove();const footerContact=el('section',{id:'footer-contact','aria-label':'تماس با آوا'},el('h2',{},'راه‌های ارتباطی آوا'),contactCards(true),locationCards());$('footer').append(footerContact);
+    $('#footer-contact')?.remove();const footerContact=el('section',{id:'footer-contact','aria-label':'تماس با آوا'},el('h2',{},'راه‌های ارتباطی آوا'),contactCards(true));$('footer').append(footerContact);
     $('.contact>.contact-page-banner')?.remove();
     if(data.pageBanners.contact?.show) {const holder=el('section',{class:'contact-page-banner'});appendPageBanner(holder,data.pageBanners.contact,data.modules.contact.name);$('.contact').prepend(holder);}
     if(!$('#home-page-heading'))$('#home-content').prepend(el('h1',{id:'home-page-heading',class:'sr-only'},data.header.nameFa+'؛ '+data.hero.title+' '+data.hero.highlight));
@@ -1272,7 +1314,7 @@
   }
   function renderContactEditor(root) {
     const c=data.contact;let locations=clone(c.locations||[]);
-    root.innerHTML=`<div class="admin-panel"><form class="admin-form" id="contact-form"><h2>اطلاعات تماس آوا</h2>${field('نام بخش','moduleName',data.modules.contact.name,{max:80})}${field('عنوان بخش تماس','title',c.title,{multiline:true,max:500,rows:2})}${field('توضیحات','description',c.description,{multiline:true,max:2500})}<h3>تلفن اصلی و گویا</h3><div class="admin-form-grid">${field('شمارهٔ تلفن اصلی','phone',c.phone,{ltr:true,max:500})}${field('نمایش شمارهٔ اصلی','phoneDisplay',c.phoneDisplay,{ltr:true,max:80})}${field('عنوان شمارهٔ اصلی','phoneLabel',c.phoneLabel,{max:80})}${field('توضیح شمارهٔ اصلی','phoneNote',c.phoneNote,{max:200})}</div><h3>تماس مستقیم</h3><div class="admin-form-grid">${field('شمارهٔ موبایل','mobile',c.mobile,{ltr:true,max:80})}${field('نمایش موبایل و فاصله‌گذاری','mobileDisplay',c.mobileDisplay,{ltr:true,max:80})}${field('عنوان موبایل','mobileLabel',c.mobileLabel,{max:80})}${field('توضیح موبایل','mobileNote',c.mobileNote,{max:200})}</div><small>نمایش شماره باید با ارقام شمارهٔ تماس یکی باشد؛ در صورت تفاوت، خود شمارهٔ تماس نمایش داده می‌شود.</small>${field('ایمیل عمومی','email',c.email,{type:'email',ltr:true,max:500})}<h3>نشانی‌ها</h3><div id="location-editor"></div><button class="admin-button secondary" type="button" id="add-location">＋ افزودن نشانی</button>${field('نشانی تکمیلی (اختیاری)','address',c.address,{multiline:true,max:500,rows:2})}${saveButton('ذخیرهٔ اطلاعات تماس')}</form></div>`;
+    root.innerHTML=`<div class="admin-panel"><form class="admin-form" id="contact-form"><h2>اطلاعات تماس آوا</h2>${field('نام بخش','moduleName',data.modules.contact.name,{max:80})}${field('عنوان بخش تماس','title',c.title,{multiline:true,max:500,rows:2})}${field('توضیحات','description',c.description,{multiline:true,max:2500})}<h3>شماره تماس</h3><div class="admin-form-grid">${field('شماره تماس','phone',c.phone,{ltr:true,max:500})}${field('نمایش شمارهٔ اصلی','phoneDisplay',c.phoneDisplay,{ltr:true,max:80})}${field('عنوان شمارهٔ اصلی','phoneLabel',c.phoneLabel,{max:80})}${field('توضیح شمارهٔ اصلی','phoneNote',c.phoneNote,{max:200})}</div><h3>تماس مستقیم</h3><div class="admin-form-grid">${field('شمارهٔ موبایل','mobile',c.mobile,{ltr:true,max:80})}${field('نمایش موبایل و فاصله‌گذاری','mobileDisplay',c.mobileDisplay,{ltr:true,max:80})}${field('عنوان موبایل','mobileLabel',c.mobileLabel,{max:80})}${field('توضیح موبایل','mobileNote',c.mobileNote,{max:200})}</div><small>نمایش شماره باید با ارقام شمارهٔ تماس یکی باشد؛ در صورت تفاوت، خود شمارهٔ تماس نمایش داده می‌شود.</small>${field('ایمیل عمومی','email',c.email,{type:'email',ltr:true,max:500})}<h3>نشانی‌ها</h3><div id="location-editor"></div><button class="admin-button secondary" type="button" id="add-location">＋ افزودن نشانی</button>${field('نشانی تکمیلی (اختیاری)','address',c.address,{multiline:true,max:500,rows:2})}${saveButton('ذخیرهٔ اطلاعات تماس')}</form></div>`;
     const form=$('#contact-form');watchForm(form);
     const collect=()=>{$$('[data-location-id]',form).forEach(row=>{const location=locations.find(x=>x.id===row.dataset.locationId);location.title=$('[name=locationTitle]',row).value;location.address=$('[name=locationAddress]',row).value;});};
     const paint=()=>{const root=$('#location-editor');root.replaceChildren();locations.forEach(location=>{const row=el('div',{class:'admin-location-row','data-location-id':location.id});row.innerHTML=field('عنوان محل','locationTitle',location.title,{max:120,required:true})+field('نشانی','locationAddress',location.address,{max:1000,multiline:true,rows:3,required:true});const remove=el('button',{type:'button',class:'admin-button danger'},'حذف نشانی');remove.onclick=()=>{collect();locations=locations.filter(x=>x.id!==location.id);markDirty();paint();};row.append(remove);root.append(row);});$('#add-location').disabled=locations.length>=12;};paint();
@@ -1281,16 +1323,17 @@
   }
   function renderModule(root, key) {
     const module = data.modules[key];
-    root.innerHTML = `<div class="admin-panel"><form class="admin-form" id="module-settings"><div class="admin-form-grid">${field('نام بخش در سایت','name',module.name,{max:80,required:true})}${field('معرفی کوتاه بخش','description',module.description,{max:1000})}</div>${key === 'products' ? '<div class="banner-editor-fields" id="products-banner-fields"></div>' : ''}${saveButton('ذخیرهٔ مشخصات بخش')}</form></div>
+    root.innerHTML = `<div class="admin-panel"><form class="admin-form" id="module-settings"><div class="admin-form-grid">${key==='services'?checkbox('نمایش بخش خدمات در سایت','visible',module.visible!==false):''}${field('نام بخش در سایت','name',module.name,{max:80,required:true})}${field('معرفی کوتاه بخش','description',module.description,{max:1000})}</div>${key === 'products' ? '<div class="banner-editor-fields" id="products-banner-fields"></div>' : ''}${saveButton('ذخیرهٔ مشخصات بخش')}</form></div>
       <div class="module-tools"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><input type="search" id="entry-search" aria-label="جستجو در محتوا" placeholder="جستجو در عنوان محتوا…"><select id="entry-filter" aria-label="فیلتر وضعیت" style="font:inherit;border:1px solid #dce4f1;background:white;color:#657692;padding:9px;border-radius:8px"><option value="all">همهٔ وضعیت‌ها</option><option value="published">منتشرشده</option><option value="draft">پیش‌نویس</option></select></div><button type="button" class="admin-button" id="add-entry">＋ افزودن ${escapeHTML(LABELS[key])}</button></div><div class="admin-entry-list" id="entry-list"></div>`;
     const form = $('#module-settings');watchForm(form);
     const bannerEditor = key === 'products' ? mountBannerEditor($('#products-banner-fields'),module.banner) : null;
-    form.addEventListener('submit',async event => {event.preventDefault();const v = formValues(form);const next = clone(data);next.modules[key].name = v.name.trim();next.modules[key].description = v.description;if (bannerEditor) next.modules[key].banner = bannerEditor.read();await commit(next);});
+    form.addEventListener('submit',async event => {event.preventDefault();const v = formValues(form);const next = clone(data);if(key==='services')next.modules[key].visible=form.elements.visible.checked;next.modules[key].name = v.name.trim();next.modules[key].description = v.description;if (bannerEditor) next.modules[key].banner = bannerEditor.read();await commit(next);});
     if (key === 'products') {
       const tools = $('.module-tools');const categoryLink = el('a',{href:'#admin/categories',class:'admin-button secondary'},'مدیریت دسته‌بندی‌ها');tools.append(categoryLink);
       const categoryFilter = el('select',{id:'entry-category-filter','aria-label':'فیلتر دستهٔ محصول'},el('option',{value:''},'همهٔ دسته‌ها'),data.productCategories.map(category => el('option',{value:category.id},categoryLabel(category))));
       tools.firstElementChild.append(categoryFilter);categoryFilter.addEventListener('change',paintList);
     }
+    if(key==='services'){const removeAll=el('button',{type:'button',class:'admin-button danger',id:'delete-all-services'},'حذف همه آیتم‌های خدمات');removeAll.onclick=async()=>{if(!discardAllowed()||!confirm('همهٔ آیتم‌های خدمات حذف شوند؟ درخواست‌های ثبت‌شده حفظ می‌شوند.'))return;const next=clone(data);next.modules.services.items=[];for(const key of Object.keys(next.pageBanners))if(key.startsWith('service:'))delete next.pageBanners[key];if(await commit(next))paintList();};$('.module-tools').append(removeAll);}
     if (key === 'equipment') $('.module-tools').append(el('a',{href:'#equipment',class:'admin-button secondary'},'مشاهدهٔ بخش تجهیزات'));
     $('#add-entry').addEventListener('click',() => openEditor(key));
     $('#entry-search').addEventListener('input',paintList);$('#entry-filter').addEventListener('change',paintList);
@@ -1303,7 +1346,7 @@
       if (!items.length) {list.append(el('div',{class:'admin-empty'},el('strong',{},query || filter !== 'all' ? 'محتوایی با این فیلتر پیدا نشد.' : 'اولین محتوای این بخش را اضافه کن.'),el('p',{},'عنوان، تصویر و توضیحات را وارد کن؛ سپس آن را به‌صورت پیش‌نویس یا منتشرشده ذخیره کن.')));return;}
       items.forEach(item => {
         const row = el('article',{class:'admin-entry','data-entry-id':item.id});
-        const thumbnail = key === 'products' ? productImage(item) : item.image;
+        const thumbnail = key === 'products' ? productImage(item) : item.image || (key==='projects'?item.gallery?.[0]?.image:'');
         row.append(thumbnail ? el('img',{class:'entry-thumbnail',src:thumbnail,alt:''}) : el('div',{class:'entry-thumbnail','aria-hidden':'true'},'AVA'));
         row.append(el('div',{class:'admin-entry-info'},el('h3',{},item.title),el('p',{},item.summary || 'بدون توضیح کوتاه'),el('span',{class:'entry-status' + (item.status === 'draft' ? ' draft' : '')},item.status === 'draft' ? 'پیش‌نویس' : 'منتشرشده')));
         if (key === 'products') {
@@ -1315,7 +1358,7 @@
         const actions = el('div',{class:'entry-actions'});
         const edit = el('button',{type:'button',class:'admin-button secondary'},'ویرایش');edit.addEventListener('click',() => openEditor(key,item));
         const toggle = el('button',{type:'button',class:'admin-button secondary'},item.status === 'published' ? 'پیش‌نویس' : 'انتشار');toggle.addEventListener('click',async () => {if (!discardAllowed()) return;const next = clone(data);const target = next.modules[key].items.find(i => i.id === item.id);target.status = target.status === 'published' ? 'draft' : 'published';if (await commit(next)) paintList();});
-        const remove = el('button',{type:'button',class:'admin-button danger'},'حذف');remove.addEventListener('click',async () => {if (!discardAllowed() || !confirm('«' + item.title + '» حذف شود؟')) return;const next = clone(data);next.modules[key].items = next.modules[key].items.filter(i => i.id !== item.id);if (await commit(next,'محتوا حذف شد.')) paintList();});
+        const remove = el('button',{type:'button',class:'admin-button danger'},'حذف');remove.addEventListener('click',async () => {if (!discardAllowed() || !confirm('«' + item.title + '» حذف شود؟')) return;const next = clone(data);next.modules[key].items = next.modules[key].items.filter(i => i.id !== item.id);if(key==='services')delete next.pageBanners['service:'+item.id];if (await commit(next,'محتوا حذف شد.')) paintList();});
         actions.append(edit,toggle,remove);row.append(actions);list.append(row);
       });
     }
@@ -1325,7 +1368,7 @@
     if (!discardAllowed()) return;
     if (dirty) renderPage(currentPage);
     dirty = false;
-    editingModule = key;entryImage = item?.image || '';entryImageAsset = item?.imageAsset || '';entryImageStyle = item?.imageStyle || '';entryFile = item?.file || '';
+    editingModule = key;entryGallery=clone(item?.gallery||[]);$('#project-gallery-editor').hidden=key!=='projects';paintProjectGalleryEditor();entryImage = item?.image || '';entryImageAsset = item?.imageAsset || '';entryImageStyle = item?.imageStyle || '';entryFile = item?.file || '';
     const form = $('#entry-form');form.reset();form.elements.seoTitle.value=item?.seoTitle||'';form.elements.seoDescription.value=item?.seoDescription||'';
     for (const name of ['id','title','summary','body','meta','url','status']) form.elements[name].value = item ? item[name] : name === 'status' ? 'draft' : '';
     $('#entry-editor-title').textContent = item ? 'ویرایش محتوا' : 'افزودن محتوا';
@@ -1405,13 +1448,14 @@
     $('#admin-page-title').textContent = TITLES[page] || data.modules[page]?.name || 'پیشخوان';
     $('#admin-page-description').textContent = DESCRIPTIONS[page] || (page === 'contact' ? 'شمارهٔ تماس، ایمیل، نشانی و متن بخش ارتباط با آوا.' : 'مشخصات بخش و محتوای آن را مدیریت کن؛ فقط محتوای منتشرشده در سایت دیده می‌شود.');
     $('#save-state').textContent = persistence ? 'آمادهٔ ویرایش' : 'ذخیرهٔ موقت؛ خروجی بگیر';
-    renderSidebar();
+    renderSidebar();refreshRequestSummary();
     const root = $('#admin-content');
     if (page === 'dashboard') renderDashboard(root);
     else if (page === 'header') renderHeaderEditor(root);
     else if (page === 'hero') renderHeroEditor(root);
     else if (page === 'navigation') renderNavigationEditor(root);
     else if (page === 'banners') renderBannersEditor(root);
+    else if(page==='requests')renderRequests(root);
     else if(page==='stats')renderStats(root);
     else if(page==='company')renderCompanyEditor(root);
     else if(page==='footer')renderFooterEditor(root);
@@ -1476,7 +1520,7 @@
   $('.site-menu-toggle').addEventListener('click',() => $('#site-menu').showModal());
   document.addEventListener('click',event => {if (!event.target.closest('.header-menu-item,.header-menu-popup')) closeNavigationMenus();});
 
-  $('#admin-logout').addEventListener('click',async()=>{if(!discardAllowed())return;try{await api('/api/logout',{});authenticated=false;csrf='';dirty=false;const result=await api('/api/content');data=validate(result.data);serverRevision=result.revision;renderLogin();}catch(e){toast(e.message,true);}});
+  $('#admin-logout').addEventListener('click',async()=>{if(!discardAllowed())return;try{await api('/api/logout',{});authenticated=false;requestsLastUnread=-1;csrf='';dirty=false;const result=await api('/api/content');data=validate(result.data);serverRevision=result.revision;renderLogin();}catch(e){toast(e.message,true);}});
   $('#view-site').addEventListener('click',() => {location.hash = 'home';});
   $$('[data-close]').forEach(button => button.addEventListener('click',() => document.getElementById(button.dataset.close).close()));
   for (const dialog of [$('#site-menu'),$('#content-detail'),$('#product-image-dialog')]) dialog.addEventListener('click',event => {const rect = dialog.getBoundingClientRect();if (event.target === dialog && (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom)) dialog.close();});
@@ -1499,7 +1543,7 @@
   });
   $('#entry-form').addEventListener('submit',async event => {
     event.preventDefault();const values = formValues(event.currentTarget);
-    const item = {id:values.id || (typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : 'entry-' + Date.now() + '-' + Math.random().toString(36).slice(2,9)),title:values.title.trim(),summary:values.summary,body:values.body,meta:values.meta,url:values.url.trim(),status:values.status,seoTitle:values.seoTitle,seoDescription:values.seoDescription,image:entryImage,imageAsset:entryImageAsset,banner:entryBannerEditor.read(),file:['catalog','products'].includes(editingModule) ? entryFile : '',fileName:['catalog','products'].includes(editingModule) ? values.fileName : ''};
+    const item = {id:values.id || (typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : 'entry-' + Date.now() + '-' + Math.random().toString(36).slice(2,9)),title:values.title.trim(),summary:values.summary,body:values.body,meta:values.meta,url:values.url.trim(),status:values.status,seoTitle:values.seoTitle,seoDescription:values.seoDescription,image:entryImage,...(editingModule==='projects'?{gallery:clone(entryGallery)}:{}),imageAsset:entryImageAsset,banner:entryBannerEditor.read(),file:['catalog','products'].includes(editingModule) ? entryFile : '',fileName:['catalog','products'].includes(editingModule) ? values.fileName : ''};
     if (editingModule === 'products') {
       const specifications = [];
       for (const line of values.specifications.split('\n').map(line => line.trim()).filter(Boolean)) {
@@ -1519,8 +1563,13 @@
   window.addEventListener('hashchange',transitionRoute);
   window.addEventListener('popstate',transitionRoute);
   document.addEventListener('click',event=>{const link=event.target.closest('a');if(!link)return;const kind=link.dataset.contactEvent||(link.getAttribute('href')==='#contact'?'contact-link':'');if(kind)trackEvent(kind);});
-  $('#request-form').addEventListener('submit',()=>trackEvent('contact-request'));
+  $('#request-form').addEventListener('submit',submitRequest);
+  setInterval(()=>{if(!document.hidden)refreshRequestSummary();},30000);
   window.addEventListener('beforeunload',event => {if (dirty) {event.preventDefault();event.returnValue = '';}});
   window.addEventListener('resize',() => {closeNavigationMenus();const nav = $('#navigation');nav.style.gridTemplateColumns = 'repeat(' + Math.max(1,Math.min(innerWidth <= 600 ? 4 : 8,nav.children.length)) + ',minmax(0,1fr))';});
+  $('#project-gallery-files').addEventListener('change',async event=>{
+    const input=event.target,button=$('#entry-form [type=submit]'),gallery=entryGallery;input.disabled=true;button.disabled=true;$('#entry-error').textContent='';
+    try{const files=[...input.files];if(entryGallery.length+files.length>12)throw new Error('حداکثر ۱۲ تصویر تکمیلی مجاز است.');const additions=[];for(const file of files){const image=await readImage(file);if(image)additions.push({image,alt:''});}if(entryGallery!==gallery||editingModule!=='projects'||!$('#entry-editor').open)return;gallery.push(...additions);if(additions.length){markDirty();paintProjectGalleryEditor();}}catch(error){$('#entry-error').textContent=error.message;}finally{input.value='';input.disabled=false;button.disabled=false;}
+  });
   boot();
 })();

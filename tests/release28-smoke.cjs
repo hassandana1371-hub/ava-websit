@@ -34,7 +34,7 @@ with server.connect() as db:
    await p.waitForTimeout(100);await p.touchscreen.tap(195,y);await p.waitForURL('**/category/urban');
    await p.goto(base);await p.locator('.hero-image-link').first().tap();await p.waitForURL('**/category/led-trailers');
    await p.goto(base);assert.equal(await p.locator('#software .software-card').count(),7);await p.locator('#software .software-card').first().locator('.card-action').click();assert((await p.locator('#detail-body').innerText()).includes('5.9.2'));assert.equal(await p.locator('#detail-body a').getAttribute('rel'),'noopener noreferrer');await p.locator('#content-detail').evaluate(d=>d.close());
-   assert.equal(await p.locator('#footer-contact .contact-number').nth(1).innerText(),'0912 17 18 024');assert((await p.locator('#footer-contact').innerText()).includes('کوچهٔ اختر'));
+   assert.equal(await p.locator('#footer-contact .contact-number').nth(1).innerText(),'0912 17 18 024');assert.equal(await p.locator('#footer-contact .contact-location-card').count(),0);assert((await p.locator('.contact').innerText()).includes('کوچهٔ اختر'));
   }
   await context.close();
  }

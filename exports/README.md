@@ -1,11 +1,11 @@
-# سایت آوا ـ نسخهٔ ۳۰
+# سایت آوا ـ نسخهٔ ۳۱
 
-- [بستهٔ کامل](https://github.com/hassandana1371-hub/ava-websit/raw/refs/heads/main/exports/ava-site-v30-complete.zip)
-- [آپدیت سرور](https://github.com/hassandana1371-hub/ava-websit/raw/refs/heads/main/exports/ava-site-v30-server-update.zip)
-- [پیش‌نمایش آفلاین](https://github.com/hassandana1371-hub/ava-websit/raw/refs/heads/main/exports/ava-site-v30-backup.zip)
-- [راهنمای نصب و محدودیت دسترسی گوگل](../SEARCH-PURCHASE-v30-fa.md)
-- [نمای موبایل بدون JavaScript](ava-v30-nojs-preview.png)
+- [بستهٔ کامل](https://github.com/hassandana1371-hub/ava-websit/raw/refs/heads/main/exports/ava-site-v31-complete.zip)
+- [آپدیت سرور](https://github.com/hassandana1371-hub/ava-websit/raw/refs/heads/main/exports/ava-site-v31-server-update.zip)
+- [پیش‌نمایش HTML آفلاین](https://github.com/hassandana1371-hub/ava-websit/raw/refs/heads/main/exports/ava-site-v31-backup.zip)
+- [راهنمای نصب و نگهداری](../UPDATE-v31-fa.md)
+- [نمونهٔ آزمایشی گالری در موبایل](ava-v31-project-mobile.png)
 
-صفحهٔ خرید تلویزیون شهری با راهنمای کاربردی، فهرست مدل‌ها و قیمت مرجع/تاریخ در HTML اولیه، ItemList واقعی، HEAD و هدایت آدرس‌های تکراری آماده شده است. ابزار اختیاری check_seo.py وضعیت فنی عمومی را بررسی می‌کند و آمار گوگل نیست.
+گالری چندعکسی پروژه با نمایش بزرگ؛ فرم واقعی نام/شماره تماس/پیام؛ صندوق خصوصی درخواست‌ها با هشدار ورود، خواندن و حذف؛ حذف/پنهان‌کردن خدمات؛ عنوان «شماره تماس» و نشانی فقط در بخش تماس. شماره‌ها و داده‌های قبلی حفظ می‌شوند. صندوق در SQLite است و در خروجی JSON محتوای سایت نیست.
 
-هر سه فایل index.html، server.py و site_features.py برای آپدیت لازم‌اند. دیتابیس داخل بسته نیست؛ اطلاعات و سامانهٔ انبار حفظ می‌شوند. این نسخه روی سرور نصب نشده و اقدامی داخل حساب گوگل ثبت نشده است؛ دسترسی شبکه و حساب/مرورگر لازم فراهم نیست. رتبهٔ واقعی اندازه‌گیری یا تضمین نشده است. نسخه‌های قبلی حفظ شده‌اند.
+این بسته تغییرات ۳۰ را هم دارد و مستقیم روی نسخهٔ فعلی نصب می‌شود. هر سه فایل index.html، server.py و site_features.py لازم‌اند. دیتابیس در بسته نیست؛ سامانهٔ انبار تغییر نکند. این نسخه هنوز روی سرور واقعی نصب نشده است. پیامک فعال نیست؛ هشدار داخل پنل است. HTML آفلاین، درخواست واقعی ثبت نمی‌کند. نمونهٔ تصویری از دادهٔ آزمایشی است و پروژهٔ تازه‌ای به اطلاعات زنده اضافه نشده است.

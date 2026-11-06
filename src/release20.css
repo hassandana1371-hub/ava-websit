@@ -132,3 +132,26 @@
 .admin-location-row{border:1px solid #dce5f2;border-radius:10px;padding:20px;margin:12px 0;display:grid;gap:14px}
 @media(max-width:1100px){.contact-number-cards{grid-template-columns:1fr}.company-profile .contact-number-cards,#footer-contact .contact-number-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:600px){.company-profile .contact-number-cards,#footer-contact .contact-number-cards,#footer-contact .contact-location-cards{grid-template-columns:1fr}.contact-number-card{padding:20px}.contact-number{font-size:27px}.contact-number-label{font-size:13px}.contact-location-card p{font-size:12px}.company-profile .contact-location-card p{font-size:13px}}
+
+/* Project gallery, request inbox and public request form. */
+.content-detail.project-detail{width:min(1280px,96vw);max-height:94dvh;padding:24px}
+.project-stage{display:block;width:100%;padding:0;border:0;background:#0b1423;border-radius:14px;cursor:zoom-in;overflow:hidden}
+.content-detail.project-detail .project-stage img{display:block;width:100%;height:min(60dvh,660px);max-height:none;object-fit:contain;margin:0;border-radius:0}
+.project-gallery-controls,.request-actions{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:14px 0}
+.project-counter{margin-inline-start:auto;font-size:13px;color:#536d90}
+.project-thumbnails{display:flex;gap:10px;overflow-x:auto;padding:5px 2px 12px;direction:rtl}
+.project-thumbnails button{border:2px solid transparent;padding:3px;border-radius:9px;background:#f0f4fb;flex:0 0 110px;cursor:pointer}
+.project-thumbnails button[aria-current=true]{border-color:#5379ed}
+.content-detail .project-thumbnails img{height:75px;width:100%;margin:0;object-fit:cover}
+.project-editor-photo{display:flex;align-items:center;flex-wrap:wrap;gap:10px;padding:14px;border:1px solid #dce6f4;border-radius:10px;margin:12px 0}
+.project-editor-photo img{width:110px;height:80px;object-fit:contain}.project-editor-photo input{flex:1;min-width:140px}
+#request-form .request-honeypot{display:none}#request-form input[type=tel]{direction:ltr}
+.inbox-request{border:1px solid #dce6f4;padding:24px;border-radius:12px;background:#fff;margin:18px 0;min-width:0}
+.inbox-request.unread{border-right:5px solid #5576ee;background:#f5f8ff}.inbox-request h3{margin:0 0 14px;font-size:18px}
+.inbox-request time{font-size:12px;color:#6b7e99}.request-message{white-space:pre-wrap;overflow-wrap:anywhere;line-height:2.3}
+#request-badge{background:#e84d5e;color:white;border-radius:20px;padding:2px 9px;font-size:12px;margin-inline-start:8px}
+#request-badge[hidden],#project-gallery-editor[hidden]{display:none}
+@media(max-width:600px){.content-detail.project-detail{padding:14px;width:96vw}.content-detail.project-detail .project-stage img{height:auto;max-height:60dvh}.project-thumbnails button{flex-basis:86px}.project-editor-photo img{width:85px;height:65px}.inbox-request{padding:18px}}
+
+.project-gallery-hint{font-size:12px!important;line-height:2;color:#6c809f;margin:10px 0}
+.inbox-request h3,.inbox-request>a,.inbox-request>p{overflow-wrap:anywhere}

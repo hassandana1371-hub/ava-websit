@@ -1,0 +1,81 @@
+{
+  "brand": "گروه آوا",
+  "channel": "instagram",
+  "campaign": "ava-buy-guide",
+  "publication": "drafts only; no account connection or automatic publication",
+  "measurement": "UTM tags label links; attribution requires an analytics system that records them. Existing site aggregate stats do not report campaign attribution.",
+  "posts": [
+    {
+      "id": "buy-guide",
+      "day": 1,
+      "title": "قبل از خرید تلویزیون شهری",
+      "landing_page": "https://avagroups.ir/category/urban",
+      "tracked_link": "https://avagroups.ir/category/urban?utm_source=instagram&utm_medium=organic_social&utm_campaign=ava-buy-guide&utm_content=buy-guide",
+      "text": "قبل از انتخاب تلویزیون شهری، این چهار مورد را مشخص کنید: محل نصب، ابعاد تصویر، فاصلهٔ مخاطب و نوع محتوا.\nقیمت یک ماژول، هزینهٔ نمایشگر کامل نیست؛ سازه، تجهیزات کنترل، تغذیه و نصب هم باید در پیشنهاد مشخص باشند. راهنمای انتخاب و مدل‌ها را ببینید.\n\nگروه آوا\nجزئیات از لینک بیو یا استوری",
+      "status": "draft"
+    },
+    {
+      "id": "product-indoor-125",
+      "day": 3,
+      "title": "ماژول LED داخلی P1.25",
+      "landing_page": "https://avagroups.ir/product/indoor-125",
+      "tracked_link": "https://avagroups.ir/product/indoor-125?utm_source=instagram&utm_medium=organic_social&utm_campaign=ava-buy-guide&utm_content=product-indoor-125",
+      "text": "ماژول LED داخلی P1.25\nدات‌پیچ: 1.25 میلی‌متر · ابعاد ماژول: 320×160 میلی‌متر · نرخ نوسازی: 3840 هرتز\n\nبرای انتخاب متناسب با پروژه، ابعاد و شرایط محل نصب را مشخص کنید. جزئیات مدل و شرایط استعلام در صفحهٔ محصول آمده است.\n\nگروه آوا\nجزئیات از لینک بیو یا استوری",
+      "status": "draft"
+    },
+    {
+      "id": "product-outdoor-25",
+      "day": 5,
+      "title": "ماژول LED خارجی P2.5",
+      "landing_page": "https://avagroups.ir/product/outdoor-25",
+      "tracked_link": "https://avagroups.ir/product/outdoor-25?utm_source=instagram&utm_medium=organic_social&utm_campaign=ava-buy-guide&utm_content=product-outdoor-25",
+      "text": "ماژول LED خارجی P2.5\nدات‌پیچ: 2.5 میلی‌متر · ابعاد ماژول: 320×160 میلی‌متر · نرخ نوسازی: 3840 هرتز\n\nبرای انتخاب متناسب با پروژه، ابعاد و شرایط محل نصب را مشخص کنید. جزئیات مدل و شرایط استعلام در صفحهٔ محصول آمده است.\n\nگروه آوا\nجزئیات از لینک بیو یا استوری",
+      "status": "draft"
+    },
+    {
+      "id": "product-adhesive-transparent-led-film",
+      "day": 7,
+      "title": "فیلم LED شفاف چسبی روی شیشه",
+      "landing_page": "https://avagroups.ir/product/adhesive-transparent-led-film",
+      "tracked_link": "https://avagroups.ir/product/adhesive-transparent-led-film?utm_source=instagram&utm_medium=organic_social&utm_campaign=ava-buy-guide&utm_content=product-adhesive-transparent-led-film",
+      "text": "فیلم LED شفاف چسبی روی شیشه\nانتخاب مدل و مشخصات متناسب با ابعاد و شرایط نصب پروژه؛ برای جزئیات و قیمت استعلام بگیرید.\n\nبرای انتخاب متناسب با پروژه، ابعاد و شرایط محل نصب را مشخص کنید. جزئیات مدل و شرایط استعلام در صفحهٔ محصول آمده است.\n\nگروه آوا\nجزئیات از لینک بیو یا استوری",
+      "status": "draft"
+    },
+    {
+      "id": "product-flexible-153",
+      "day": 9,
+      "title": "ماژول LED فلکسیبل داخلی P1.53",
+      "landing_page": "https://avagroups.ir/product/flexible-153",
+      "tracked_link": "https://avagroups.ir/product/flexible-153?utm_source=instagram&utm_medium=organic_social&utm_campaign=ava-buy-guide&utm_content=product-flexible-153",
+      "text": "ماژول LED فلکسیبل داخلی P1.53\nدات‌پیچ: 1.53 میلی‌متر · ابعاد ماژول: 320×160 میلی‌متر · نرخ نوسازی: 3840 هرتز\n\nبرای انتخاب متناسب با پروژه، ابعاد و شرایط محل نصب را مشخص کنید. جزئیات مدل و شرایط استعلام در صفحهٔ محصول آمده است.\n\nگروه آوا\nجزئیات از لینک بیو یا استوری",
+      "status": "draft"
+    },
+    {
+      "id": "service-initial-rental",
+      "day": 11,
+      "title": "اجارهٔ تلویزیون‌های شهری",
+      "landing_page": "https://avagroups.ir/service/initial-rental",
+      "tracked_link": "https://avagroups.ir/service/initial-rental?utm_source=instagram&utm_medium=organic_social&utm_campaign=ava-buy-guide&utm_content=service-initial-rental",
+      "text": "اجارهٔ تلویزیون‌های شهری\nبررسی و هماهنگی اجارهٔ نمایشگر LED برای نمایشگاه، همایش و رویداد؛ متناسب با فضا و مدت اجرا.\n\nبرای بررسی شرایط اجرا، محل، زمان و ابعاد موردنظر را در درخواست خود توضیح دهید.\n\nگروه آوا\nجزئیات از لینک بیو یا استوری",
+      "status": "draft"
+    },
+    {
+      "id": "service-service-videowall",
+      "day": 13,
+      "title": "طراحی و نصب ویدئووال",
+      "landing_page": "https://avagroups.ir/service/service-videowall",
+      "tracked_link": "https://avagroups.ir/service/service-videowall?utm_source=instagram&utm_medium=organic_social&utm_campaign=ava-buy-guide&utm_content=service-service-videowall",
+      "text": "طراحی و نصب ویدئووال\nبررسی چیدمان ویدئووال، ساختار نصب و مسیرهای برق و سیگنال برای فضای موردنظر.\n\nبرای بررسی شرایط اجرا، محل، زمان و ابعاد موردنظر را در درخواست خود توضیح دهید.\n\nگروه آوا\nجزئیات از لینک بیو یا استوری",
+      "status": "draft"
+    },
+    {
+      "id": "service-led-trailer-rental",
+      "day": 15,
+      "title": "اجارهٔ تریلر LED سیار",
+      "landing_page": "https://avagroups.ir/service/led-trailer-rental",
+      "tracked_link": "https://avagroups.ir/service/led-trailer-rental?utm_source=instagram&utm_medium=organic_social&utm_campaign=ava-buy-guide&utm_content=service-led-trailer-rental",
+      "text": "اجارهٔ تریلر LED سیار\nنمایشگر بزرگ را به محل رویداد بیاورید؛ برای پخش زنده، تبلیغات و گردهمایی‌های فضای باز، با امکان استعلام اجارهٔ ساعتی.\n\nبرای بررسی شرایط اجرا، محل، زمان و ابعاد موردنظر را در درخواست خود توضیح دهید.\n\nگروه آوا\nجزئیات از لینک بیو یا استوری",
+      "status": "draft"
+    }
+  ]
+}
