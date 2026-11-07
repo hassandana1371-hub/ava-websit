@@ -1,3 +1,13 @@
+# سایت آوا ـ نسخهٔ ۳۳
+
+بنرهای هیرو و صفحات بدون فشرده‌سازی مجدد ذخیره می‌شوند؛ عکس بعدی پیش از حرکت آمادهٔ نمایش می‌شود. اصلاح سبک‌سازی و ورود نسخهٔ ۳۲ هم در این بسته است. [راهنمای نصب و کیفیت بنر](UPDATE-v33-fa.md).
+
+مستقیم روی ۳۱ نصب می‌شود. سه فایل سرور: index.html، server.py و site_features.py. ابتدا بکاپ بگیرید؛ دیتابیس، تصاویر، پیام‌ها و انبار جایگزین نشوند. روی سرور واقعی نصب نشده است. بنرهای قبلاً فشرده‌شده را از فایل اصلی دوباره آپلود کنید.
+
+- [آپدیت سرور ۳۳](https://github.com/hassandana1371-hub/ava-websit/raw/refs/heads/main/exports/ava-site-v33-server-update.zip)
+- [بستهٔ کامل ۳۳](https://github.com/hassandana1371-hub/ava-websit/raw/refs/heads/main/exports/ava-site-v33-complete.zip)
+- [پیش‌نمایش آفلاین ۳۳](https://github.com/hassandana1371-hub/ava-websit/raw/refs/heads/main/exports/ava-site-v33-backup.zip)
+
 # سایت آوا ـ اصلاح نسخهٔ ۳۲
 
 اصلاح حجم پاسخ اولیهٔ گالری و نمایش مستقل فرم ورود پنل. اصل تصاویر، دیتابیس، درخواست‌ها و تنظیمات امنیتی حفظ می‌شوند. [راهنمای بررسی، پشتیبان، نصب و بازگشت](RECOVERY-v32-fa.md).

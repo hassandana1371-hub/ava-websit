@@ -18,7 +18,7 @@ seed.hero.showMotionLogo=false;
   assert.equal(await page.locator('#hero').evaluate(n=>n.getBoundingClientRect().bottom),900);
   await page.locator('.hero-scene').evaluateAll(images=>Promise.all(images.map(i=>i.decode())));assert(await page.locator('.hero-scene').evaluateAll(images=>images.every(i=>i.complete&&i.naturalWidth>=1600&&i.src.startsWith('data:image/webp;base64,'))));
   await page.mouse.move(500,450);
-  await page.evaluate(()=>{window.heroChanges=[];let previous='';new MutationObserver(()=>{const active=document.querySelector('.hero-slide[aria-hidden=false]');const alt=active.querySelector('img').alt;if(alt!==previous){previous=alt;window.heroChanges.push({alt,time:performance.now()});}}).observe(document.querySelector('#hero-viewport'),{subtree:true,attributes:true,attributeFilter:['aria-hidden']});});
+  await page.evaluate(()=>{window.heroChanges=[];let previous=document.querySelector('.hero-slide[aria-hidden=false] img').alt;new MutationObserver(()=>{const active=document.querySelector('.hero-slide[aria-hidden=false]');const alt=active.querySelector('img').alt;if(alt!==previous){previous=alt;window.heroChanges.push({alt,time:performance.now()});}}).observe(document.querySelector('#hero-viewport'),{subtree:true,attributes:true,attributeFilter:['aria-hidden']});});
   await page.waitForFunction(()=>window.heroChanges.length>=6,{},{timeout:14000});
   const changes=await page.evaluate(()=>window.heroChanges);for(let i=1;i<6;i++){const delta=changes[i].time-changes[i-1].time;assert(delta>1850&&delta<2200,`cadence ${delta}ms`);}
   assert.equal(changes[0].alt,changes[5].alt);

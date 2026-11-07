@@ -2,7 +2,7 @@
 <html lang="fa" dir="rtl">
 <head>
 <meta name="ava-media-mode" content="references">
-<meta name="ava-site-release" content="32">
+<meta name="ava-site-release" content="33">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#10172b">
@@ -1914,7 +1914,10 @@ h1,h2,h3{letter-spacing:0}
     hero.append(el('div',{class:'catalog-banner-shade','aria-hidden':'true'}),heading);
     const abort=new AbortController(),options={signal:abort.signal};
     function schedule(){clearTimeout(timer);if(!disposed&&visible&&!document.hidden&&!matchMedia('(prefers-reduced-motion: reduce)').matches&&slides.length>1)timer=setTimeout(()=>go(active+1),banner.interval);}
-    function go(index){active=(index+slides.length)%slides.length;images.forEach((image,i)=>{image.classList.toggle('is-active',i===active);image.setAttribute('aria-hidden',String(i!==active));});$$('.page-banner-dot',hero).forEach((dot,i)=>dot.setAttribute('aria-current',String(i===active)));schedule();}
+    let imageVisit=0;
+    function prepare(index){const image=images[index];image.loading='eager';return image.decode().catch(()=>{});}
+    async function go(index){clearTimeout(timer);const visit=++imageVisit,next=(index+slides.length)%slides.length;await prepare(next);if(disposed||visit!==imageVisit)return;if(!images[next].naturalWidth){schedule();return;}active=next;images.forEach((image,i)=>{image.classList.toggle('is-active',i===active);image.setAttribute('aria-hidden',String(i!==active));});$$('.page-banner-dot',hero).forEach((dot,i)=>dot.setAttribute('aria-current',String(i===active)));prepare((active+1)%slides.length);schedule();}
+    if(slides.length>1)prepare(1);
     if(slides.length>1){const controls=el('div',{class:'page-banner-controls'}),dots=el('div',{class:'page-banner-dots','aria-label':'انتخاب عکس بنر'});
       for(const [step,label,symbol] of [[1,'عکس بعدی','›'],[-1,'عکس قبلی','‹']]){const arrow=el('button',{type:'button',class:'page-banner-arrow '+(step===1?'next':'previous'),'aria-label':label},symbol);arrow.addEventListener('click',()=>go(active+step),options);controls.append(arrow);}
       slides.forEach((slide,i)=>{const dot=el('button',{type:'button',class:'page-banner-dot','aria-label':'عکس ' + (i+1),'aria-current':String(i===0)});dot.addEventListener('click',()=>go(i),options);dots.append(dot);});controls.append(dots);hero.append(controls);
@@ -2807,7 +2810,11 @@ h1,h2,h3{letter-spacing:0}
     });
     const status = el('span',{class:'sr-only','aria-live':'polite','aria-atomic':'true'});
     pagination.append(dots);controls.append(previous,next,pagination,status);controls.hidden = count < 2;root.append(controls);
+    function prepareImage(number) {
+      const image=nodes[number]?.querySelector('img');if(!image)return Promise.resolve();image.loading='eager';return image.decode().catch(()=>{});
+    }
     function paint(manual = false) {
+      prepareImage((index+1)%count);
       dotButtons.forEach((button,number) => button.setAttribute('aria-current',String(number === index)));
       if (manual) status.textContent = 'اسلاید ' + (index+1).toLocaleString('fa-IR') + ' از ' + count.toLocaleString('fa-IR');
     }
@@ -2845,9 +2852,13 @@ h1,h2,h3{letter-spacing:0}
       transitionVisit++;animations.forEach(animation => animation.cancel());animations = [];
       nodes.forEach((node,number) => {node.style.transform = '';node.hidden = number !== index;node.inert = number !== index;node.setAttribute('aria-hidden',String(number !== index));});previewIndex = null;
     }
-    function go(nextIndex,direction,manual,offset = 0) {
-      normalize();
+    async function go(nextIndex,direction,manual,offset = 0) {
+      stop();normalize();
       if (nextIndex === index) {paint(manual);schedule();return;}
+      const requested=(nextIndex+count)%count,loadingVisit=transitionVisit;
+      await prepareImage(requested);
+      if(disposed||loadingVisit!==transitionVisit)return;
+      const photo=nodes[requested].querySelector('img');if(photo&&!photo.naturalWidth){schedule();return;}
       motionVisit++;motionWaiting = false;
       const old = nodes[index];index = (nextIndex+count)%count;const incoming = nodes[index];
       old.inert = true;old.setAttribute('aria-hidden','true');incoming.hidden = false;incoming.inert = false;incoming.setAttribute('aria-hidden','false');paint(manual);
@@ -3017,13 +3028,13 @@ h1,h2,h3{letter-spacing:0}
       <div class="stats-grid"><div class="stat"><span>کل محتواها</span><strong>${all.length.toLocaleString('fa-IR')}</strong></div><div class="stat"><span>منتشرشده</span><strong>${all.filter(i => i.status === 'published').length.toLocaleString('fa-IR')}</strong></div><div class="stat"><span>پیش‌نویس</span><strong>${all.filter(i => i.status === 'draft').length.toLocaleString('fa-IR')}</strong></div></div>
       <h2 style="font-size:17px;margin:0 0 17px">بخش‌های سایت</h2><div class="module-grid">${CONTENT_KEYS.map(key => `<a class="module-tile" href="#admin/${key}"><span class="module-arrow">↖</span><strong>${escapeHTML(data.modules[key].name)}</strong><span>${key === 'contact' ? 'اطلاعات تماس و نشانی' : data.modules[key].items.length.toLocaleString('fa-IR') + ' محتوا · ' + published(key).length.toLocaleString('fa-IR') + ' منتشرشده'}</span></a>`).join('')}</div>`;
   }
-  async function readImage(file) {
+  async function readImage(file, {banner=false} = {}) {
     if (!file) return '';
     if (!['image/png','image/jpeg','image/webp','image/gif','image/svg+xml'].includes(file.type)) throw new Error('یک فایل تصویر PNG، JPG، WebP، GIF یا SVG انتخاب کن.');
     if (file.size > 5 * 1024 * 1024) throw new Error('حجم تصویر باید حداکثر ۵ مگابایت باشد.');
     const encoded = await new Promise((resolve,reject) => {const reader = new FileReader();reader.onload = () => resolve(reader.result);reader.onerror = () => reject(new Error('خواندن فایل تصویر ممکن نشد.'));reader.readAsDataURL(file);});
     const decoded = await new Promise((resolve,reject) => {const image = new Image();image.onload = () => resolve(image);image.onerror = () => reject(new Error('فایل انتخاب‌شده تصویر قابل خواندن نیست.'));image.src = encoded;});
-    if (file.size <= 1024 * 1024 || ['image/gif','image/svg+xml'].includes(file.type)) return imageData(encoded);
+    if (banner || file.size <= 1024 * 1024 || ['image/gif','image/svg+xml'].includes(file.type)) return imageData(encoded);
     // Keep large camera images usable in local browser storage. Animated/vector
     // uploads retain their original format; raster photos get a web-sized copy.
     const canvas = document.createElement('canvas'),context = canvas.getContext('2d');
@@ -3046,9 +3057,9 @@ h1,h2,h3{letter-spacing:0}
   }
   function mountBannerEditor(root, initial) {
     const banner = clone(initial || {show:true,image:'',asset:'wall',title:'',description:'',imageAlt:''});if (banner.slides?.length) Object.assign(banner,banner.slides[0]);let image = banner.image;let extras = clone(banner.slides?.slice(1) || []);
-    root.innerHTML = `<h3 class="banner-editor-title">بنر اختصاصی این صفحه</h3>${checkbox('نمایش بنر بالای صفحه','bannerShow',banner.show !== false)}<div class="banner-media-editor"><div class="media-preview"></div><div><label class="upload-button">انتخاب عکس بنر<input data-banner-upload type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"></label><button type="button" class="text-button" data-banner-reset>بازگشت به تصویر پیش‌فرض</button><small>عکس افقی و باکیفیت؛ حداکثر ۵ مگابایت.</small></div></div><label>تصویر پیش‌فرض<select name="bannerAsset">${[['wall','نمایشگر LED'],['flex','نمایشگر Flexible'],['film','نمایشگر شفاف'],['floor','کف LED'],...Object.keys(heroImages).filter(k=>k.startsWith('trailer-')).map(k=>[k,'تریلر ' + k.slice(-2)])].map(([id,name])=>`<option value="${id}" ${banner.asset===id?'selected':''}>${name}</option>`).join('')}</select></label>${field('عنوان روی بنر','bannerTitle',banner.title,{max:160})}${field('توضیح بنر','bannerDescription',banner.description,{multiline:true,max:1000})}${field('توضیح تصویر برای دسترس‌پذیری','bannerImageAlt',banner.imageAlt,{max:200})}`;
+    root.innerHTML = `<h3 class="banner-editor-title">بنر اختصاصی این صفحه</h3>${checkbox('نمایش بنر بالای صفحه','bannerShow',banner.show !== false)}<div class="banner-media-editor"><div class="media-preview"></div><div><label class="upload-button">انتخاب عکس بنر<input data-banner-upload type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"></label><button type="button" class="text-button" data-banner-reset>بازگشت به تصویر پیش‌فرض</button><small>عکس افقی، ترجیحاً ۲۵۶۰×۱۴۴۰؛ حداکثر ۵ مگابایت. فایل بنر بدون فشرده‌سازی مجدد ذخیره می‌شود.</small></div></div><label>تصویر پیش‌فرض<select name="bannerAsset">${[['wall','نمایشگر LED'],['flex','نمایشگر Flexible'],['film','نمایشگر شفاف'],['floor','کف LED'],...Object.keys(heroImages).filter(k=>k.startsWith('trailer-')).map(k=>[k,'تریلر ' + k.slice(-2)])].map(([id,name])=>`<option value="${id}" ${banner.asset===id?'selected':''}>${name}</option>`).join('')}</select></label>${field('عنوان روی بنر','bannerTitle',banner.title,{max:160})}${field('توضیح بنر','bannerDescription',banner.description,{multiline:true,max:1000})}${field('توضیح تصویر برای دسترس‌پذیری','bannerImageAlt',banner.imageAlt,{max:200})}`;
     const preview = () => imagePreview($('.media-preview',root),image || heroImages[$('[name=bannerAsset]',root).value]);preview();
-    $('[data-banner-upload]',root).addEventListener('change',async event => {try {const selected = await readImage(event.target.files[0]);if(!selected) return;image = selected;markDirty();preview();}catch(error){toast(error.message,true);}event.target.value = '';});
+    $('[data-banner-upload]',root).addEventListener('change',async event => {try {const selected = await readImage(event.target.files[0],{banner:true});if(!selected) return;image = selected;markDirty();preview();}catch(error){toast(error.message,true);}event.target.value = '';});
     $('[data-banner-reset]',root).addEventListener('click',() => {image = '';markDirty();preview();});
     $('[name=bannerAsset]',root).addEventListener('change',() => {image = '';markDirty();preview();});
     const extraRoot = el('div',{class:'banner-slide-list'}), add = el('button',{type:'button',class:'admin-button secondary','data-add-banner-slide':''},'＋ افزودن عکس به اسلایدر این صفحه');
@@ -3059,7 +3070,7 @@ h1,h2,h3{letter-spacing:0}
         const row = el('div',{class:'banner-extra-slide'}), preview = el('div',{class:'media-preview'});imagePreview(preview,frame.image || heroImages[frame.asset]);
         const caption = el('input',{value:frame.imageAlt || '',maxlength:'200','aria-label':'توضیح عکس ' + (index+2)});caption.addEventListener('input',()=>{frame.imageAlt=caption.value;markDirty();});
         const upload = el('input',{type:'file',accept:'image/png,image/jpeg,image/webp,image/gif,image/svg+xml','aria-label':'عکس اسلاید ' + (index+2)});
-        upload.addEventListener('change',async()=>{try {const selected=await readImage(upload.files[0]);if(!selected)return;frame.image=selected;imagePreview(preview,selected);markDirty();}catch(e){toast(e.message,true);}upload.value='';});
+        upload.addEventListener('change',async()=>{try {const selected=await readImage(upload.files[0],{banner:true});if(!selected)return;frame.image=selected;imagePreview(preview,selected);markDirty();}catch(e){toast(e.message,true);}upload.value='';});
         row.append(el('strong',{},'عکس ' + (index+2).toLocaleString('fa-IR')),preview,upload,caption);
         for(const [step,label] of [[-1,'↑'],[1,'↓']]) {const button=el('button',{type:'button',class:'admin-button secondary','aria-label':label==='↑'?'انتقال عکس به بالا':'انتقال عکس به پایین'},label);button.disabled=index+step<0 || index+step>=extras.length;button.onclick=()=>{[extras[index],extras[index+step]]=[extras[index+step],extras[index]];markDirty();paintExtras();};row.append(button);}
         const remove=el('button',{type:'button',class:'admin-button danger'},'حذف عکس');remove.onclick=()=>{extras.splice(index,1);markDirty();paintExtras();};row.append(remove);extraRoot.append(row);
@@ -3111,7 +3122,7 @@ h1,h2,h3{letter-spacing:0}
         const row = el('details',{class:'hero-editor-slide','data-slide-id':slide.id});if(index === 0) row.open = true;
         const summary = el('summary',{},'اسلاید ' + (index+1).toLocaleString('fa-IR') + ' — ' + slide.title);row.append(summary);
         const body = el('div',{class:'hero-editor-slide-body'});
-        body.innerHTML = `<div class="hero-editor-media"><div class="media-preview"></div><div><label class="upload-button">انتخاب عکس این اسلاید<input type="file" data-slide-image accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"></label><button type="button" class="text-button" data-reset-image>بازگشت به تصویر مفهومی</button><small>حداکثر ۵ مگابایت؛ عکس افقی و عریض بهترین نتیجه را می‌دهد.</small></div></div>${field('مقصد کلیک عکس؛ مثل /product/indoor-125 یا https://…','clickUrl',slide.clickUrl||'',{max:2000,ltr:true})}${field('نام اسلاید در پنل','title',slide.title,{max:200,required:true})}${field('توضیح تصویر برای دسترس‌پذیری','imageAlt',slide.imageAlt,{max:200})}<div class="hero-editor-order"><button class="admin-button secondary" type="button" data-move-slide="-1" ${index === 0 ? 'disabled' : ''}>↑ زودتر</button><button class="admin-button secondary" type="button" data-move-slide="1" ${index === slides.length-1 ? 'disabled' : ''}>↓ دیرتر</button><button class="admin-button danger" type="button" data-delete-slide ${slides.length === 1 ? 'disabled' : ''}>حذف اسلاید</button></div>`;
+        body.innerHTML = `<div class="hero-editor-media"><div class="media-preview"></div><div><label class="upload-button">انتخاب عکس این اسلاید<input type="file" data-slide-image accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"></label><button type="button" class="text-button" data-reset-image>بازگشت به تصویر مفهومی</button><small>عکس افقی، ترجیحاً ۲۵۶۰×۱۴۴۰؛ حداکثر ۵ مگابایت. فایل اصلی بدون کاهش کیفیت ذخیره می‌شود.</small></div></div>${field('مقصد کلیک عکس؛ مثل /product/indoor-125 یا https://…','clickUrl',slide.clickUrl||'',{max:2000,ltr:true})}${field('نام اسلاید در پنل','title',slide.title,{max:200,required:true})}${field('توضیح تصویر برای دسترس‌پذیری','imageAlt',slide.imageAlt,{max:200})}<div class="hero-editor-order"><button class="admin-button secondary" type="button" data-move-slide="-1" ${index === 0 ? 'disabled' : ''}>↑ زودتر</button><button class="admin-button secondary" type="button" data-move-slide="1" ${index === slides.length-1 ? 'disabled' : ''}>↓ دیرتر</button><button class="admin-button danger" type="button" data-delete-slide ${slides.length === 1 ? 'disabled' : ''}>حذف اسلاید</button></div>`;
         row.append(body);list.append(row);imagePreview($('.media-preview',row),slide.image || heroImages[slide.asset]);
         const input = $('[name=clickUrl]',row);
         const destination = el('select',{'aria-label':'انتخاب مقصد اسلاید'},el('option',{value:''},'انتخاب محصول، خدمت یا دسته…'));
@@ -3122,7 +3133,7 @@ h1,h2,h3{letter-spacing:0}
         linkOptions.append(el('label',{},'مقصد آماده',destination),el('small',{},'لینک دلخواه را در کادر زیر وارد کنید. کادر خالی، دستهٔ مرتبط اسلاید اولیه را باز می‌کند.'));
         input.closest('label').before(linkOptions);destination.value=heroDestination(slide);destination.onchange=()=>{if(destination.value){input.value=destination.value;$('[name=linkEnabled]',row).checked=true;markDirty();}};
         $('[name=title]',row).addEventListener('input',() => {summary.textContent = 'اسلاید ' + (index+1).toLocaleString('fa-IR') + ' — ' + $('[name=title]',row).value;});
-        $('[data-slide-image]',row).addEventListener('change',async event => {try {const image = await readImage(event.target.files[0]);if(!image) return;slide.image = image;markDirty();imagePreview($('.media-preview',row),image);}catch(error){toast(error.message,true);}event.target.value = '';});
+        $('[data-slide-image]',row).addEventListener('change',async event => {try {const image = await readImage(event.target.files[0],{banner:true});if(!image) return;slide.image = image;markDirty();imagePreview($('.media-preview',row),image);}catch(error){toast(error.message,true);}event.target.value = '';});
         $('[data-reset-image]',row).addEventListener('click',() => {slide.image = '';markDirty();imagePreview($('.media-preview',row),heroImages[slide.asset]);});
         $$('[data-move-slide]',row).forEach(button => button.addEventListener('click',() => {collect();const to = index + Number(button.dataset.moveSlide);if(to < 0 || to >= slides.length) return;[slides[index],slides[to]] = [slides[to],slides[index]];markDirty();paint();}));
         $('[data-delete-slide]',row).addEventListener('click',() => {if(slides.length < 2 || !confirm('این اسلاید حذف شود؟')) return;collect();slides.splice(index,1);markDirty();paint();});

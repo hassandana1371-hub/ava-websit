@@ -19,8 +19,9 @@ const root=path.resolve(__dirname,'..');
   await page.waitForTimeout(700);assert.equal(await page.locator('.hero-slide:visible').count(),1);
   await page.waitForFunction(()=>document.querySelector('.hero-slide[aria-hidden=false] img')?.alt.includes('فیلم LED شفاف'),{},{timeout:2500});
   console.log('PASS original SVG plays two real 7-second loops, then transitions to photos with their 2-second interval');
+  // Four remaining photos need eight seconds plus image decode/scheduling time.
   // Return to the logo after the full photo sequence; its animation must restart.
-  await page.waitForFunction(()=>document.querySelector('.hero-motion-slide').getAttribute('aria-hidden')==='false',{},{timeout:8000});
+  await page.waitForFunction(()=>document.querySelector('.hero-motion-slide').getAttribute('aria-hidden')==='false',{},{timeout:11000});
   await page.waitForFunction(()=>document.querySelector('.hero-motion-frame').contentDocument.querySelector('.stage').getAnimations()[0].playState==='running');const restarted=await frame.evaluate(f=>f.contentDocument.querySelector('.stage').getAnimations()[0].currentTime);assert(restarted<1000);
   console.log('PASS carousel returns to the logo and restarts its two-iteration animation');
 
