@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
-<meta name="ava-site-release" content="31">
+<meta name="ava-media-mode" content="references">
+<meta name="ava-site-release" content="32">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#10172b">
@@ -1875,14 +1876,17 @@ h1,h2,h3{letter-spacing:0}
   let entryFile = '';
 
   async function api(path, payload) {
-    const response = await fetch(path,{method:payload === undefined ? 'GET' : 'POST',credentials:'same-origin',headers:payload === undefined ? {} : {'Content-Type':'application/json','X-CSRF-Token':csrf},...(payload === undefined ? {} : {body:JSON.stringify(payload)})});
-    let result;try {result = await response.json();}catch {throw new Error('پاسخ سرور قابل خواندن نیست؛ تغییرات ذخیره نشد.');}
-    if (!response.ok) {if(response.status===401) authenticated=false;throw new Error(result.error || 'ارتباط با سرور انجام نشد.');}return result;
+    const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),path==='/api/content'&&payload!==undefined?300000:20000);
+    try {
+      const response=await fetch(path,{signal:controller.signal,method:payload===undefined?'GET':'POST',credentials:'same-origin',headers:payload===undefined?{'X-AvA-Media':'references'}:{'Content-Type':'application/json','X-CSRF-Token':csrf},...(payload===undefined?{}:{body:JSON.stringify(payload)})});
+      let result;try{result=await response.json();}catch(error){if(error.name==='AbortError')throw error;throw new Error('پاسخ سرور قابل خواندن نیست؛ تغییرات ذخیره نشد.');}
+      if(!response.ok){if(response.status===401)authenticated=false;throw new Error(result.error||'ارتباط با سرور انجام نشد.');}return result;
+    }catch(error){if(error.name==='AbortError')throw new Error('سرور به‌موقع پاسخ نداد؛ اتصال یا وضعیت سرویس را بررسی کنید.');throw error;}finally{clearTimeout(timer);}
   }
   async function boot() {
     if(serverMode && location.pathname==='/admin' && !currentHash()) history.replaceState(null,'','#admin/dashboard');
     if (serverMode) {
-      try {const session = await api('/api/session');authenticated=session.authenticated;csrf=session.csrf;serverReady=true;const result=await api('/api/content');data=validate(result.data);serverRevision=result.revision;
+      try {const session = await api('/api/session');authenticated=session.authenticated;csrf=session.csrf;serverReady=true;if(!authenticated&&currentHash().startsWith('#admin')){renderLogin();return;}if(authenticated){const result=await api('/api/content');data=validate(result.data);serverRevision=result.revision;}else{data=validate(seed);}
         $('.local-badge').textContent='متصل به سرور';$('.sidebar-note').textContent='تغییرات پس از ذخیره روی سرور نگهداری می‌شوند. از بخش پشتیبان خروجی بگیرید.';
         $('#admin-logout').hidden=false;
       } catch(error) {if(!currentHash().startsWith('#admin')&&$('#ava-seo-content'))return;renderLogin(error.message);return;}
@@ -1893,7 +1897,7 @@ h1,h2,h3{letter-spacing:0}
     $('#ava-seo-content')?.remove();setMeta('robots','noindex,nofollow');
     adminVisible=false;$('#public-site').hidden=true;$('#admin-app').hidden=true;$('#admin-content').replaceChildren();
     const root=$('#admin-login');root.hidden=false;
-    root.innerHTML=`<div class="login-card"><a href="#home" class="login-back">گروه آوا ↗</a><span class="admin-eyebrow">AVA GROUP / CONTENT STUDIO</span><h1>ورود به مدیریت سایت</h1><p>برای مدیریت محصولات، خدمات و بنرهای سایت وارد شوید.</p><form id="login-form" class="admin-form"><label>رمز مدیر<input type="password" name="password" autocomplete="current-password" required maxlength="256"></label><p role="alert" class="form-error" id="login-error">${escapeHTML(error)}</p><button class="admin-button" type="submit">ورود به پنل</button></form><small>رمز اولیه را هنگام راه‌اندازی سرور تعیین کنید؛ پس از ورود از بخش «رمز و ورود» قابل تغییر است.</small></div>`;
+    root.innerHTML=`<div class="login-card"><a href="${serverMode?'/':'#home'}" class="login-back">گروه آوا ↗</a><span class="admin-eyebrow">AVA GROUP / CONTENT STUDIO</span><h1>ورود به مدیریت سایت</h1><p>برای مدیریت محصولات، خدمات و بنرهای سایت وارد شوید.</p><form id="login-form" class="admin-form"><label>رمز مدیر<input type="password" name="password" autocomplete="current-password" required maxlength="256"></label><p role="alert" class="form-error" id="login-error">${escapeHTML(error)}</p><button class="admin-button" type="submit">ورود به پنل</button></form><small>رمز اولیه را هنگام راه‌اندازی سرور تعیین کنید؛ پس از ورود از بخش «رمز و ورود» قابل تغییر است.</small></div>`;
     $('#login-form').onsubmit=async event=>{event.preventDefault();const button=$('button[type=submit]',event.currentTarget);button.disabled=true;try {const session=await api('/api/login',{password:event.currentTarget.elements.password.value});csrf=session.csrf;authenticated=true;requestsLastUnread=-1;serverReady=true;const result=await api('/api/content');data=validate(result.data);serverRevision=result.revision;root.hidden=true;dirty=false;renderPublic();route();}catch(e){$('#login-error').textContent=e.message;}finally{button.disabled=false;}};
   }
   function renderSecurity(root) {
@@ -2064,11 +2068,13 @@ h1,h2,h3{letter-spacing:0}
   }
   function imageData(value) {
     if (!value) return '';
+    if(serverMode&&typeof value==='string'&&/^\/media\/[a-f0-9]{64}\.(?:png|jpg|webp|gif|svg)$/.test(value))return value;
     if (typeof value !== 'string' || value.length > Math.ceil(5 * 1024 * 1024 / 3) * 4 + 200 || !/^data:image\/(png|jpeg|webp|gif|svg\+xml);base64,[A-Za-z0-9+/=\r\n]+$/.test(value)) throw new Error('فایل تصویر معتبر نیست یا بیش از اندازه بزرگ است.');
     return value;
   }
   function pdfData(value) {
     if (!value) return '';
+    if(serverMode&&typeof value==='string'&&/^\/media\/[a-f0-9]{64}\.pdf$/.test(value))return value;
     if (typeof value !== 'string' || value.length > 2850000 || !/^data:application\/pdf;base64,JVBERi0[A-Za-z0-9+/=\r\n]*$/.test(value)) throw new Error('فایل PDF معتبر نیست.');
     return value;
   }
@@ -2327,9 +2333,23 @@ h1,h2,h3{letter-spacing:0}
     document.body.append(a);a.click();a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 30000);
   }
+  async function hydrateMedia(value) {
+    if(!serverMode)return clone(value);
+    const cache=new Map();
+    async function visit(node,key=''){
+      if(Array.isArray(node)){const result=[];for(const item of node)result.push(await visit(item,key));return result;}
+      if(isObject(node)){const result={};for(const [name,item]of Object.entries(node))result[name]=await visit(item,name);return result;}
+      if(['image','logo','file'].includes(key)&&typeof node==='string'&&/^\/media\/[a-f0-9]{64}\.(?:png|jpg|webp|gif|svg|pdf)$/.test(node)){
+        if(!cache.has(node)){const response=await fetch(node,{credentials:'same-origin'});if(!response.ok)throw new Error('دریافت تصویر یا فایل برای پشتیبان انجام نشد؛ صفحه را تازه کنید.');const bytes=new Uint8Array(await response.arrayBuffer());let binary='';for(let n=0;n<bytes.length;n+=32768)binary+=String.fromCharCode(...bytes.subarray(n,n+32768));cache.set(node,'data:'+response.headers.get('Content-Type').split(';')[0]+';base64,'+btoa(binary));}return cache.get(node);
+      }
+      return node;
+    }
+    return visit(value);
+  }
   async function exportSite() {
     if (!discardAllowed()) return;
-    const json = JSON.stringify(data).replace(/</g, '\\u003c');
+    let hydrated;try{hydrated=await hydrateMedia(data);}catch(error){toast(error.message,true);return;}
+    const json = JSON.stringify(hydrated).replace(/</g, '\\u003c');
     let output = bootHTML.replace(/<script id="ava-server-mode" type="application\/json">[\s\S]*?<\/script>/,'').replace(/(<script id="ava-initial-data" type="application\/json">)[\s\S]*?(<\/script>)/, (_, open, close) => open + json + close);
     if(serverMode){try{for(const path of new Set(output.match(/\/assets\/[a-f0-9]{32}\.(?:webp|jpg|woff2)/g)||[])){const response=await fetch(path);if(!response.ok)throw new Error('دریافت فایل خروجی انجام نشد.');const bytes=new Uint8Array(await response.arrayBuffer());let binary='';for(let n=0;n<bytes.length;n+=32768)binary+=String.fromCharCode(...bytes.subarray(n,n+32768));output=output.replaceAll(path,'data:'+response.headers.get('Content-Type').split(';')[0]+';base64,'+btoa(binary));}}catch(error){toast(error.message,true);return;}}
     download('ava-site-and-panel.html', output, 'text/html;charset=utf-8');
@@ -3250,7 +3270,7 @@ h1,h2,h3{letter-spacing:0}
   function renderBackup(root) {
     root.innerHTML = notice() + `<div class="admin-panel"><h2>نسخهٔ کامل سایت و پنل</h2><p>یک فایل HTML شامل سایت، پنل و همهٔ محتوای ذخیره‌شده دریافت کن. آن را با مرورگر باز کن؛ در منوی سایت، «مدیریت سایت» را بزن.</p><div class="notice">این خروجی برای بررسی و انتقال کار است و محتوای پیش‌نویس را هم در خود دارد. برای انتشار عمومی، پنل باید به سرور و ورود امن متصل شود.</div><button type="button" class="admin-button" id="export-site">دریافت فایل کامل سایت و پنل ↓</button></div><div class="admin-panel"><h2>پشتیبان اطلاعات</h2><p>فایل JSON شامل نام‌ها، متن‌ها، تصاویر و محتواهاست. آن را در جای مطمئن نگه دار.</p><div class="backup-actions"><button type="button" class="admin-button secondary" id="export-backup">دریافت پشتیبان JSON</button><label class="upload-button">بازیابی پشتیبان<input type="file" id="import-backup" accept="application/json,.json"></label></div><p style="font-size:11px;margin-top:18px">بازیابی، اطلاعات فعلی این مرورگر را جایگزین می‌کند؛ پیش از آن پشتیبان بگیر.</p></div>`;
     $('#export-site').addEventListener('click',exportSite);
-    $('#export-backup').addEventListener('click',() => download('ava-content-backup.json',JSON.stringify(data,null,2),'application/json;charset=utf-8'));
+    $('#export-backup').addEventListener('click',async () => {try{download('ava-content-backup.json',JSON.stringify(await hydrateMedia(data),null,2),'application/json;charset=utf-8');}catch(error){toast(error.message,true);}});
     $('#import-backup').addEventListener('change',async event => {
       const file = event.target.files[0];if (!file) return;
       try {if (file.size > 32 * 1024 * 1024) throw new Error('حجم فایل پشتیبان بیش از حد مجاز است.');const next = validate(JSON.parse(await file.text()));if (!confirm('اطلاعات این پشتیبان جایگزین همهٔ اطلاعات فعلی شود؟')) return;if (await commit(next,'پشتیبان با موفقیت بازیابی شد.')) {renderPage('backup');}}
@@ -3283,6 +3303,7 @@ h1,h2,h3{letter-spacing:0}
   }
   function route() {
     const nextHash = currentHash();
+    if(serverMode&&!$('#admin-login').hidden&&!nextHash.startsWith('#admin')){location.assign(publicPath());return;}
     if (!discardAllowed()) {history.replaceState(null,'',lastHash || location.pathname + location.search);return;}
     if (!$('#catalog-page').hidden || /^#(products|category|product|service|equipment)(\/|$)/.test(nextHash) || nextHash.startsWith('#admin')) disposePageBanners();
     closeNavigationMenus();

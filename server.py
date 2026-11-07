@@ -55,6 +55,7 @@ def initialize():
             upgraded['updatedAt']=int(time.time()*1000)
             db.execute('UPDATE content SET revision=?,data=? WHERE id=1',(row['revision']+1,json.dumps(upgraded,ensure_ascii=False)))
     os.chmod(DB, 0o600)
+    site_features.clear_content_cache()
 
 
 def password_hash(password, salt):
@@ -317,7 +318,7 @@ class Handler(BaseHTTPRequestHandler):
         # Never log cookies, request bodies or passwords.
         super().log_message(fmt, *args)
 
-    def reply(self, code, value, cookie=None, content_type='application/json; charset=utf-8', location=None):
+    def reply(self, code, value, cookie=None, content_type='application/json; charset=utf-8', location=None, cache_control=None, security_policy=None):
         body = value if isinstance(value, bytes) else json.dumps(value, ensure_ascii=False).encode()
         compressed=len(body)>1024 and ('text/' in content_type or 'json' in content_type or 'xml' in content_type) and 'gzip' in self.headers.get('Accept-Encoding','')
         if compressed:body=gzip.compress(body,compresslevel=3)
@@ -326,10 +327,11 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header('Content-Length', str(len(body)))
         if compressed:self.send_header('Content-Encoding','gzip')
         self.send_header('Vary','Accept-Encoding')
-        self.send_header('Cache-Control', 'public, max-age=31536000, immutable' if urlsplit(self.path).path.startswith('/assets/') and code==200 else 'no-store')
+        self.send_header('Cache-Control', cache_control or ('public, max-age=31536000, immutable' if urlsplit(self.path).path.startswith('/assets/') and code==200 else 'no-store'))
         self.send_header('X-Content-Type-Options', 'nosniff')
         self.send_header('X-Frame-Options', 'SAMEORIGIN')
         self.send_header('Referrer-Policy', 'strict-origin-when-cross-origin')
+        if security_policy:self.send_header('Content-Security-Policy',security_policy)
         if location is not None:self.send_header('Location',location)
         if cookie:
             self.send_header('Set-Cookie', cookie)
@@ -359,6 +361,13 @@ class Handler(BaseHTTPRequestHandler):
             blob,mime=assets[path];return self.reply(200,blob,content_type=mime)
         with connect() as db:
             session = self.session(db)
+            if path.startswith('/media/'):
+                if not site_features.MEDIA_PATH.fullmatch(path):return self.reply(404,{'error':'فایل پیدا نشد.'})
+                snapshot=site_features.content_snapshot(db,public_content,str(DB.resolve()))
+                media=site_features.media_blob(snapshot,path,bool(session))
+                if media is None:return self.reply(404,{'error':'فایل پیدا نشد.'})
+                blob,mime=media
+                return self.reply(200,blob,content_type=mime,cache_control='public, max-age=3600' if path in snapshot['public_media'] else 'no-store',security_policy="sandbox; default-src 'none'; style-src 'unsafe-inline'" if mime=='image/svg+xml' else None)
             if path in ['/api/requests','/api/requests/summary']:
                 if not session:return self.reply(401,{'error':'ورود لازم است.'})
                 counts=db.execute('SELECT COUNT(*) AS total,COALESCE(SUM(unread),0) AS unread FROM service_requests').fetchone()
@@ -376,11 +385,17 @@ class Handler(BaseHTTPRequestHandler):
             if path == '/api/session':
                 configured = bool(db.execute('SELECT 1 FROM account').fetchone())
                 return self.reply(200, {'authenticated':bool(session), 'configured':configured, 'csrf':session['csrf'] if session else ''})
-            row = db.execute('SELECT * FROM content WHERE id=1').fetchone()
-            data = json.loads(row['data'])
+            if path in ['/panel','/panel/','/admin']:
+                html=bundled.replace('<div id="public-site">','<div id="public-site" hidden>',1).replace('<head>','<head><meta name="robots" content="noindex,nofollow"><script id="ava-server-mode" type="application/json">true</script><script id="ava-site-origin" type="application/json">'+json.dumps(self.server.origin).replace('<','\\u003c')+'</script>',1)
+                return self.reply(200,html.encode(),content_type='text/html; charset=utf-8')
+            snapshot=site_features.content_snapshot(db,public_content,str(DB.resolve()))
+            data=snapshot['raw']
             if path == '/api/content':
-                return self.reply(200, {'revision':row['revision'], 'data':data if session else public_content(data)})
-            public=public_content(data)
+                compact=self.headers.get('X-AvA-Media')=='references'
+                content=snapshot['private'] if session else snapshot['public']
+                if not compact:content=data if session else public_content(data)
+                return self.reply(200, {'revision':snapshot['revision'], 'data':content})
+            public=snapshot['public']
             if path=='/index.html' or (path!='/' and path.endswith('/') and path.rstrip('/') in site_features.pages(public)):
                 target='/' if path=='/index.html' else path.rstrip('/')
                 query=urlsplit(self.path).query
@@ -392,8 +407,9 @@ class Handler(BaseHTTPRequestHandler):
             if path in ['/', '/index.html', '/admin','/panel','/panel/'] or path in site_features.pages(public):
                 # Always embed public data, even when an administrator requests HTML.
                 html = bundled
-                seed = json.dumps(public_content(data), ensure_ascii=False).replace('<', '\\u003c')
-                html = re.sub(r'(<script id="ava-initial-data" type="application/json">).*?(</script>)', lambda m:m[1]+seed+m[2], html, flags=re.S)
+                if path not in ['/panel','/panel/','/admin']:
+                    seed = json.dumps(public if 'name="ava-media-mode" content="references"' in html else public_content(data), ensure_ascii=False).replace('<', '\\u003c')
+                    html = re.sub(r'(<script id="ava-initial-data" type="application/json">).*?(</script>)', lambda m:m[1]+seed+m[2], html, flags=re.S)
                 html = html.replace('<head>', '<head><script id="ava-server-mode" type="application/json">true</script><script id="ava-site-origin" type="application/json">'+json.dumps(self.server.origin).replace('<','\\u003c')+'</script>', 1)
                 if path.startswith(('/panel','/admin')):
                     html=html.replace('<head>','<head><meta name="robots" content="noindex,nofollow">',1)
@@ -432,7 +448,7 @@ class Handler(BaseHTTPRequestHandler):
                 normalized=site_features.phone_number(phone)
                 if not customer or len(customer)>100 or not message or len(message)>4000 or len(phone)>40 or not re.fullmatch(r'[+0-9۰-۹٠-٩()\s-]+',phone) or not re.fullmatch(r'\+?\d{8,15}',normalized):return self.reply(400,{'error':'نام، شماره تماس معتبر و متن درخواست را کامل کنید.'})
                 if not re.fullmatch(r'[A-Za-z0-9_-]{8,80}',key):return self.reply(400,{'error':'شناسهٔ ارسال معتبر نیست؛ صفحه را تازه کنید.'})
-                pages=site_features.pages(public_content(json.loads(db.execute('SELECT data FROM content').fetchone()[0])))
+                pages=site_features.pages(site_features.content_snapshot(db,public_content,str(DB.resolve()))['public'])
                 if source not in pages or not (source=='/contact' or source.startswith(('/service/','/product/','/equipment/'))):return self.reply(400,{'error':'خدمت یا محصول انتخاب‌شده در دسترس نیست.'})
                 now=time.time();address=hashlib.sha256(self.client_address[0].encode()).hexdigest()
                 db.execute('BEGIN IMMEDIATE')
@@ -445,7 +461,7 @@ class Handler(BaseHTTPRequestHandler):
             if path == '/api/track':
                 if len(json.dumps(payload))>1000:return self.reply(400, {'error':'رویداد بزرگ است.'})
                 if self.session(db):return self.reply(200, {'ok':True,'ignored':True})
-                try:cookie=site_features.record(db,payload,self.headers.get('Cookie',''),public_content(json.loads(db.execute('SELECT data FROM content').fetchone()[0])),not self.server.dev)
+                try:cookie=site_features.record(db,payload,self.headers.get('Cookie',''),site_features.content_snapshot(db,public_content,str(DB.resolve()))['public'],not self.server.dev)
                 except ValueError as error:return self.reply(400, {'error':str(error)})
                 db.commit()
                 return self.reply(200, {'ok':True},cookie)
@@ -499,12 +515,14 @@ class Handler(BaseHTTPRequestHandler):
                 if payload.get('revision') != row['revision']:
                     return self.reply(409, {'error':'محتوا در دستگاه دیگری تغییر کرده است. از فرم فعلی کپی بگیرید و صفحه را تازه کنید.'})
                 try:
-                    content = validate_content(payload.get('data'))
+                    snapshot=site_features.content_snapshot(db,public_content,str(DB.resolve()))
+                    content = validate_content(site_features.restore_media_references(payload.get('data'),snapshot))
                 except (ValueError, TypeError, KeyError) as error:
                     return self.reply(400, {'error':str(error)})
                 revision = row['revision']+1
                 db.execute('UPDATE content SET revision=?,data=? WHERE id=1', (revision, json.dumps(content, ensure_ascii=False)))
                 db.commit()
+                site_features.clear_content_cache()
                 return self.reply(200, {'ok':True, 'revision':revision})
         self.reply(404, {'error':'مسیر پیدا نشد.'})
 

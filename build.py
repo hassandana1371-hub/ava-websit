@@ -5,8 +5,8 @@ import base64
 
 ROOT = Path(__file__).resolve().parent
 SRC = ROOT / 'src'
-RELEASE = '31'
-page = (SRC / 'site-template.html').read_text().replace('<head>', '<head>\n<meta name="ava-site-release" content="' + RELEASE + '">', 1)
+RELEASE = '32'
+page = (SRC / 'site-template.html').read_text().replace('<head>', '<head>\n<meta name="ava-media-mode" content="references">\n<meta name="ava-site-release" content="' + RELEASE + '">', 1)
 data = json.loads((SRC / 'defaults.json').read_text())
 encoded = json.dumps(data, ensure_ascii=False).replace('<', '\\u003c')
 font = base64.b64encode((SRC / 'assets/Vazirmatn-variable.woff2').read_bytes()).decode('ascii')

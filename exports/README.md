@@ -1,3 +1,13 @@
+# سایت آوا ـ اصلاح نسخهٔ ۳۲
+
+اصلاح حجم پاسخ اولیهٔ گالری و نمایش مستقل فرم ورود پنل. اصل تصاویر، دیتابیس، درخواست‌ها و تنظیمات امنیتی حفظ می‌شوند. [راهنمای بررسی، پشتیبان، نصب و بازگشت](RECOVERY-v32-fa.md).
+
+فقط سه فایل index.html، server.py و site_features.py برای سرور لازم‌اند. نصب روی سرور واقعی انجام نشده و علت اختلال زنده هنوز به لاگ نیاز دارد. سامانهٔ انبار تغییر نکند. پنل: https://avagroups.ir/panel . رتبهٔ گوگل با این اصلاح تضمین نمی‌شود.
+
+- [آپدیت سرور](https://github.com/hassandana1371-hub/ava-websit/raw/refs/heads/main/exports/ava-site-v32-server-update.zip)
+- [بستهٔ کامل](https://github.com/hassandana1371-hub/ava-websit/raw/refs/heads/main/exports/ava-site-v32-complete.zip)
+- [پیش‌نمایش آفلاین](https://github.com/hassandana1371-hub/ava-websit/raw/refs/heads/main/exports/ava-site-v32-backup.zip)
+
 # سایت آوا ـ نسخهٔ ۳۱
 
 - [بستهٔ کامل](https://github.com/hassandana1371-hub/ava-websit/raw/refs/heads/main/exports/ava-site-v31-complete.zip)

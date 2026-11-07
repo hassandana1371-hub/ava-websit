@@ -7,10 +7,60 @@ import hashlib
 import html
 import json
 import secrets
+import threading
 from http.cookies import SimpleCookie, CookieError
 from zoneinfo import ZoneInfo
 
 TZ=ZoneInfo('Asia/Tehran')
+
+MEDIA_PATH=re.compile(r'/media/[a-f0-9]{64}\.(?:png|jpg|webp|gif|svg|pdf)\Z')
+_CONTENT_LOCK=threading.RLock()
+_CONTENT_CACHE={}
+
+def clear_content_cache():
+    with _CONTENT_LOCK:_CONTENT_CACHE.clear()
+
+def content_snapshot(db,public_projection,identity):
+    """Keep original media in SQLite, serve small metadata snapshots per revision."""
+    with _CONTENT_LOCK:
+        revision=db.execute('SELECT revision FROM content WHERE id=1').fetchone()[0]
+        if _CONTENT_CACHE.get('identity')==identity and _CONTENT_CACHE.get('revision')==revision:return dict(_CONTENT_CACHE)
+        raw=json.loads(db.execute('SELECT data FROM content WHERE id=1').fetchone()[0])
+        sources={};by_value={}
+        extensions={'image/png':'png','image/jpeg':'jpg','image/webp':'webp','image/gif':'gif','image/svg+xml':'svg','application/pdf':'pdf'}
+        def compact(value,media,key=''):
+            if isinstance(value,dict):return {k:compact(v,media,k) for k,v in value.items()}
+            if isinstance(value,list):return [compact(v,media,key) for v in value]
+            if key in ['image','logo','file'] and isinstance(value,str) and value.startswith('data:'):
+                mime=value[5:].split(';',1)[0]
+                if mime in extensions and ';base64,' in value:
+                    path=by_value.get(value)
+                    if path is None:
+                        path='/media/'+hashlib.sha256(value.encode()).hexdigest()+'.'+extensions[mime];by_value[value]=path;sources[path]=value
+                    media.add(path);return path
+            return value
+        private_media=set();public_media=set()
+        private=compact(raw,private_media);public=compact(public_projection(raw),public_media)
+        _CONTENT_CACHE.clear();_CONTENT_CACHE.update(identity=identity,revision=revision,raw=raw,private=private,public=public,private_media=private_media,public_media=public_media,sources=sources,blobs={})
+        return dict(_CONTENT_CACHE)
+
+def media_blob(snapshot,path,authenticated):
+    if path not in snapshot['private_media' if authenticated else 'public_media']:return None
+    with _CONTENT_LOCK:
+        if path not in snapshot['blobs']:
+            value=snapshot['sources'][path];prefix,encoded=value.split(';base64,',1)
+            try:blob=base64.b64decode(encoded,validate=False)
+            except (ValueError,TypeError):return None
+            snapshot['blobs'][path]=(blob,prefix[5:])
+        return snapshot['blobs'][path]
+
+def restore_media_references(value,snapshot,key=''):
+    if isinstance(value,dict):return {k:restore_media_references(v,snapshot,k) for k,v in value.items()}
+    if isinstance(value,list):return [restore_media_references(v,snapshot,key) for v in value]
+    if key in ['image','logo','file'] and isinstance(value,str) and value.startswith('/media/'):
+        if not MEDIA_PATH.fullmatch(value) or value not in snapshot['sources']:raise ValueError('مرجع تصویر یا فایل قدیمی است؛ صفحه را تازه کنید یا پشتیبان کامل را بازیابی کنید.')
+        return snapshot['sources'][value]
+    return value
 def initialize(db):
     db.executescript('''CREATE TABLE IF NOT EXISTS site_metrics_meta(key TEXT PRIMARY KEY,value TEXT);
     CREATE TABLE IF NOT EXISTS site_metrics(day TEXT,path TEXT,visitor TEXT,event TEXT,total INTEGER,PRIMARY KEY(day,path,visitor,event));''')
