@@ -130,6 +130,11 @@ def validate_content(data):
                 raise ValueError('والد دسته معتبر نیست.')
         if c.get('banner') is not None:
             banner(c['banner'])
+    redirects=data.get('categoryRedirects',{})
+    if not isinstance(redirects,dict) or len(redirects)>100:raise ValueError('تغییر مسیر دسته معتبر نیست.')
+    for source,target in redirects.items():
+        if not re.fullmatch(r'[A-Za-z0-9_-]{1,80}',source) or source in ids or target not in ids:raise ValueError('مقصد تغییر مسیر دسته معتبر نیست.')
+    site_features.validate_typography(data.get('typography',{}))
     header, hero = data['header'], data['hero']
     for key in ['nameEn','nameFa','sloganEn','sloganFa']:
         string(header.get(key), 180)
@@ -140,6 +145,7 @@ def validate_content(data):
         raise ValueError('تنظیم هیرو معتبر نیست.')
     if not isinstance(hero.get('slides'), list) or not 1 <= len(hero['slides']) <= 8:
         raise ValueError('تعداد اسلایدهای هیرو معتبر نیست.')
+    if hero.get('transition','fade') not in ['slide','fade','cube','zoom','reveal'] or type(hero.get('transitionDuration',700)) is not int or not 150<=hero.get('transitionDuration',700)<=2500:raise ValueError('افکت یا مدت انتقال هیرو معتبر نیست.')
     slide_ids = set()
     targets = set(MODULES) | {'hero','vision','process'}
     for slide in [hero] + hero['slides']:
@@ -406,6 +412,7 @@ class Handler(BaseHTTPRequestHandler):
                 if not compact:content=data if session else public_content(data)
                 return self.reply(200, {'revision':snapshot['revision'], 'data':content})
             public=snapshot['public']
+            if path.startswith('/category/') and path[10:] in public.get('categoryRedirects',{}):return self.reply(301,b'',content_type='text/plain',location='/category/'+public['categoryRedirects'][path[10:]])
             if path=='/index.html' or (path!='/' and path.endswith('/') and path.rstrip('/') in site_features.pages(public)):
                 target='/' if path=='/index.html' else path.rstrip('/')
                 query=urlsplit(self.path).query
@@ -420,6 +427,7 @@ class Handler(BaseHTTPRequestHandler):
                 if path not in ['/panel','/panel/','/admin']:
                     seed = json.dumps(public if 'name="ava-media-mode" content="references"' in html else public_content(data), ensure_ascii=False).replace('<', '\\u003c')
                     html = re.sub(r'(<script id="ava-initial-data" type="application/json">).*?(</script>)', lambda m:m[1]+seed+m[2], html, flags=re.S)
+                html = html.replace('</head>','<style id="ava-typography">'+site_features.typography_css(public)+'</style></head>',1)
                 html = html.replace('<head>', '<head><script id="ava-server-mode" type="application/json">true</script><script id="ava-site-origin" type="application/json">'+json.dumps(self.server.origin).replace('<','\\u003c')+'</script>', 1)
                 if path.startswith(('/panel','/admin')):
                     html=html.replace('<head>','<head><meta name="robots" content="noindex,nofollow">',1)

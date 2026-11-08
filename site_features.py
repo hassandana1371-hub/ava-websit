@@ -382,3 +382,21 @@ def asset_bundle(file):
     source=re.sub(r'data:(font/woff2);base64,([A-Za-z0-9+/=]+)',externalize,source)
     _ASSET_CACHE.update(stamp=stamp,html=source,assets=assets)
     return source,assets
+
+
+FONT_FAMILIES={'Vazirmatn':"'Vazirmatn',Tahoma,sans-serif",'Estedad':"'Estedad',Tahoma,sans-serif",'Tahoma':'Tahoma,sans-serif'}
+TYPOGRAPHY_DEFAULTS=dict(body='Vazirmatn',headings='Estedad',navigation='inherit',products='inherit',content='inherit',bodySize=15,headingWeight=700)
+
+def validate_typography(raw):
+    if not isinstance(raw,dict):raise ValueError('تنظیم فونت معتبر نیست.')
+    config={**TYPOGRAPHY_DEFAULTS,**raw}
+    for key in ['body','headings','navigation','products','content']:
+        if config[key] not in list(FONT_FAMILIES)+([] if key=='body' else ['inherit']):raise ValueError('فونت انتخابی معتبر نیست.')
+    if type(config['bodySize']) is not int or not 13<=config['bodySize']<=19 or config['headingWeight'] not in [500,600,700,800]:raise ValueError('اندازه یا ضخامت فونت معتبر نیست.')
+    return config
+
+def typography_css(data):
+    c=validate_typography(data.get('typography',{}));body=FONT_FAMILIES[c['body']]
+    def family(key):return FONT_FAMILIES.get(c[key],body)
+    values={'--font-fa':body,'--ava-heading-font':family('headings'),'--ava-nav-font':family('navigation'),'--ava-product-font':family('products'),'--ava-content-font':family('content'),'--ava-product-heading':family('headings') if c['products']=='inherit' else family('products'),'--ava-body-size':str(c['bodySize'])+'px','--ava-heading-weight':str(c['headingWeight'])}
+    return ':root{'+''.join(k+':'+v+';' for k,v in values.items())+'}'

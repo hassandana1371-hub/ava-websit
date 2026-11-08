@@ -2,7 +2,7 @@
 <html lang="fa" dir="rtl">
 <head>
 <meta name="ava-media-mode" content="references">
-<meta name="ava-site-release" content="34">
+<meta name="ava-site-release" content="35">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#10172b">
@@ -912,6 +912,15 @@ h1,h2,h3{letter-spacing:0}
 @media(max-width:350px){.product-grid,.catalog-layout .product-grid{grid-template-columns:1fr}.product-card-media{height:220px}.product-card-content{padding:20px}.product-card h3{font-size:16px}.product-card p{font-size:12px}}
 @media(prefers-reduced-motion:reduce){::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none!important}.product-card,.product-card-media img{transition:none}}
 
+/* Public typography scopes; names/values are chosen from embedded font allowlists. */
+body{font-size:var(--ava-body-size,15px)}
+#public-site h1,#public-site h2,#public-site h3,#ava-seo-content h1,#ava-seo-content h2{font-family:var(--ava-heading-font,'Estedad');font-weight:var(--ava-heading-weight,700)}
+#public-site .site-header,#public-site .site-header button,#public-site .site-header .ava-wordmark small{font-family:var(--ava-nav-font,var(--font-fa))}
+#public-site .product-card,#public-site .product-introduction,#public-site .product-tab-panels{font-family:var(--ava-product-font,var(--font-fa))}
+#public-site .product-card h3,#public-site .product-introduction h1{font-family:var(--ava-product-heading,var(--ava-heading-font,'Estedad'))}
+#public-site .search-copy,#public-site .managed-card,#public-site #contact{font-family:var(--ava-content-font,var(--font-fa))}
+.hero-slide{backface-visibility:hidden}
+
 /* Page-specific slides and the mobile LED trailer collection. */
 .catalog-banner{touch-action:pan-y}
 .page-banner-frame{opacity:0;transition:opacity .65s ease;pointer-events:none}
@@ -1197,6 +1206,7 @@ h1,h2,h3{letter-spacing:0}
       <a href="#admin/requests" data-page="requests">درخواست‌ها <span id="request-badge" hidden></span></a><a href="#admin/stats" data-page="stats">آمار بازدید</a><a href="#admin/seo" data-page="seo">تنظیمات سئو</a><a href="#admin/company" data-page="company">معرفی شرکت</a><a href="#admin/footer" data-page="footer">فوتر سایت</a>
       <a href="#admin/dashboard" data-page="dashboard"><span aria-hidden="true">◫</span>پیشخوان</a>
       <a href="#admin/header" data-page="header"><span aria-hidden="true">◈</span>لوگو و هدر</a>
+      <a href="#admin/typography" data-page="typography">فونت و خوانایی</a>
       <a href="#admin/hero" data-page="hero"><span aria-hidden="true">▣</span>هیرو / تصویر اصلی</a>
       <a href="#admin/banners" data-page="banners"><span aria-hidden="true">▧</span>بنر اختصاصی صفحات</a>
       <a href="#admin/security" data-page="security"><span aria-hidden="true">⌘</span>رمز و ورود</a>
@@ -1841,7 +1851,7 @@ h1,h2,h3{letter-spacing:0}
   const KEYS = ['products','services','projects','partners','software','articles','contact','catalog'];
   const CONTENT_KEYS = [...KEYS,'equipment'];
   const LABELS = {products:'محصولات',services:'خدمات',projects:'پروژه‌ها',partners:'همکاران',equipment:'فروش تجهیزات تلویزیون',software:'نرم‌افزار',articles:'مقالات',contact:'تماس با ما',catalog:'کاتالوگ'};
-  const TITLES = {requests:'درخواست‌ها',company:'معرفی شرکت',stats:'آمار بازدید',footer:'فوتر سایت',seo:'تنظیمات سئو',dashboard:'پیشخوان',header:'لوگو و هدر',hero:'هیرو / تصویر اصلی',navigation:'منوها و اتصال‌ها',categories:'دسته‌بندی محصولات',banners:'بنر اختصاصی صفحات',security:'رمز و ورود',backup:'نسخهٔ پشتیبان و خروجی'};
+  const TITLES = {typography:'فونت و خوانایی',requests:'درخواست‌ها',company:'معرفی شرکت',stats:'آمار بازدید',footer:'فوتر سایت',seo:'تنظیمات سئو',dashboard:'پیشخوان',header:'لوگو و هدر',hero:'هیرو / تصویر اصلی',navigation:'منوها و اتصال‌ها',categories:'دسته‌بندی محصولات',banners:'بنر اختصاصی صفحات',security:'رمز و ورود',backup:'نسخهٔ پشتیبان و خروجی'};
   const DESCRIPTIONS = {
     dashboard:'از اینجا ظاهر سایت را تنظیم کن و محتوای هر بخش را مدیریت کن.',
     header:'لوگو، نام فارسی و انگلیسی و شعارهای بالای سایت را جداگانه ویرایش کن.',
@@ -2049,6 +2059,30 @@ h1,h2,h3{letter-spacing:0}
 
   function companyDescription(){return data.company?.description||'گروه آوا در زمینهٔ فروش و اجارهٔ نمایشگر LED و تلویزیون شهری فعالیت می‌کند. محصولات و خدمات مرتبط را بررسی کنید و برای انتخاب متناسب با محل نصب یا رویداد، درخواست مشاوره و استعلام بفرستید.';}
   function renderAbout(){const root=$('#catalog-page');root.replaceChildren();const section=el('section',{class:'content company-profile'},el('h1',{},'دربارهٔ '+data.header.nameFa),el('p',{},companyDescription()));if(data.company?.serviceArea)section.append(el('h2',{},'محدودهٔ خدمات'),el('p',{},data.company.serviceArea));section.append(el('h2',{},'راه‌های ارتباطی آوا'),contactCards());contactExtras(section,false);section.append(el('nav',{class:'search-copy-links'},el('a',{href:serverMode?'/products':'#products'},'محصولات نمایشگر LED'),el('a',{href:serverMode?'/services':'#services'},'خدمات و اجاره'),el('a',{href:serverMode?'/contact':'#contact'},'تماس با آوا')));root.append(section);}
+  const fontFamilies={Vazirmatn:"'Vazirmatn',Tahoma,sans-serif",Estedad:"'Estedad',Tahoma,sans-serif",Tahoma:'Tahoma,sans-serif'};
+  const typographyDefaults={body:'Vazirmatn',headings:'Estedad',navigation:'inherit',products:'inherit',content:'inherit',bodySize:15,headingWeight:700};
+  function typographyConfig(raw={}){
+    if(!isObject(raw))throw new Error('تنظیم فونت معتبر نیست.');const config={...typographyDefaults,...raw};
+    for(const key of ['body','headings','navigation','products','content'])if(!Object.hasOwn(fontFamilies,config[key])&&!(key!=='body'&&config[key]==='inherit'))throw new Error('فونت انتخابی معتبر نیست.');
+    if(!Number.isInteger(config.bodySize)||config.bodySize<13||config.bodySize>19||![500,600,700,800].includes(config.headingWeight))throw new Error('اندازه یا ضخامت فونت معتبر نیست.');return config;
+  }
+  function applyTypography(config){
+    const c=typographyConfig(config),body=fontFamilies[c.body],family=key=>fontFamilies[c[key]]||body;
+    const values={'--font-fa':body,'--ava-heading-font':family('headings'),'--ava-nav-font':family('navigation'),'--ava-product-font':family('products'),'--ava-content-font':family('content'),'--ava-product-heading':c.products==='inherit'?family('headings'):family('products'),'--ava-body-size':c.bodySize+'px','--ava-heading-weight':String(c.headingWeight)};
+    let style=$('#ava-typography');if(!style){style=el('style',{id:'ava-typography'});document.head.append(style);}style.textContent=':root{'+Object.entries(values).map(([k,v])=>k+':'+v+';').join('')+'}';
+  }
+  function renderTypographyEditor(root){
+    const config=data.typography;root.innerHTML='<div class="admin-panel"><h2>فونت و خوانایی سایت</h2><p>فونت کل سایت و بخش‌های مشخص را انتخاب کنید. استعداد و وزیرمتن داخل سایت هستند؛ Tahoma به فونت دستگاه وابسته است.</p><form id="typography-form" class="admin-form"></form></div>';
+    const form=$('#typography-form');
+    for(const [key,label]of [['body','متن اصلی سایت'],['headings','تیترها'],['navigation','هدر و منو'],['products','محصولات'],['content','متن‌ها و مقالات']]){
+      const select=el('select',{name:key});if(key!=='body')select.append(el('option',{value:'inherit'},'پیروی از فونت اصلی'));
+      for(const [id,name]of [['Vazirmatn','وزیرمتن'],['Estedad','استعداد'],['Tahoma','Tahoma (فونت دستگاه)']])select.append(el('option',{value:id},name));select.value=config[key];form.append(el('label',{},label,select));
+    }
+    form.insertAdjacentHTML('beforeend',`<div class="admin-form-grid"><label>اندازهٔ متن اصلی<input type="number" name="bodySize" min="13" max="19" step="1" value="${config.bodySize}"></label><label>ضخامت تیترها<select name="headingWeight">${[500,600,700,800].map(n=>`<option value="${n}" ${config.headingWeight===n?'selected':''}>${n}</option>`).join('')}</select></label></div><div id="typography-preview" class="notice"></div>${saveButton('ذخیرهٔ فونت‌ها')}`);
+    const read=()=>({...formValues(form),bodySize:Number(form.elements.bodySize.value),headingWeight:Number(form.elements.headingWeight.value)});
+    const preview=()=>{try{const c=typographyConfig(read());applyTypography(c);const box=$('#typography-preview');box.replaceChildren();for(const [key,label]of [['body','متن اصلی'],['headings','تیتر'],['navigation','منو'],['products','محصول'],['content','مقاله']]){const row=el('p',{},label+' — گروه آوا، نمایشگر LED و تلویزیون شهری ۱۲۳۴۵');row.style.fontFamily=fontFamilies[c[key]]||fontFamilies[c.body];row.style.fontSize=c.bodySize+'px';row.style.fontWeight=key==='headings'?c.headingWeight:400;box.append(row);}}catch{}};
+    watchForm(form);form.addEventListener('input',preview);form.addEventListener('change',preview);form.onsubmit=async event=>{event.preventDefault();const next=clone(data);try{next.typography=typographyConfig(read());await commit(next,'فونت‌ها ذخیره شدند.');}catch(error){toast(error.message,true);}};preview();
+  }
   function renderCompanyEditor(root){root.innerHTML='<div class="admin-panel"><form id="company-form" class="admin-form">'+field('معرفی شرکت؛ فقط اطلاعات قابل انتشار','description',companyDescription(),{max:2500,multiline:true,rows:6})+field('محدودهٔ خدمات تأییدشده؛ در صورت مشخص‌نبودن خالی بماند','serviceArea',data.company?.serviceArea||'',{max:200})+saveButton()+'</form></div><div class="notice">نام فارسی و انگلیسی از بخش هدر و تلفن و نشانی از بخش تماس با ما خوانده می‌شوند. سابقه، گواهی، پروژه یا شهر تأییدنشده وارد نکنید.</div>';const form=$('#company-form');watchForm(form);form.onsubmit=async event=>{event.preventDefault();const next=clone(data);next.company=formValues(form);await commit(next);};}
 
   function renderFooterEditor(root){const footer=data.footer;root.innerHTML='<div class="admin-panel"><form id="footer-form" class="admin-form">'+field('متن معرفی پایین سایت','text',footer.text,{max:1000,multiline:true})+field('متن حقوق و کپی‌رایت','copyright',footer.copyright,{max:1000})+saveButton()+'</form></div>';const form=$('#footer-form');watchForm(form);form.onsubmit=async event=>{event.preventDefault();const next=clone(data);next.footer=formValues(form);await commit(next);};}
@@ -2098,7 +2132,7 @@ h1,h2,h3{letter-spacing:0}
   }
   function validate(raw) {
     if (!isObject(raw) || raw.version !== 1 || !isObject(raw.header) || !isObject(raw.hero) || !isObject(raw.modules) || !isObject(raw.contact) || !Array.isArray(raw.navigation)) throw new Error('ساختار فایل پشتیبان معتبر نیست.');
-    const out = clone(seed);const company=raw.company||{};out.company={description:text(company.description||'',2500),serviceArea:text(company.serviceArea||'',200)};
+    const out = clone(seed);out.typography=typographyConfig(raw.typography||{});out.categoryRedirects=clone(raw.categoryRedirects||{});const company=raw.company||{};out.company={description:text(company.description||'',2500),serviceArea:text(company.serviceArea||'',200)};
     const footer=raw.footer||{text:'آوا؛ فروش و اجارهٔ نمایشگر.',copyright:''};out.footer={text:text(footer.text||'',1000),copyright:text(footer.copyright||'',1000)};out.pageSeo={};
     if(raw.pageSeo && !isObject(raw.pageSeo))throw new Error('سئو معتبر نیست.');for(const [key,value] of Object.entries(raw.pageSeo||{})){if(!/^\/(?:[a-zA-Z0-9_-]+\/?)*$/.test(key)||!isObject(value))throw new Error('صفحهٔ سئو معتبر نیست.');const seo={title:text(value.title||'',160),description:text(value.description||'',320)};
       for(const name of ['heading','intro'])if(value[name]!==undefined)seo[name]=text(value[name],name==='heading'?200:2500);
@@ -2145,6 +2179,8 @@ h1,h2,h3{letter-spacing:0}
       out.productCategories.push({id:'uncategorized',name:'دسته‌بندی‌نشده',description:'',visible:true,parentId:'',menu:false});
       categoryIds.add('uncategorized');
     }
+    if(!isObject(out.categoryRedirects)||Object.keys(out.categoryRedirects).length>100)throw new Error('تغییر مسیر دسته معتبر نیست.');
+    for(const [source,target]of Object.entries(out.categoryRedirects))if(!/^[A-Za-z0-9_-]{1,80}$/.test(source)||categoryIds.has(source)||!categoryIds.has(target))throw new Error('مقصد تغییر مسیر دسته معتبر نیست.');
     for (const category of out.productCategories) {
       if (!category.parentId) continue;
       const parent = out.productCategories.find(item => item.id === category.parentId);
@@ -2187,6 +2223,8 @@ h1,h2,h3{letter-spacing:0}
     out.hero.motionRevision = 2;
     out.hero.showMotionLogo = raw.hero.showMotionLogo !== false;
     out.hero.autoplay = true;
+    out.hero.transition=raw.hero.transition||'fade';out.hero.transitionDuration=raw.hero.transitionDuration??700;
+    if(!['slide','fade','cube','zoom','reveal'].includes(out.hero.transition)||!Number.isInteger(out.hero.transitionDuration)||out.hero.transitionDuration<150||out.hero.transitionDuration>2500)throw new Error('نوع یا مدت افکت هیرو معتبر نیست.');
     out.hero.interval = raw.hero.motionRevision === 2 && raw.hero.interval !== undefined ? Number(raw.hero.interval) : 2000;
     if (!Number.isInteger(out.hero.interval) || out.hero.interval < 1000 || out.hero.interval > 15000) throw new Error('زمان هر اسلاید باید بین ۱ تا ۱۵ ثانیه باشد.');
     const seen = new Set();
@@ -2725,6 +2763,7 @@ h1,h2,h3{letter-spacing:0}
   }
   function renderCatalogRoute() {
     const [name,id] = currentHash().slice(1).split('/');
+    if(name==='category'&&Object.hasOwn(data.categoryRedirects||{},id)){location.replace(serverMode?'/category/'+data.categoryRedirects[id]:'#category/'+data.categoryRedirects[id]);return;}
     const isCatalog = ['about','products','category','product','service','equipment'].includes(name);
     $('#home-content').hidden = isCatalog;$('#catalog-page').hidden = !isCatalog;
     if (!isCatalog) return false;
@@ -2841,7 +2880,7 @@ h1,h2,h3{letter-spacing:0}
       }
       if (time !== undefined) for(const animation of motionAnimations){animation.pause();animation.currentTime = time;}
     }
-    function canPlay() {return !disposed && count > 1 && !pointer && !reducedMotion.matches && inView && !document.hidden && !root.hidden && !$('#home-content').hidden && !$('#public-site').hidden;}
+    function canPlay() {return !disposed && count > 1 && !animations.length && !pointer && !reducedMotion.matches && inView && !document.hidden && !root.hidden && !$('#home-content').hidden && !$('#public-site').hidden;}
     function schedule() {
       stop();const playing = canPlay();
       if (playing && hasMotion && index === 0) refreshMotion();
@@ -2861,7 +2900,7 @@ h1,h2,h3{letter-spacing:0}
     }
     function normalize() {
       transitionVisit++;animations.forEach(animation => animation.cancel());animations = [];
-      nodes.forEach((node,number) => {node.style.transform = '';node.hidden = number !== index;node.inert = number !== index;node.setAttribute('aria-hidden',String(number !== index));});previewIndex = null;
+      nodes.forEach((node,number) => {node.style.transform = '';node.style.transformOrigin='';node.style.zIndex='';node.hidden = number !== index;node.inert = number !== index;node.setAttribute('aria-hidden',String(number !== index));});previewIndex = null;
     }
     async function go(nextIndex,direction,manual,offset = 0) {
       stop();normalize();
@@ -2875,9 +2914,14 @@ h1,h2,h3{letter-spacing:0}
       old.inert = true;old.setAttribute('aria-hidden','true');incoming.hidden = false;incoming.inert = false;incoming.setAttribute('aria-hidden','false');paint(manual);
       if (hasMotion && index === 0) refreshMotion(reducedMotion.matches ? 3500 : 0);
       if (reducedMotion.matches) {old.hidden = true;schedule();return;}
-      const visit = transitionVisit,width = viewport.clientWidth,options = {duration:500,easing:'cubic-bezier(.22,.7,.2,1)'};
-      animations = [old.animate([{transform:'translateX('+offset+'px)'},{transform:'translateX('+(-direction*100)+'%)'}],options),incoming.animate([{transform:'translateX('+(direction*width+offset)+'px)'},{transform:'translateX(0)'}],options)];
-      Promise.all(animations.map(animation => animation.finished)).then(() => {if(disposed || visit !== transitionVisit) return;old.hidden = true;animations = [];}).catch(() => {});
+      const visit = transitionVisit,width = viewport.clientWidth,options = {duration:hero.transitionDuration,easing:'cubic-bezier(.22,.7,.2,1)'};
+      let outgoing=[{transform:'translateX('+offset+'px)'},{transform:'translateX('+(-direction*100)+'%)'}],entering=[{transform:'translateX('+(direction*width+offset)+'px)'},{transform:'translateX(0)'}];
+      if(hero.transition==='fade'){outgoing=[{opacity:1},{opacity:0}];entering=[{opacity:0},{opacity:1}];}
+      else if(hero.transition==='zoom'){outgoing=[{opacity:1,transform:'scale(1)'},{opacity:0,transform:'scale(1.07)'}];entering=[{opacity:0,transform:'scale(1.06)'},{opacity:1,transform:'scale(1)'}];}
+      else if(hero.transition==='reveal'){outgoing=[{opacity:1},{opacity:1}];entering=[{clipPath:direction>0?'inset(0 0 0 100%)':'inset(0 100% 0 0)'},{clipPath:'inset(0 0 0 0)'}];incoming.style.zIndex='2';}
+      else if(hero.transition==='cube'){old.style.transformOrigin=incoming.style.transformOrigin='center';const cube=angle=>'perspective(1400px) translateZ('+(-width/2)+'px) rotateY('+angle+'deg) translateZ('+(width/2)+'px)';outgoing=[{opacity:1,transform:cube(0)},{opacity:.4,transform:cube(-direction*90)}];entering=[{opacity:.4,transform:cube(direction*90)},{opacity:1,transform:cube(0)}];}
+      animations = [old.animate(outgoing,options),incoming.animate(entering,options)];
+      Promise.all(animations.map(animation => animation.finished)).then(() => {if(disposed || visit !== transitionVisit) return;old.hidden = true;incoming.style.zIndex='';animations = [];schedule();}).catch(() => {});
       schedule();
     }
     previous.addEventListener('click',() => go((index+count-1)%count,-1,true),{signal});next.addEventListener('click',() => go((index+1)%count,1,true),{signal});
@@ -2933,6 +2977,7 @@ h1,h2,h3{letter-spacing:0}
     paint();
   }
   function renderPublic() {
+    applyTypography(data.typography);
     closeNavigationMenus();
     disposePageBanners();
     const h = data.header;
@@ -3117,7 +3162,7 @@ h1,h2,h3{letter-spacing:0}
   }
   function renderHeroEditor(root) {
     const h = data.hero;let slides = clone(h.slides);
-    root.innerHTML = `<div class="admin-panel"><form class="admin-form" id="hero-form"><h2>اسلایدر تمام‌صفحه</h2>${checkbox('نمایش هیرو در سایت','show',h.show)}${checkbox('نمایش موشن‌لوگوی آوا در آغاز؛ دو دور پخش','showMotionLogo',h.showMotionLogo !== false)}<div class="admin-form-grid"><label>زمان نمایش هر اسلاید (ثانیه)<input type="number" name="interval" min="1" max="15" step="1" value="${h.interval/1000}" required></label></div><small>موشن‌لوگو ابتدا دو دور، حدود ۱۴ ثانیه، پخش می‌شود؛ سپس عکس‌ها با زمان انتخابی به چپ حرکت می‌کنند. تصاویر اولیه مفهومی هستند و قابل تعویض‌اند.</small><div class="hero-editor-slides" id="hero-editor-slides"></div><div><button class="admin-button secondary" id="add-hero-slide" type="button">افزودن اسلاید</button></div>${saveButton('ذخیرهٔ اسلایدر')}</form></div>`;
+    root.innerHTML = `<div class="admin-panel"><form class="admin-form" id="hero-form"><h2>اسلایدر تمام‌صفحه</h2>${checkbox('نمایش هیرو در سایت','show',h.show)}${checkbox('نمایش موشن‌لوگوی آوا در آغاز؛ دو دور پخش','showMotionLogo',h.showMotionLogo !== false)}<div class="admin-form-grid"><label>زمان نمایش هر اسلاید (ثانیه)<input type="number" name="interval" min="1" max="15" step="1" value="${h.interval/1000}" required></label><label>افکت جابه‌جایی<select name="transition">${[['fade','محو نرم (Fade)'],['slide','حرکت افقی (Slide)'],['cube','مکعب سه‌بعدی (Cube)'],['zoom','زوم و محو'],['reveal','پرده‌ای (Reveal)']].map(([id,label])=>`<option value="${id}" ${h.transition===id?'selected':''}>${label}</option>`).join('')}</select></label><label>مدت انتقال (ثانیه)<input name="transitionDuration" type="number" min="0.15" max="2.5" step="0.05" value="${h.transitionDuration/1000}" required></label></div><small>زمان نمایش اسلاید، مکث بعد از پایان انتقال است. موشن‌لوگو ابتدا دو دور، حدود ۱۴ ثانیه، پخش می‌شود؛ سپس عکس‌ها با افکت و زمان انتخابی جابه‌جا می‌شوند. تصاویر اولیه مفهومی هستند و قابل تعویض‌اند.</small><div class="hero-editor-slides" id="hero-editor-slides"></div><div><button class="admin-button secondary" id="add-hero-slide" type="button">افزودن اسلاید</button></div>${saveButton('ذخیرهٔ اسلایدر')}</form></div>`;
     const form = $('#hero-form');watchForm(form);
     const textFields = ['title','imageAlt','clickUrl'];
     function collect() {
@@ -3152,7 +3197,7 @@ h1,h2,h3{letter-spacing:0}
       $('#add-hero-slide').disabled = slides.length >= 8;
     }
     $('#add-hero-slide').addEventListener('click',() => {if(slides.length >= 8) return;collect();slides.push({...clone(seed.hero.slides[0]),id:'slide-' + (typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : Date.now()),title:'اسلاید تازه',highlight:'',image:'',categoryId:'',clickUrl:'',linkEnabled:true});markDirty();paint();const last = $('.hero-editor-slide:last-child',form);last.open = true;last.scrollIntoView({block:'center',behavior:'instant'});});
-    form.addEventListener('submit',async event => {event.preventDefault();collect();const next = clone(data);next.hero.slides = slides;next.hero.show = form.elements.show.checked;next.hero.showMotionLogo = form.elements.showMotionLogo.checked;next.hero.autoplay = true;next.hero.interval = Number(form.elements.interval.value)*1000;for (const key of ['eyebrow','title','highlight','description','image','imageAlt','primaryLabel','primaryTarget','secondaryLabel','secondaryTarget']) next.hero[key] = slides[0][key];if(await commit(next,'اسلایدر ذخیره شد.')) {slides = clone(data.hero.slides);paint();}});
+    form.addEventListener('submit',async event => {event.preventDefault();collect();const next = clone(data);next.hero.slides = slides;next.hero.show = form.elements.show.checked;next.hero.showMotionLogo = form.elements.showMotionLogo.checked;next.hero.autoplay = true;next.hero.interval = Number(form.elements.interval.value)*1000;next.hero.transition=form.elements.transition.value;next.hero.transitionDuration=Math.round(Number(form.elements.transitionDuration.value)*1000);for (const key of ['eyebrow','title','highlight','description','image','imageAlt','primaryLabel','primaryTarget','secondaryLabel','secondaryTarget']) next.hero[key] = slides[0][key];if(await commit(next,'اسلایدر ذخیره شد.')) {slides = clone(data.hero.slides);paint();}});
     paint();
   }
   function renderNavigationEditor(root) {
@@ -3302,13 +3347,14 @@ h1,h2,h3{letter-spacing:0}
     });
   }
   function renderPage(page) {
-    currentPage = page;dirty = false;
+    currentPage = page;dirty = false;applyTypography(data.typography);
     $('#admin-page-title').textContent = TITLES[page] || data.modules[page]?.name || 'پیشخوان';
     $('#admin-page-description').textContent = DESCRIPTIONS[page] || (page === 'contact' ? 'شمارهٔ تماس، ایمیل، نشانی و متن بخش ارتباط با آوا.' : 'مشخصات بخش و محتوای آن را مدیریت کن؛ فقط محتوای منتشرشده در سایت دیده می‌شود.');
     $('#save-state').textContent = persistence ? 'آمادهٔ ویرایش' : 'ذخیرهٔ موقت؛ خروجی بگیر';
     renderSidebar();refreshRequestSummary();
     const root = $('#admin-content');
     if (page === 'dashboard') renderDashboard(root);
+    else if (page === 'typography') renderTypographyEditor(root);
     else if (page === 'header') renderHeaderEditor(root);
     else if (page === 'hero') renderHeroEditor(root);
     else if (page === 'navigation') renderNavigationEditor(root);

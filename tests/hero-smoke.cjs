@@ -4,7 +4,7 @@ const fs=require('node:fs'),path=require('node:path'),http=require('node:http');
 const root=path.resolve(__dirname,'..');
 const seed=JSON.parse(fs.readFileSync(path.join(root,'src/defaults.json'),'utf8'));
 // Exercise photo editing/timing separately from the 14-second logo introduction.
-seed.hero.showMotionLogo=false;
+seed.hero.showMotionLogo=false;seed.hero.transition='slide';seed.hero.transitionDuration=500;
 (async()=>{
  const html=fs.readFileSync(path.join(root,'index.html'),'utf8').replace(/(<script id="ava-initial-data" type="application\/json">)[\s\S]*?(<\/script>)/,(_,open,close)=>open+JSON.stringify(seed).replace(/</g,'\\u003c')+close);
  const server=http.createServer((q,r)=>{r.writeHead(200,{'Content-Type':'text/html;charset=utf-8'});r.end(html);});
@@ -19,13 +19,13 @@ seed.hero.showMotionLogo=false;
   await page.locator('.hero-scene').evaluateAll(images=>Promise.all(images.map(i=>i.decode())));assert(await page.locator('.hero-scene').evaluateAll(images=>images.every(i=>i.complete&&i.naturalWidth>=1600&&i.src.startsWith('data:image/webp;base64,'))));
   await page.mouse.move(500,450);
   await page.evaluate(()=>{window.heroChanges=[];let previous=document.querySelector('.hero-slide[aria-hidden=false] img').alt;new MutationObserver(()=>{const active=document.querySelector('.hero-slide[aria-hidden=false]');const alt=active.querySelector('img').alt;if(alt!==previous){previous=alt;window.heroChanges.push({alt,time:performance.now()});}}).observe(document.querySelector('#hero-viewport'),{subtree:true,attributes:true,attributeFilter:['aria-hidden']});});
-  await page.waitForFunction(()=>window.heroChanges.length>=6,{},{timeout:14000});
-  const changes=await page.evaluate(()=>window.heroChanges);for(let i=1;i<6;i++){const delta=changes[i].time-changes[i-1].time;assert(delta>1850&&delta<2200,`cadence ${delta}ms`);}
+  await page.waitForFunction(()=>window.heroChanges.length>=6,{},{timeout:19000});
+  const changes=await page.evaluate(()=>window.heroChanges);for(let i=1;i<6;i++){const delta=changes[i].time-changes[i-1].time;assert(delta>2350&&delta<2900,`cadence ${delta}ms`);}
   assert.equal(changes[0].alt,changes[5].alt);
   // The outgoing image always moves left, including the final-to-first wrap.
   const frames=await page.locator('.hero-slide').evaluateAll(nodes=>nodes.flatMap(n=>n.getAnimations().map(a=>a.effect.getKeyframes().map(f=>f.transform))));
   if(frames.length)assert(frames.some(f=>f.includes('translateX(-100%)')));
-  console.log('PASS image-only hero, embedded high-resolution media, two-second cadence while hovered, left transitions and looping');
+  console.log('PASS image-only hero, embedded high-resolution media, two-second dwell plus transition while hovered, left transitions and looping');
 
   await page.goto(base+'#admin/hero');assert.equal(await page.locator('#hero-form [name=interval]').inputValue(),'2');assert.equal(await page.locator('#hero-form [name=interval]').getAttribute('min'),'1');
   const rows=page.locator('.hero-editor-slide');await rows.first().locator('[name=title]').fill('عکس سفارشی آوا');await rows.first().locator('[data-slide-image]').setInputFiles(path.join(root,'src/assets/hero-film.webp'));await page.locator('#hero-form [type=submit]').click();

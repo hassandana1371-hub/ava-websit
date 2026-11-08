@@ -16,12 +16,12 @@ const root=path.resolve(__dirname,'..');
   await page.waitForFunction(()=>{const f=document.querySelector('.hero-motion-frame');return f.contentDocument.querySelector('.stage').getAnimations()[0].effect.getComputedTiming().currentIteration===1;},{},{timeout:9000});
   assert.equal(await page.locator('.hero-motion-slide').getAttribute('aria-hidden'),'false');
   await page.waitForFunction(()=>document.querySelector('.hero-slide[aria-hidden=false] img')?.alt.includes('نمایشگر LED بزرگ'),{},{timeout:9000});
-  await page.waitForTimeout(700);assert.equal(await page.locator('.hero-slide:visible').count(),1);
-  await page.waitForFunction(()=>document.querySelector('.hero-slide[aria-hidden=false] img')?.alt.includes('فیلم LED شفاف'),{},{timeout:2500});
-  console.log('PASS original SVG plays two real 7-second loops, then transitions to photos with their 2-second interval');
+  await page.waitForFunction(()=>[...document.querySelectorAll('.hero-slide')].filter(n=>!n.hidden).length===1,{},{timeout:1500});assert.equal(await page.locator('.hero-slide:visible').count(),1);
+  await page.waitForFunction(()=>document.querySelector('.hero-slide[aria-hidden=false] img')?.alt.includes('فیلم LED شفاف'),{},{timeout:3500});
+  console.log('PASS original SVG plays two real 7-second loops, then transitions to photos with their two-second dwell after each transition');
   // Four remaining photos need eight seconds plus image decode/scheduling time.
   // Return to the logo after the full photo sequence; its animation must restart.
-  await page.waitForFunction(()=>document.querySelector('.hero-motion-slide').getAttribute('aria-hidden')==='false',{},{timeout:11000});
+  await page.waitForFunction(()=>document.querySelector('.hero-motion-slide').getAttribute('aria-hidden')==='false',{},{timeout:14000});
   await page.waitForFunction(()=>document.querySelector('.hero-motion-frame').contentDocument.querySelector('.stage').getAnimations()[0].playState==='running');const restarted=await frame.evaluate(f=>f.contentDocument.querySelector('.stage').getAnimations()[0].currentTime);assert(restarted<1000);
   console.log('PASS carousel returns to the logo and restarts its two-iteration animation');
 

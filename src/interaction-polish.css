@@ -74,3 +74,12 @@ h1,h2,h3{letter-spacing:0}
 @media(max-width:600px){.main-navigation>a,.products-menu-trigger,.services-menu-trigger,.partners-menu-trigger{font-size:9px}.brand-motto p{font-size:8px}.catalog-banner .catalog-heading h1{font-size:32px}.product-price-label{font-size:9px}.product-image-caption{font-size:8px}.product-card .product-price-block{padding:12px 0 15px}.product-card-link{font-size:10px}.product-card-media[data-image-style=datasheet] img{padding:6px}}
 @media(max-width:350px){.product-grid,.catalog-layout .product-grid{grid-template-columns:1fr}.product-card-media{height:220px}.product-card-content{padding:20px}.product-card h3{font-size:16px}.product-card p{font-size:12px}}
 @media(prefers-reduced-motion:reduce){::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none!important}.product-card,.product-card-media img{transition:none}}
+
+/* Public typography scopes; names/values are chosen from embedded font allowlists. */
+body{font-size:var(--ava-body-size,15px)}
+#public-site h1,#public-site h2,#public-site h3,#ava-seo-content h1,#ava-seo-content h2{font-family:var(--ava-heading-font,'Estedad');font-weight:var(--ava-heading-weight,700)}
+#public-site .site-header,#public-site .site-header button,#public-site .site-header .ava-wordmark small{font-family:var(--ava-nav-font,var(--font-fa))}
+#public-site .product-card,#public-site .product-introduction,#public-site .product-tab-panels{font-family:var(--ava-product-font,var(--font-fa))}
+#public-site .product-card h3,#public-site .product-introduction h1{font-family:var(--ava-product-heading,var(--ava-heading-font,'Estedad'))}
+#public-site .search-copy,#public-site .managed-card,#public-site #contact{font-family:var(--ava-content-font,var(--font-fa))}
+.hero-slide{backface-visibility:hidden}

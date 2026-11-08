@@ -1,0 +1,12 @@
+{
+  "moved_indoor": 28,
+  "moved_outdoor": 24,
+  "moved_flexible": 7,
+  "angled": 16,
+  "base_prices": 212,
+  "option_prices": 172,
+  "unclassified": [],
+  "applied": true,
+  "already_applied": false,
+  "backup": "ava-before-v35-20261108T204305954137Z.sqlite3"
+}
