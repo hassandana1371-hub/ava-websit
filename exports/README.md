@@ -1,3 +1,13 @@
+# سایت آوا ـ نسخهٔ تست ۳۴
+
+۲۷۳ ردیف کاتالوگ در نسخهٔ تست به ۲۴ محصول سورس افزوده شد؛ جمع ۲۹۷. ورود تکرارپذیر با externalId و سابقهٔ حذف، حفظ قیمت/عکس مدیر، قیمت تومانی با واحد و گزینه‌های افزودهٔ جدا. [گزارش و راهنمای بازبینی](../IMPORT-PRODUCTS-v34-fa.md).
+
+این نسخه روی شاخهٔ بازبینی است؛ روی سرور اصلی نصب نشده و main ادغام نشده است. دیتابیس، عکس‌های موجود و انبار جایگزین نشوند. ۷۵ قیمت نیازمند بررسی و ۱۱ مورد بدون عکس اختصاصی، با هم‌پوشانی در ۷۸ محصول: [فهرست بررسی](../catalog-import34/review-needed.csv).
+
+- [پیش‌نمایش محصولات ۳۴](https://github.com/hassandana1371-hub/ava-websit/raw/refs/heads/review/catalog-import-v34/exports/ava-site-v34-products-review.zip)
+- [بستهٔ کامل تست ۳۴](https://github.com/hassandana1371-hub/ava-websit/raw/refs/heads/review/catalog-import-v34/exports/ava-site-v34-complete.zip)
+- [فایل‌های به‌روزرسانی و ورود](https://github.com/hassandana1371-hub/ava-websit/raw/refs/heads/review/catalog-import-v34/exports/ava-site-v34-server-update.zip)
+
 # سایت آوا ـ نسخهٔ ۳۳
 
 بنرهای هیرو و صفحات بدون فشرده‌سازی مجدد ذخیره می‌شوند؛ عکس بعدی پیش از حرکت آمادهٔ نمایش می‌شود. اصلاح سبک‌سازی و ورود نسخهٔ ۳۲ هم در این بسته است. [راهنمای نصب و کیفیت بنر](UPDATE-v33-fa.md).

@@ -118,3 +118,8 @@
 @media(max-width:600px){.products-menu-trigger{min-height:36px;font-size:9px;gap:3px;padding:6px 2px}.dropdown-chevron{font-size:14px}.products-dropdown{top:calc(100% + 5px)}.admin-sidebar a.sidebar-subitem{padding-right:11px}.catalog-breadcrumbs{font-size:9px;gap:7px;margin-bottom:22px}.product-category-label{font-size:9px}.product-card-content{padding:13px}.product-card-media{height:140px}.product-card h3{font-size:12px}.product-no-image>span{font-size:42px}.category-overview{grid-template-columns:repeat(2,minmax(0,1fr))}.category-overview-card:last-child:nth-child(odd){grid-column:1 / -1}.product-introduction h1{font-size:27px}.product-summary{font-size:12px}.product-tabs button{font-size:10px}.product-tab-panels h2{font-size:18px}.product-main-actions .button{font-size:10px}.product-specifications{table-layout:fixed}.all-products-link{font-size:11px}}
 @media(max-width:600px){.products-dropdown{padding:9px;width:350px}.product-category-row>a{font-size:11px;padding:10px 8px}.products-submenu a.product-subcategory-link{font-size:11px}.subcategory-toggle{width:33px}.admin-entry.admin-subcategory{margin-right:12px}}
 @media(max-width:600px){.product-category-row>.category-expand-trigger{font-size:12px;padding:10px 8px}}
+
+/* Optional charges are separate from the base quote. */
+.product-price-options{margin:20px 0;padding:18px;border:1px solid #dce4ef;border-radius:12px;background:#f7f9fc;line-height:1.9}
+.product-price-options h2{font-size:16px;margin:0 0 6px}.product-price-options p{font-size:12px;color:#586779;margin:0 0 8px}
+.product-price-options ul{padding-inline-start:20px;margin:0;display:grid;gap:6px;font-size:14px;overflow-wrap:anywhere}

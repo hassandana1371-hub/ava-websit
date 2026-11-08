@@ -231,6 +231,16 @@ def product_price_text(item):
     label='قیمت فروش' if item.get('priceKind')=='sale' else 'قیمت مرجع'
     return label+' '+item.get('priceUnit','هر ماژول')+': '+number+' تومان'
 
+def price_options_html(item):
+    options=item.get('priceOptions',[])
+    if not options:return ''
+    out='<section class="product-price-options"><h2>گزینه‌های افزوده</h2><p>این مبالغ جدا هستند و به قیمت پایه اضافه نشده‌اند.</p><ul>'
+    for option in options:
+        amount=option.get('priceAmount')
+        text='استعلام قیمت' if amount is None else f"{amount:,}".translate(str.maketrans('0123456789,','۰۱۲۳۴۵۶۷۸۹٬'))+' تومان · '+option['priceUnit']
+        out+='<li>'+html.escape(option['name'])+' — '+html.escape(text)+'</li>'
+    return out+'</ul></section>'
+
 def catalogue_html(data,path,page):
     items=catalogue_products(data,path,page)
     if not items:return ''
@@ -315,6 +325,7 @@ def seo_html(data,path,origin):
     if p.get('body') and path not in ['/contact','/about']:body+='<div style="white-space:pre-line">'+esc(p['body'])+'</div>'
     if p.get('product'):
         body+='<p>'+esc(product_price_text(p['item']))+'</p>'
+        body+=price_options_html(p['item'])
         if p['item'].get('priceDate') and p['item'].get('priceKind')!='quote' and p['item'].get('priceAmount') is not None:body+='<p>تاریخ قیمت ثبت‌شده: <bdi dir="ltr">'+esc(p['item']['priceDate'])+'</bdi></p>'
     specs=''.join('<tr><th>'+esc(s['label'])+'</th><td>'+esc(s['value'])+'</td></tr>' for s in p.get('specs',[]))
     if specs:body+='<h2>مشخصات فنی</h2><table>'+specs+'</table>'

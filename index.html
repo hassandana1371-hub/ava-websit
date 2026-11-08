@@ -2,7 +2,7 @@
 <html lang="fa" dir="rtl">
 <head>
 <meta name="ava-media-mode" content="references">
-<meta name="ava-site-release" content="33">
+<meta name="ava-site-release" content="34">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#10172b">
@@ -628,6 +628,11 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
 @media(max-width:600px){.products-dropdown{padding:9px;width:350px}.product-category-row>a{font-size:11px;padding:10px 8px}.products-submenu a.product-subcategory-link{font-size:11px}.subcategory-toggle{width:33px}.admin-entry.admin-subcategory{margin-right:12px}}
 @media(max-width:600px){.product-category-row>.category-expand-trigger{font-size:12px;padding:10px 8px}}
 
+/* Optional charges are separate from the base quote. */
+.product-price-options{margin:20px 0;padding:18px;border:1px solid #dce4ef;border-radius:12px;background:#f7f9fc;line-height:1.9}
+.product-price-options h2{font-size:16px;margin:0 0 6px}.product-price-options p{font-size:12px;color:#586779;margin:0 0 8px}
+.product-price-options ul{padding-inline-start:20px;margin:0;display:grid;gap:6px;font-size:14px;overflow-wrap:anywhere}
+
 .services-nav-item{position:relative;min-width:0}
 .services-menu-trigger{position:relative;width:100%;height:100%;min-height:46px;display:flex;align-items:center;justify-content:center;gap:9px;padding:8px 12px;border:0;background:transparent;color:#52617d;font-size:12px;white-space:nowrap}
 .services-menu-trigger:hover,.services-menu-trigger[aria-expanded=true]{background:#edf1ff;color:#405de0}
@@ -1219,6 +1224,7 @@ h1,h2,h3{letter-spacing:0}
       <label class="checkbox"><input name="featured" type="checkbox">نمایش در محصولات منتخب صفحهٔ اصلی</label>
       <div class="admin-form-grid"><label>نوع نمایش قیمت<select name="priceKind"><option value="quote">استعلام قیمت</option><option value="reference">قیمت مرجع</option><option value="sale">قیمت فروش</option></select></label><label>مبلغ به تومان<input name="priceAmount" type="number" min="0" max="9000000000000" step="1" placeholder="مثلاً 4791000"></label></div>
       <div class="admin-form-grid"><label>مبنای قیمت<input name="priceUnit" maxlength="80" placeholder="هر ماژول"></label><label>تاریخ قیمت<input name="priceDate" type="date"></label></div>
+      <label>گزینه‌های افزوده؛ جدا از قیمت پایه<textarea name="priceOptions" rows="3" maxlength="10000" placeholder="GOB | 30000000 | هر عدد"></textarea><small>هر خط: نام | مبلغ تومان | واحد. برای استعلام، مبلغ را خالی بگذارید. برای حذف گزینه، خط آن را پاک کنید.</small></label>
       <label>برچسب عکس<input name="imageCaption" maxlength="200" placeholder="مثلاً تصویر مرجع؛ برای عکس تأییدشده خالی بگذارید"></label>
     </div>
     <details><summary>تنظیمات سئو</summary><label>عنوان سئو<input name="seoTitle" maxlength="160"></label><label>توضیحات سئو<textarea name="seoDescription" maxlength="320"></textarea></label></details>
@@ -2218,6 +2224,10 @@ h1,h2,h3{letter-spacing:0}
         if (item.banner) result.banner = validateBanner(item.banner);
         if (key === 'products') {
           if (item.categoryId !== undefined && !categoryIds.has(item.categoryId)) throw new Error('دستهٔ یکی از محصولات وجود ندارد.');
+          result.externalId=text(item.externalId||'',120);
+          if(result.externalId&&!/^[A-Za-z0-9:_-]+$/.test(result.externalId))throw new Error('شناسهٔ ورود محصول معتبر نیست.');
+          if(!Array.isArray(item.priceOptions||[])||(item.priceOptions||[]).length>30)throw new Error('حداکثر ۳۰ گزینهٔ قیمت افزوده مجاز است.');
+          result.priceOptions=(item.priceOptions||[]).map(option=>{if(!isObject(option))throw new Error('گزینهٔ قیمت معتبر نیست.');const name=text(option.name,120).trim(),priceUnit=text(option.priceUnit,80).trim(),priceAmount=option.priceAmount??null;if(!name||(priceAmount!==null&&(!Number.isSafeInteger(priceAmount)||priceAmount<0||priceAmount>9000000000000||!priceUnit)))throw new Error('مبلغ یا واحد گزینهٔ افزوده معتبر نیست.');return {name,priceAmount,priceUnit};});
           result.categoryId = item.categoryId || 'uncategorized';
           result.model = text(item.model || '',120);
           result.featured = item.featured === undefined ? true : item.featured === true;
@@ -2667,6 +2677,7 @@ h1,h2,h3{letter-spacing:0}
     if (item.model) info.append(el('p',{class:'product-model',dir:'auto'},item.model));
     info.append(el('p',{class:'product-summary'},item.summary));
     info.append(productPrice(item));
+    if(item.priceOptions?.length){const options=el('section',{class:'product-price-options'},el('h2',{},'گزینه‌های افزوده'),el('p',{},'این مبالغ جدا هستند و به قیمت پایه اضافه نشده‌اند.'));options.append(el('ul',{},item.priceOptions.map(option=>el('li',{},el('strong',{},option.name+' — '),option.priceAmount===null?'استعلام قیمت':option.priceAmount.toLocaleString('fa-IR')+' تومان · '+option.priceUnit))));info.append(options);}
     if (item.priceKind === 'reference' && item.priceAmount !== null) info.append(el('p',{class:'product-price-note'},'قیمت مرجع ' + item.priceUnit + '؛ هزینهٔ حمل، واردات و مالیات در آن لحاظ نشده است. قیمت نهایی را استعلام کنید.'));
     if (item.priceDate) info.append(el('p',{class:'product-price-date'},'تاریخ لیست قیمت: ' + item.priceDate.replace(/\d/g,n => '۰۱۲۳۴۵۶۷۸۹'[n])));
     if (item.meta) info.append(el('p',{class:'product-extra'},item.meta));
@@ -3230,6 +3241,7 @@ h1,h2,h3{letter-spacing:0}
     form.elements.priceKind.value = item?.priceKind || 'quote';
     form.elements.priceUnit.value = item?.priceUnit || 'هر ماژول';
     form.elements.priceDate.value = item?.priceDate || '';
+    form.elements.priceOptions.value=(item?.priceOptions||[]).map(o=>[o.name,o.priceAmount??'',o.priceUnit].join(' | ')).join('\n');
     form.elements.imageCaption.value = item?.imageCaption || '';
     form.elements.featured.checked = item?.featured === true;
     form.elements.specifications.value = (item?.specifications || []).map(spec => spec.label + ': ' + spec.value).join('\n');
@@ -3392,6 +3404,13 @@ h1,h2,h3{letter-spacing:0}
     event.preventDefault();const values = formValues(event.currentTarget);
     const item = {id:values.id || (typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : 'entry-' + Date.now() + '-' + Math.random().toString(36).slice(2,9)),title:values.title.trim(),summary:values.summary,body:values.body,meta:values.meta,url:values.url.trim(),status:values.status,seoTitle:values.seoTitle,seoDescription:values.seoDescription,image:entryImage,...(editingModule==='projects'?{gallery:clone(entryGallery)}:{}),imageAsset:entryImageAsset,banner:entryBannerEditor.read(),file:['catalog','products'].includes(editingModule) ? entryFile : '',fileName:['catalog','products'].includes(editingModule) ? values.fileName : ''};
     if (editingModule === 'products') {
+      const original=data.modules.products.items.find(p=>p.id===item.id);item.externalId=original?.externalId||'';
+      item.priceOptions=[];
+      for(const line of values.priceOptions.split('\n').map(x=>x.trim()).filter(Boolean)){
+        const parts=line.split('|').map(x=>x.trim());if(parts.length!==3){$('#entry-error').textContent='گزینهٔ افزوده را به شکل نام | مبلغ تومان | واحد بنویسید.';return;}
+        const normalized=parts[1].replace(/[۰-۹]/g,n=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(n)).replace(/[٠-٩]/g,n=>'٠١٢٣٤٥٦٧٨٩'.indexOf(n)).replace(/[,،٬\s]/g,'');
+        const amount=normalized===''?null:Number(normalized);if(!parts[0]||(amount!==null&&(!/^\d+$/.test(normalized)||!Number.isSafeInteger(amount)||!parts[2]))){$('#entry-error').textContent='نام، مبلغ و واحد گزینهٔ افزوده را بررسی کنید.';return;}item.priceOptions.push({name:parts[0],priceAmount:amount,priceUnit:parts[2]});
+      }
       const specifications = [];
       for (const line of values.specifications.split('\n').map(line => line.trim()).filter(Boolean)) {
         const separator = line.indexOf(':');

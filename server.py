@@ -191,7 +191,7 @@ def validate_content(data):
         if 'visible' in module and type(module['visible']) is not bool:raise ValueError('وضعیت نمایش بخش معتبر نیست.')
         if key == 'products':
             banner(module.get('banner'))
-        seen = set()
+        seen = set();external_ids=set()
         for item in module['items']:
             if not isinstance(item, dict) or not re.fullmatch(r'[A-Za-z0-9_-]{1,80}', str(item.get('id', ''))) or item['id'] in seen or item.get('status') not in ['draft', 'published']:
                 raise ValueError('شناسه یا وضعیت محتوا معتبر نیست.')
@@ -212,6 +212,16 @@ def validate_content(data):
             if item.get('banner') is not None:
                 banner(item['banner'])
             if key == 'products':
+                external=item.get('externalId','')
+                if not isinstance(external,str) or (external and (not re.fullmatch(r'[A-Za-z0-9:_-]{1,120}',external) or external in external_ids)):raise ValueError('شناسهٔ ورود محصول معتبر یا یکتا نیست.')
+                if external:external_ids.add(external)
+                options=item.get('priceOptions',[])
+                if not isinstance(options,list) or len(options)>30:raise ValueError('گزینه‌های افزودهٔ قیمت معتبر نیست.')
+                for option in options:
+                    if not isinstance(option,dict):raise ValueError('گزینهٔ قیمت معتبر نیست.')
+                    string(option.get('name'),120);string(option.get('priceUnit'),80)
+                    amount=option.get('priceAmount')
+                    if not option['name'].strip() or (amount is not None and (type(amount) is not int or not 0<=amount<=9000000000000 or not option['priceUnit'].strip())):raise ValueError('مبلغ یا واحد گزینهٔ افزوده معتبر نیست.')
                 price = item.get('priceAmount')
                 if price is not None and (type(price) is not int or not 0 <= price <= 9000000000000):
                     raise ValueError('قیمت محصول معتبر نیست.')
@@ -516,7 +526,16 @@ class Handler(BaseHTTPRequestHandler):
                     return self.reply(409, {'error':'محتوا در دستگاه دیگری تغییر کرده است. از فرم فعلی کپی بگیرید و صفحه را تازه کنید.'})
                 try:
                     snapshot=site_features.content_snapshot(db,public_content,str(DB.resolve()))
-                    content = validate_content(site_features.restore_media_references(payload.get('data'),snapshot))
+                    candidate=site_features.restore_media_references(payload.get('data'),snapshot)
+                    if isinstance(candidate,dict) and isinstance(candidate.get('modules'),dict) and isinstance(candidate['modules'].get('products'),dict) and isinstance(candidate['modules']['products'].get('items'),list):
+                        existing={p['id']:p for p in snapshot['raw']['modules']['products']['items']}
+                        for product in candidate['modules']['products'].get('items',[]):
+                            old=existing.get(product.get('id')) if isinstance(product,dict) else None
+                            if old:
+                                if old.get('externalId') and product.get('externalId',old['externalId'])!=old['externalId']:raise ValueError('شناسهٔ ورود محصول قابل تغییر نیست.')
+                                for field in ['externalId','priceOptions']:
+                                    if field not in product and field in old:product[field]=copy.deepcopy(old[field])
+                    content = validate_content(candidate)
                 except (ValueError, TypeError, KeyError) as error:
                     return self.reply(400, {'error':str(error)})
                 revision = row['revision']+1
