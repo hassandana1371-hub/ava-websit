@@ -15,3 +15,5 @@
 @media(max-width:1000px){.partners-menu-trigger{font-size:11px;padding:8px 4px}}
 @media(max-width:700px){.equipment-list{grid-template-columns:repeat(2,minmax(0,1fr));padding:25px 5% 50px;gap:15px}.equipment-list .card{padding:22px}.equipment-list h3{font-size:15px}.equipment-list .card p{font-size:11px}}
 @media(max-width:600px){.partners-menu-trigger{min-height:36px;font-size:10px;gap:3px;padding:6px 2px}.partners-dropdown{top:calc(100% + 5px);padding:9px}.partners-dropdown>.equipment-category-trigger{font-size:12px}.equipment-submenu a{font-size:11px;padding:10px}.equipment-list{grid-template-columns:1fr}}
+
+.partner-products{padding-block:32px}.partner-category-overview{margin-block:25px}.partner-category-overview .category-overview-card{min-height:105px}.partner-products .catalog-tools{margin-bottom:15px}.partner-products h2{margin-bottom:18px}

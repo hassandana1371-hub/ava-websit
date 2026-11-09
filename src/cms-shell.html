@@ -24,6 +24,7 @@
       <p class="sidebar-label">محتوای سایت</p>
       <div id="module-sidebar"></div>
       <p class="sidebar-label">نگهداری</p>
+      <a href="#admin/partner-products" data-page="partner-products">محصولات همکاران</a>
       <a href="#admin/backup" data-page="backup"><span aria-hidden="true">⇩</span>نسخهٔ پشتیبان و خروجی</a>
       <p class="sidebar-note">تغییرات این نسخه در همین مرورگر ذخیره می‌شوند. برای انتقال، خروجی بگیر.</p>
     </aside>
@@ -41,6 +42,7 @@
     <label>عنوان<input name="title" maxlength="160" required placeholder="عنوان محتوا را بنویسید"></label>
     <div id="product-entry-fields" hidden>
       <div class="admin-form-grid"><label>دستهٔ محصول<select name="categoryId" id="entry-category"></select></label><label>مدل یا کد محصول<input name="model" maxlength="120" dir="ltr" placeholder="مدل محصول"></label></div>
+      <label>دسته در بخش همکاران<select name="partnerCategoryId"></select><small>محصول مشترک است؛ قیمت و عکس از همین رکورد استفاده می‌شود.</small></label>
       <label class="checkbox"><input name="featured" type="checkbox">نمایش در محصولات منتخب صفحهٔ اصلی</label>
       <div class="admin-form-grid"><label>نوع نمایش قیمت<select name="priceKind"><option value="quote">استعلام قیمت</option><option value="reference">قیمت مرجع</option><option value="sale">قیمت فروش</option></select></label><label>مبلغ به تومان<input name="priceAmount" type="number" min="0" max="9000000000000" step="1" placeholder="مثلاً 4791000"></label></div>
       <div class="admin-form-grid"><label>مبنای قیمت<input name="priceUnit" maxlength="80" placeholder="هر ماژول"></label><label>تاریخ قیمت<input name="priceDate" type="date"></label></div>

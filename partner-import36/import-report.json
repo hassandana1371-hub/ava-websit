@@ -1,0 +1,44 @@
+{
+  "input": 42,
+  "inserted": 0,
+  "linked": 42,
+  "skipped_deleted": 0,
+  "preserved_prices": 42,
+  "price_adjusted": 0,
+  "canonical_names_corrected": 1,
+  "unit_review": 41,
+  "backup": "ava-before-partners36-20261109T151336732472Z.sqlite3",
+  "applied": true,
+  "total_products": 297,
+  "categories": {
+    "مگنت": 0,
+    "پاور": 10,
+    "ریسیور": 6,
+    "سندر": 7,
+    "پروسسور": 19
+  },
+  "environment": "local-test-only",
+  "needs_model_review": [
+    "ava-led-catalog:ava-51-07"
+  ],
+  "repeat": {
+    "input": 42,
+    "inserted": 0,
+    "linked": 42,
+    "skipped_deleted": 0,
+    "preserved_prices": 42,
+    "price_adjusted": 0,
+    "canonical_names_corrected": 0,
+    "unit_review": 41,
+    "backup": "ava-before-partners36-20261109T152738202701Z.sqlite3",
+    "applied": true,
+    "total_products": 297,
+    "categories": {
+      "مگنت": 0,
+      "پاور": 10,
+      "ریسیور": 6,
+      "سندر": 7,
+      "پروسسور": 19
+    }
+  }
+}

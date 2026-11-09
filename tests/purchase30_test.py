@@ -70,7 +70,7 @@ class PurchaseTests(unittest.TestCase):
             self.assertEqual(tuple(db.execute('SELECT * FROM account').fetchone()),account)
 
     def test_public_audit_tool_checks_real_http_pages_without_authentication(self):
-        result=subprocess.run(['python3',str(Path(__file__).resolve().parents[1]/'tools/check_seo.py'),'--origin',self.server.origin,'--expect-release','35'],capture_output=True,text=True,timeout=40)
+        result=subprocess.run(['python3',str(Path(__file__).resolve().parents[1]/'tools/check_seo.py'),'--origin',self.server.origin,'--expect-release','36'],capture_output=True,text=True,timeout=40)
         self.assertEqual(result.returncode,0,result.stdout+result.stderr)
         report=json.loads(result.stdout)
         self.assertEqual(report['issues'],[])

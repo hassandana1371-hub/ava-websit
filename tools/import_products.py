@@ -117,6 +117,8 @@ def import_catalog(database,package,apply=False,backup_dir=None,source_json=None
   has_ledger=db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='product_import_sources'").fetchone()
   ledger={r['external_id']:r['product_id'] for r in db.execute('SELECT external_id,product_id FROM product_import_sources')} if has_ledger else {}
   categories={c['id'] for c in data['productCategories']};images={};now=dt.datetime.now(dt.timezone.utc).isoformat()
+  from tools.refine_products35 import KEY as PRICE35,rental_branch
+  adjustments=db.execute("SELECT 1 FROM sqlite_master WHERE name='catalog_adjustments'").fetchone();markup_done=bool(adjustments and db.execute('SELECT 1 FROM catalog_adjustments WHERE key=?',(PRICE35,)).fetchone())
   for product in manifest['products']:
    external=product['externalId'];identity='import-'+external.split(':',1)[1]
    if product['priceStatus'] in ('unit_review','inquiry'):report[product['priceStatus']].append(external)
@@ -128,11 +130,18 @@ def import_catalog(database,package,apply=False,backup_dir=None,source_json=None
    else:
     if identity in by_id:raise ValueError('Product ID collision; refusing to overwrite '+identity)
     cat_id,cat_name=CATEGORY_MAP[product['category']]
+    cat_id=data.get('categoryRedirects',{}).get(cat_id,cat_id)
     if cat_id not in categories:
      if not cat_name:raise ValueError('Existing target category missing: '+cat_id)
      data['productCategories'].append(dict(id=cat_id,name=cat_name,description='',visible=True,parentId='',menu=True))
      categories.add(cat_id);report['categories_added'].append(cat_id)
-    item=adapt(product,package,images);items.append(item);by_id[identity]=item;by_external[external]=item;report['inserted']+=1
+    item=adapt(product,package,images);item['categoryId']=cat_id
+    if markup_done:
+     if cat_id=='rental':item['categoryId']=rental_branch(product['name']) or cat_id
+     if type(item['priceAmount']) is int:item['priceAmount']=(item['priceAmount']*110+50)//100
+     for option in item['priceOptions']:
+      if type(option['priceAmount']) is int:option['priceAmount']=(option['priceAmount']*110+50)//100
+    items.append(item);by_id[identity]=item;by_external[external]=item;report['inserted']+=1
    if apply and external not in ledger:
     db.execute('INSERT INTO product_import_sources VALUES(?,?,?,?)',(external,identity,now,json.dumps(raw_by_id.get(external,product),ensure_ascii=False)))
   server.validate_content(data)

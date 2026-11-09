@@ -168,6 +168,22 @@ def robots_text(origin):
         groups.append('User-agent: '+agent+'\nDisallow: /panel\nDisallow: /admin\nDisallow: /api/\nAllow: /\n')
     return '\n'.join(groups)+'\nSitemap: '+origin+'/sitemap.xml\n'
 
+def partner_groups(data):
+    config=data.get('partnerCatalog',{})
+    if not config.get('enabled') or data['modules']['partners'].get('visible') is False or data['modules']['equipment'].get('visible') is False:return []
+    items={i['id']:i for i in data['modules']['equipment']['items'] if i.get('status')=='published'}
+    return [items[id] for id in config.get('categories',[]) if id in items and id not in config.get('excludedEquipmentIds',[])]
+
+def partner_products(data,category=None):
+    ids={p['id'] for p in partner_groups(data)}
+    return [p for p in data['modules']['products']['items'] if p.get('status')=='published' and p.get('partnerCategoryId') in ids and (category is None or p.get('partnerCategoryId')==category)]
+
+def partner_overview_html(data,path):
+    if path not in ['/partners','/equipment'] or not data.get('partnerCatalog',{}).get('enabled'):return ''
+    out='<nav aria-label="دسته‌های محصولات همکاران"><ul>'
+    for category in partner_groups(data):out+='<li><a href="/equipment/'+html.escape(category['id'],quote=True)+'">'+html.escape(category['title'])+'</a></li>'
+    return out+'</ul></nav>'
+
 def pages(data):
     brand=data['header']['nameFa']
     result={'/':{'title':brand,'heading':brand,'description':data['hero']['description'],'body':data['hero']['description'],'indexable':True}}
@@ -183,6 +199,12 @@ def pages(data):
         result['/category/'+c['id']]={'title':c['name'],'heading':c.get('banner',{}).get('title') or c['name'],'description':c['description'],'body':c['description'],'indexable':any(i['categoryId'] in ids for i in product_items),'category':c}
     result['/contact']={'title':data['contact']['title'],'heading':data['contact']['title'],'description':data['contact']['description'],'body':contact_body(data),'indexable':True}
     result['/about']={'title':'دربارهٔ '+brand,'heading':'دربارهٔ '+brand,'description':company_description(data)[:320],'body':'\n'.join(filter(None,[company_description(data),data.get('company',{}).get('serviceArea',''),contact_body(data,False)])),'indexable':True}
+    if data.get('partnerCatalog',{}).get('enabled'):
+        result['/partners']['indexable']=bool(partner_groups(data)) or bool(data['modules']['partners']['items'])
+        result['/partners']['partnerOverview']=True
+        result['/equipment']['partnerOverview']=True
+        for category in partner_groups(data):
+            if '/equipment/'+category['id'] in result:result['/equipment/'+category['id']]['partnerCategory']=category['id']
     defaults=search_defaults()
     for path,p in result.items():
         default=defaults.get(path,{});custom=data.get('pageSeo',{}).get(path,{})
@@ -212,10 +234,13 @@ def breadcrumb(data,path,all_pages):
             if parent:trail.append({'name':parent['name'],'path':'/category/'+parent['id']})
             if '/category/'+category['id']!=path:trail.append({'name':category['name'],'path':'/category/'+category['id']})
     elif kind=='service':trail.append({'name':data['modules']['services']['name'],'path':'/services'})
+    if p.get('partnerCategory'):trail.append({'name':data['modules']['partners']['name'],'path':'/partners'})
     trail.append({'name':p['heading'],'path':path})
     return trail
 
 def catalogue_products(data,path,page):
+    if page.get('partnerOverview'):return partner_products(data)
+    if page.get('partnerCategory'):return partner_products(data,page['partnerCategory'])
     if path!='/products' and not path.startswith('/category/'):return []
     categories={c['id']:c for c in data['productCategories']}
     def visible(category):
@@ -315,6 +340,7 @@ def seo_html(data,path,origin):
     head+='<script id="ava-structured-data" type="application/ld+json">'+schema+'</script>'
     crumbs=' / '.join('<a href="'+esc(c['path'],quote=True)+'">'+esc(c['name'])+'</a>' for c in breadcrumb(data,path,all_pages))
     body='<main id="ava-seo-content" dir="rtl"><nav aria-label="مسیر صفحه">'+crumbs+'</nav><h1>'+esc(p['heading'])+'</h1><p>'+esc(company_description(data) if path=='/about' else description)+'</p>'
+    body+=partner_overview_html(data,path)
     body+=catalogue_html(data,path,p)
     copy=p.get('copy')
     if copy:

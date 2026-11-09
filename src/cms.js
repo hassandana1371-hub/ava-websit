@@ -19,7 +19,7 @@
   const KEYS = ['products','services','projects','partners','software','articles','contact','catalog'];
   const CONTENT_KEYS = [...KEYS,'equipment'];
   const LABELS = {products:'محصولات',services:'خدمات',projects:'پروژه‌ها',partners:'همکاران',equipment:'فروش تجهیزات تلویزیون',software:'نرم‌افزار',articles:'مقالات',contact:'تماس با ما',catalog:'کاتالوگ'};
-  const TITLES = {typography:'فونت و خوانایی',requests:'درخواست‌ها',company:'معرفی شرکت',stats:'آمار بازدید',footer:'فوتر سایت',seo:'تنظیمات سئو',dashboard:'پیشخوان',header:'لوگو و هدر',hero:'هیرو / تصویر اصلی',navigation:'منوها و اتصال‌ها',categories:'دسته‌بندی محصولات',banners:'بنر اختصاصی صفحات',security:'رمز و ورود',backup:'نسخهٔ پشتیبان و خروجی'};
+  const TITLES = {'partner-products':'محصولات همکاران',typography:'فونت و خوانایی',requests:'درخواست‌ها',company:'معرفی شرکت',stats:'آمار بازدید',footer:'فوتر سایت',seo:'تنظیمات سئو',dashboard:'پیشخوان',header:'لوگو و هدر',hero:'هیرو / تصویر اصلی',navigation:'منوها و اتصال‌ها',categories:'دسته‌بندی محصولات',banners:'بنر اختصاصی صفحات',security:'رمز و ورود',backup:'نسخهٔ پشتیبان و خروجی'};
   const DESCRIPTIONS = {
     dashboard:'از اینجا ظاهر سایت را تنظیم کن و محتوای هر بخش را مدیریت کن.',
     header:'لوگو، نام فارسی و انگلیسی و شعارهای بالای سایت را جداگانه ویرایش کن.',
@@ -159,7 +159,7 @@
     if(kind==='category')category=publicCategories().find(c=>c.id===id);
     const fallback=path==='/about'?{title:'دربارهٔ '+data.header.nameFa,heading:'دربارهٔ '+data.header.nameFa,description:companyDescription()}:path==='/'?{title:data.header.nameFa,description:data.hero.description,heading:data.header.nameFa}:path==='/contact'?{title:data.contact.title,heading:data.contact.title,description:data.contact.description}:item?{title:item.title,heading:item.title,description:item.summary}:category?{title:category.name,heading:category.banner?.title||category.name,description:category.description}:{title:data.modules[kind]?.name||data.header.nameFa,heading:data.modules[kind]?.name||data.header.nameFa,description:data.modules[kind]?.description||data.hero.description};
     const defaults=searchDefaults[path]||{},custom=data.pageSeo?.[path]||{},copy={...defaults,...Object.fromEntries(Object.entries(custom).filter(([key])=>!['title','description'].includes(key)))};
-    const indexable=path==='/'||path==='/contact'||path==='/about'||!!item||(category?categoryCount(category.id)>0:CONTENT_KEYS.includes(kind)&&published(kind).length>0);
+    const indexable=((path==='/partners'||path==='/equipment')&&partnerGroups().length>0)||path==='/'||path==='/contact'||path==='/about'||!!item||(category?categoryCount(category.id)>0:CONTENT_KEYS.includes(kind)&&published(kind).length>0);
     return {kind,item,category,title:item?.seoTitle||custom.title||defaults.title||fallback.title,description:(item?.seoDescription||custom.description||defaults.description||fallback.description).slice(0,320),heading:path==='/'&&copy.showContent!==false&&copy.heading?copy.heading:fallback.heading,copy:copy.showContent!==false&&(copy.intro||copy.sections?.length)?copy:null,indexable};
   }
   function searchTrail(path,model){
@@ -171,7 +171,7 @@
     }else if(model.kind==='service')trail.push({name:data.modules.services.name,path:'/services'});
     trail.push({name:model.heading,path});return trail;
   }
-  function catalogueSearchProducts(path,model){return path==='/products'?publicProducts():model.category?publicProducts().filter(item=>categoryContains(model.category.id,item)):[];}
+  function catalogueSearchProducts(path,model){if((path==='/partners'||path==='/equipment')&&data.partnerCatalog?.enabled)return partnerProducts();if(model.kind==='equipment'&&partnerGroups().some(c=>c.id===model.item?.id))return partnerProducts(model.item.id);return path==='/products'?publicProducts():model.category?publicProducts().filter(item=>categoryContains(model.category.id,item)):[];}
   function searchSchema(path,model,origin){
     const org=origin+'/#organization',url=origin+path;
     const graph=[{'@type':'Organization','@id':org,name:data.header.nameEn||data.header.nameFa,alternateName:data.header.nameFa,url:origin+'/'},{'@type':'WebSite','@id':origin+'/#website',url:origin+'/',name:data.header.nameFa,inLanguage:'fa-IR',publisher:{'@id':org}},{'@type':path==='/about'?'AboutPage':path==='/products'||path.startsWith('/category/')?'CollectionPage':'WebPage','@id':url+'#webpage',url,name:model.title+' | AvA Groups',description:model.description,inLanguage:'fa-IR',isPartOf:{'@id':origin+'/#website'}},{'@type':'BreadcrumbList','@id':url+'#breadcrumb',itemListElement:searchTrail(path,model).map((c,n)=>({'@type':'ListItem',position:n+1,name:c.name,item:origin+c.path}))}];
@@ -300,7 +300,7 @@
   }
   function validate(raw) {
     if (!isObject(raw) || raw.version !== 1 || !isObject(raw.header) || !isObject(raw.hero) || !isObject(raw.modules) || !isObject(raw.contact) || !Array.isArray(raw.navigation)) throw new Error('ساختار فایل پشتیبان معتبر نیست.');
-    const out = clone(seed);out.typography=typographyConfig(raw.typography||{});out.categoryRedirects=clone(raw.categoryRedirects||{});const company=raw.company||{};out.company={description:text(company.description||'',2500),serviceArea:text(company.serviceArea||'',200)};
+    const out = clone(seed);out.partnerCatalog=clone(raw.partnerCatalog||{enabled:false,categories:[],excludedEquipmentIds:[]});if(!isObject(out.partnerCatalog)||typeof out.partnerCatalog.enabled!=='boolean'||!Array.isArray(out.partnerCatalog.categories)||!Array.isArray(out.partnerCatalog.excludedEquipmentIds)||out.partnerCatalog.categories.length>100||out.partnerCatalog.excludedEquipmentIds.length>100)throw new Error('تنظیم همکاران معتبر نیست.');out.typography=typographyConfig(raw.typography||{});out.categoryRedirects=clone(raw.categoryRedirects||{});const company=raw.company||{};out.company={description:text(company.description||'',2500),serviceArea:text(company.serviceArea||'',200)};
     const footer=raw.footer||{text:'آوا؛ فروش و اجارهٔ نمایشگر.',copyright:''};out.footer={text:text(footer.text||'',1000),copyright:text(footer.copyright||'',1000)};out.pageSeo={};
     if(raw.pageSeo && !isObject(raw.pageSeo))throw new Error('سئو معتبر نیست.');for(const [key,value] of Object.entries(raw.pageSeo||{})){if(!/^\/(?:[a-zA-Z0-9_-]+\/?)*$/.test(key)||!isObject(value))throw new Error('صفحهٔ سئو معتبر نیست.');const seo={title:text(value.title||'',160),description:text(value.description||'',320)};
       for(const name of ['heading','intro'])if(value[name]!==undefined)seo[name]=text(value[name],name==='heading'?200:2500);
@@ -430,7 +430,7 @@
         if (item.banner) result.banner = validateBanner(item.banner);
         if (key === 'products') {
           if (item.categoryId !== undefined && !categoryIds.has(item.categoryId)) throw new Error('دستهٔ یکی از محصولات وجود ندارد.');
-          result.externalId=text(item.externalId||'',120);
+          result.externalId=text(item.externalId||'',120);result.partnerCategoryId=text(item.partnerCategoryId||'',80);
           if(result.externalId&&!/^[A-Za-z0-9:_-]+$/.test(result.externalId))throw new Error('شناسهٔ ورود محصول معتبر نیست.');
           if(!Array.isArray(item.priceOptions||[])||(item.priceOptions||[]).length>30)throw new Error('حداکثر ۳۰ گزینهٔ قیمت افزوده مجاز است.');
           result.priceOptions=(item.priceOptions||[]).map(option=>{if(!isObject(option))throw new Error('گزینهٔ قیمت معتبر نیست.');const name=text(option.name,120).trim(),priceUnit=text(option.priceUnit,80).trim(),priceAmount=option.priceAmount??null;if(!name||(priceAmount!==null&&(!Number.isSafeInteger(priceAmount)||priceAmount<0||priceAmount>9000000000000||!priceUnit)))throw new Error('مبلغ یا واحد گزینهٔ افزوده معتبر نیست.');return {name,priceAmount,priceUnit};});
@@ -654,7 +654,7 @@
     closeNavigationMenus();
     if ($('#site-menu').open) $('#site-menu').close();
     if (target === 'external') {window.open(url, '_blank', 'noopener,noreferrer');return;}
-    if (['products','equipment'].includes(target)) {if (currentHash() === '#' + target) renderCatalogRoute();else location.hash = target;return;}
+    if (['products','equipment'].includes(target)||(target==='partners'&&data.partnerCatalog?.enabled)) {if (currentHash() === '#' + target) renderCatalogRoute();else location.hash = target;return;}
     const wasCatalog = !$('#catalog-page').hidden;
     if (wasCatalog) {$('#home-content').hidden = false;$('#catalog-page').hidden = true;}
     const node = document.getElementById(target);
@@ -710,12 +710,29 @@
     wrap.addEventListener('focusout',event => {if (!wrap.contains(event.relatedTarget) && !dropdown.contains(event.relatedTarget)) closeNavigationMenus();});
     wrap.append(trigger,dropdown);return wrap;
   }
+  function partnerGroups(includeDraft=false){
+    if(!data.partnerCatalog?.enabled||(!includeDraft&&(data.modules.partners.visible===false||data.modules.equipment.visible===false)))return [];
+    const items=includeDraft?data.modules.equipment.items:published('equipment');return data.partnerCatalog.categories.map(id=>items.find(p=>p.id===id)).filter(p=>p&&!data.partnerCatalog.excludedEquipmentIds.includes(p.id));
+  }
+  function partnerProducts(category=''){const ids=new Set(partnerGroups().map(p=>p.id));return publicProducts().filter(p=>ids.has(p.partnerCategoryId)&&(!category||p.partnerCategoryId===category));}
+  function appendPartnerProducts(root,category=''){
+    const section=el('section',{class:'partner-products content'}),tools=el('div',{class:'catalog-tools'}),search=el('input',{type:'search',class:'catalog-search','aria-label':'جستجوی محصولات همکاران',placeholder:'جستجوی نام یا مدل…'}),filter=el('select',{'aria-label':'دستهٔ محصولات همکاران'},el('option',{value:''},'همهٔ دسته‌های همکاران'),partnerGroups().map(c=>el('option',{value:c.id},c.title)));
+    filter.value=category;filter.hidden=!!category;tools.append(search,filter);const counter=el('p',{class:'catalog-result-count','aria-live':'polite'}),grid=el('div',{class:'product-grid'});section.append(el('h2',{},'محصولات همکاران'),tools,counter,grid);root.append(section);
+    const paint=()=>{const query=search.value.trim().toLocaleLowerCase('fa-IR'),items=partnerProducts(category||filter.value).filter(p=>(p.title+' '+p.model+' '+p.summary).toLocaleLowerCase('fa-IR').includes(query));grid.replaceChildren(...items.map(item=>productCard(item,{partner:true})));counter.textContent=items.length.toLocaleString('fa-IR')+' محصول';if(!items.length)grid.append(el('p',{class:'managed-empty'},'محصولی برای این دسته یا جستجو ثبت نشده است.'));};search.oninput=filter.onchange=paint;paint();
+  }
+  function renderPartnerDirectory(){
+    const root=$('#catalog-page');root.replaceChildren();root.append(el('section',{class:'catalog-heading'},breadcrumbs([{label:'خانه',href:'#home'},{label:data.modules.partners.name}]),el('h1',{},data.modules.partners.name),el('p',{},'تجهیزات و قطعات LED؛ انتخاب مدل و استعلام بر اساس سازگاری.')));
+    const overviewBanner=data.pageBanners[currentHash().startsWith('#equipment')?'equipment':'partners']||data.pageBanners.equipment;if(overviewBanner&&overviewBanner.show!==false)appendPageBanner(root,overviewBanner,data.modules.partners.name);
+    const categories=el('div',{class:'category-overview partner-category-overview'});for(const c of partnerGroups())categories.append(el('a',{class:'category-overview-card',href:'#equipment/'+c.id},el('strong',{},c.title),el('span',{},partnerProducts(c.id).length.toLocaleString('fa-IR')+' محصول')));root.append(categories);appendPartnerProducts(root);
+    const companies=published('partners');if(companies.length){const list=el('section',{class:'content cards'});for(const item of companies){const button=el('button',{class:'card managed-card',type:'button'},el('strong',{},item.title),el('p',{},item.summary));if(item.image)button.prepend(el('img',{src:item.image,alt:item.title,loading:'lazy'}));button.onclick=()=>openDetail('partners',item);list.append(button);}root.append(list);}
+  }
   function partnersMenu(row) {
     const wrap = el('div',{class:'partners-nav-item header-menu-item'});
     const id = 'partners-dropdown-' + row.id;
     const trigger = el('button',{type:'button',class:'partners-menu-trigger header-menu-trigger','aria-expanded':'false','aria-controls':id},row.label,el('span',{'aria-hidden':'true',class:'dropdown-chevron'},'⌄'));
     const dropdown = el('div',{class:'partners-dropdown header-menu-popup',id,hidden:'','aria-label':'همکاران و تجهیزات'});
     dropdown.append(el('p',{class:'dropdown-eyebrow'},'همکاری و تأمین تجهیزات نمایش'));
+    if(data.partnerCatalog?.enabled){for(const category of partnerGroups())dropdown.append(el('a',{href:'#equipment/'+category.id,class:'partners-directory-link'},category.title));dropdown.append(el('a',{href:'#partners',class:'partners-directory-link'},'همهٔ محصولات همکاران'));trigger.addEventListener('click',()=>toggleNavigationMenu(trigger,dropdown));wrap.append(trigger,dropdown);return wrap;}
     const submenuId = id + '-equipment';
     const branch = el('button',{type:'button',class:'equipment-category-trigger subcategory-toggle','aria-expanded':'false','aria-controls':submenuId},el('span',{},data.modules.equipment.name),el('span',{class:'equipment-chevron','aria-hidden':'true'},'⌄'));
     const submenu = el('div',{class:'equipment-submenu',id:submenuId,hidden:'','aria-label':data.modules.equipment.name});
@@ -781,8 +798,8 @@
     block.append(el('span',{class:'product-price-label'},(item.priceKind === 'sale' ? 'قیمت فروش' : 'قیمت مرجع') + (item.priceUnit ? ' ' + item.priceUnit : '')),el('strong',{class:'product-price-value'},item.priceAmount.toLocaleString('fa-IR'),el('small',{},' تومان')));
     return block;
   }
-  function productCard(item) {
-    const category = categoryFor(item);
+  function productCard(item,context={}) {
+    const partner=context?.partner?partnerGroups().find(c=>c.id===item.partnerCategoryId):null;const category=partner?{name:partner.title}:categoryFor(item);
     const link = el('a',{class:'product-card',href:'#product/' + item.id});
     const media = el('div',{class:'product-card-media','data-image-style':item.imageStyle || ''});
     if (productImage(item)) media.append(el('img',{src:productImage(item),alt:item.title,loading:'lazy'}));
@@ -881,6 +898,7 @@
     if (item.imageCaption) media.append(el('span',{class:'product-image-caption'},item.imageCaption));
     const info = el('div',{class:'product-introduction'},el('a',{class:'product-category-label',href:'#category/' + category.id},category.name),el('h1',{},item.title));
     if (item.model) info.append(el('p',{class:'product-model',dir:'auto'},item.model));
+    const partnerCategory=partnerGroups().find(c=>c.id===item.partnerCategoryId);if(partnerCategory)info.append(el('a',{class:'product-category-label',href:'#equipment/'+partnerCategory.id},'همکاران / '+partnerCategory.title));
     info.append(el('p',{class:'product-summary'},item.summary));
     info.append(productPrice(item));
     if(item.priceOptions?.length){const options=el('section',{class:'product-price-options'},el('h2',{},'گزینه‌های افزوده'),el('p',{},'این مبالغ جدا هستند و به قیمت پایه اضافه نشده‌اند.'));options.append(el('ul',{},item.priceOptions.map(option=>el('li',{},el('strong',{},option.name+' — '),option.priceAmount===null?'استعلام قیمت':option.priceAmount.toLocaleString('fa-IR')+' تومان · '+option.priceUnit))));info.append(options);}
@@ -932,10 +950,10 @@
   function renderCatalogRoute() {
     const [name,id] = currentHash().slice(1).split('/');
     if(name==='category'&&Object.hasOwn(data.categoryRedirects||{},id)){location.replace(serverMode?'/category/'+data.categoryRedirects[id]:'#category/'+data.categoryRedirects[id]);return;}
-    const isCatalog = ['about','products','category','product','service','equipment'].includes(name);
+    const isCatalog = ['about','products','category','product','service','equipment'].includes(name)||(name==='partners'&&data.partnerCatalog?.enabled);
     $('#home-content').hidden = isCatalog;$('#catalog-page').hidden = !isCatalog;
     if (!isCatalog) return false;
-    if(name==='about')renderAbout();else if (name === 'products') renderCatalogue();else if (name === 'category') renderCatalogue(id || '__missing__');else if (name === 'service') renderOffering('services',id || '__missing__');else if (name === 'equipment') {if (id) renderOffering('equipment',id);else renderEquipmentList();}else renderProduct(id || '__missing__');
+    if(name==='partners')renderPartnerDirectory();else if(name==='about')renderAbout();else if (name === 'products') renderCatalogue();else if (name === 'category') renderCatalogue(id || '__missing__');else if (name === 'service') renderOffering('services',id || '__missing__');else if (name === 'equipment') {if (id) renderOffering('equipment',id);else renderEquipmentList();}else renderProduct(id || '__missing__');
     return true;
   }
   function renderOffering(key,id) {
@@ -949,7 +967,7 @@
     const pageBanner = data.pageBanners[(equipment ? 'equipment:' : 'service:') + id] || item.banner;
     if (pageBanner?.show !== false && pageBanner) appendPageBanner(root,pageBanner,item.title);
     const container = el('div',{class:'service-page' + (equipment ? ' equipment-page' : '')});
-    container.append(breadcrumbs([{label:'خانه',href:'#home'},...(equipment ? [{label:data.modules.partners.name}] : []),{label:data.modules[key].name,href:'#' + key},{label:item.title}]));
+    container.append(breadcrumbs([{label:'خانه',href:'#home'},...(equipment&&partnerGroups().some(c=>c.id===id) ? [{label:data.modules.partners.name,href:'#partners'}] : []),{label:data.modules[key].name,href:'#' + key},{label:item.title}]));
     const heading = el('section',{class:'service-page-heading'},el('span',{class:'catalog-kicker'},'AVA GROUP / ' + (equipment ? 'EQUIPMENT' : 'SERVICES')),el('h1',{},item.title),el('p',{},item.summary));
     if (item.meta) heading.append(el('span',{class:'service-meta'},item.meta));
     const layout = el('div',{class:'service-page-layout'});
@@ -961,16 +979,17 @@
     const request = el('a',{href:'#contact',class:'button'},equipment ? 'استعلام قیمت و موجودی' : 'درخواست این خدمت');
     request.addEventListener('click',() => {$('#request-form').dataset.source=(equipment?'/equipment/':'/service/')+item.id;$('#request-form').elements.project.value = equipment ? 'استعلام تجهیز «' + item.title + '»\nمدل یا برند: \nتعداد: \nمشخصات تجهیزات فعلی: \nشهر و زمان موردنیاز: ' : 'درخواست خدمت «' + item.title + '»\nمحل اجرا: \nزمان موردنیاز: \nتوضیح پروژه: ';});
     aside.append(request,el('small',{},equipment ? 'قیمت و موجودی پس از بررسی مدل و تعداد مشخص می‌شوند.' : 'شرایط، هزینه و زمان‌بندی پس از بررسی پروژه مشخص می‌شوند.'));
-    layout.append(body,aside);container.append(heading,layout);root.append(container);document.title = item.title + ' | ' + (data.header.nameFa || 'آوا');
+    layout.append(body,aside);container.append(heading);if(equipment&&partnerGroups().some(c=>c.id===id))appendPartnerProducts(container,id);container.append(layout);root.append(container);document.title = item.title + ' | ' + (data.header.nameFa || 'آوا');
   }
   function renderEquipmentList() {
+    if(data.partnerCatalog?.enabled){renderPartnerDirectory();return;}
     const module = data.modules.equipment;const root = $('#catalog-page');root.replaceChildren();
     const heading = el('section',{class:'catalog-heading'},breadcrumbs([{label:'خانه',href:'#home'},{label:data.modules.partners.name},{label:module.name}]),el('span',{class:'catalog-kicker'},'AVA GROUP / EQUIPMENT'),el('h1',{},module.name),el('p',{},module.description));
     const overviewBanner=data.pageBanners.equipment;if(overviewBanner && overviewBanner.show!==false)appendPageBanner(root,overviewBanner,module.name);
     const list = el('div',{class:'equipment-list cards'});
     for (const item of published('equipment')) {
       const card = el('article',{class:'card managed-card'});
-      if (item.image || (key==='projects'&&item.gallery?.length)) card.append(el('img',{src:item.image||item.gallery[0].image,alt:item.title,loading:'lazy'}));else card.append(el('div',{class:'icon','aria-hidden':'true'},'▦'));
+      if (item.image) card.append(el('img',{src:item.image,alt:item.title,loading:'lazy'}));else card.append(el('div',{class:'icon','aria-hidden':'true'},'▦'));
       card.append(el('span',{class:'entry-meta',dir:'auto'},item.meta),el('h3',{},item.title),el('p',{},item.summary),el('a',{href:'#equipment/' + item.id,class:'card-action'},'معرفی و استعلام تجهیز ←'));list.append(card);
     }
     if (!list.children.length) list.append(el('p',{class:'managed-empty'},'هنوز تجهیزی در این بخش منتشر نشده است.'));
@@ -1402,6 +1421,7 @@
       const tools = $('.module-tools');const categoryLink = el('a',{href:'#admin/categories',class:'admin-button secondary'},'مدیریت دسته‌بندی‌ها');tools.append(categoryLink);
       const categoryFilter = el('select',{id:'entry-category-filter','aria-label':'فیلتر دستهٔ محصول'},el('option',{value:''},'همهٔ دسته‌ها'),data.productCategories.map(category => el('option',{value:category.id},categoryLabel(category))));
       tools.firstElementChild.append(categoryFilter);categoryFilter.addEventListener('change',paintList);
+      const partnerFilter=el('select',{id:'entry-partner-filter','aria-label':'فیلتر همکاران'},el('option',{value:'all'},'همهٔ محصولات'),el('option',{value:'linked'},'همهٔ محصولات همکاران'),partnerGroups(true).map(c=>el('option',{value:c.id},c.title)));partnerFilter.value=currentPage==='partner-products'?'linked':'all';tools.firstElementChild.append(partnerFilter);partnerFilter.onchange=paintList;if(currentPage==='partner-products')root.insertAdjacentHTML('afterbegin','<p class="notice">این‌ها همان محصولات اصلی‌اند؛ تغییر قیمت، عکس، انتشار یا حذف در هر دو بخش اثر دارد.</p>');
     }
     if(key==='services'){const removeAll=el('button',{type:'button',class:'admin-button danger',id:'delete-all-services'},'حذف همه آیتم‌های خدمات');removeAll.onclick=async()=>{if(!discardAllowed()||!confirm('همهٔ آیتم‌های خدمات حذف شوند؟ درخواست‌های ثبت‌شده حفظ می‌شوند.'))return;const next=clone(data);next.modules.services.items=[];for(const key of Object.keys(next.pageBanners))if(key.startsWith('service:'))delete next.pageBanners[key];if(await commit(next))paintList();};$('.module-tools').append(removeAll);}
     if (key === 'equipment') $('.module-tools').append(el('a',{href:'#equipment',class:'admin-button secondary'},'مشاهدهٔ بخش تجهیزات'));
@@ -1410,8 +1430,8 @@
     function paintList() {
       const query = $('#entry-search').value.trim().toLocaleLowerCase('fa-IR');
       const filter = $('#entry-filter').value;
-      const category = key === 'products' ? $('#entry-category-filter').value : '';
-      const items = data.modules[key].items.filter(item => (item.title + ' ' + (item.model || '')).toLocaleLowerCase('fa-IR').includes(query) && (filter === 'all' || item.status === filter) && (!category || categoryContains(category,item)));
+      const category = key === 'products' ? $('#entry-category-filter').value : '';const partnerFilter=key==='products'?$('#entry-partner-filter').value:'all',partnerIds=new Set(partnerGroups(true).map(c=>c.id));
+      const items = data.modules[key].items.filter(item => (item.title + ' ' + (item.model || '')).toLocaleLowerCase('fa-IR').includes(query) && (filter === 'all' || item.status === filter) && (!category || categoryContains(category,item))&&(partnerFilter==='all'||(partnerFilter==='linked'?partnerIds.has(item.partnerCategoryId):item.partnerCategoryId===partnerFilter)));
       const list = $('#entry-list');list.replaceChildren();
       if (!items.length) {list.append(el('div',{class:'admin-empty'},el('strong',{},query || filter !== 'all' ? 'محتوایی با این فیلتر پیدا نشد.' : 'اولین محتوای این بخش را اضافه کن.'),el('p',{},'عنوان، تصویر و توضیحات را وارد کن؛ سپس آن را به‌صورت پیش‌نویس یا منتشرشده ذخیره کن.')));return;}
       items.forEach(item => {
@@ -1428,7 +1448,7 @@
         const actions = el('div',{class:'entry-actions'});
         const edit = el('button',{type:'button',class:'admin-button secondary'},'ویرایش');edit.addEventListener('click',() => openEditor(key,item));
         const toggle = el('button',{type:'button',class:'admin-button secondary'},item.status === 'published' ? 'پیش‌نویس' : 'انتشار');toggle.addEventListener('click',async () => {if (!discardAllowed()) return;const next = clone(data);const target = next.modules[key].items.find(i => i.id === item.id);target.status = target.status === 'published' ? 'draft' : 'published';if (await commit(next)) paintList();});
-        const remove = el('button',{type:'button',class:'admin-button danger'},'حذف');remove.addEventListener('click',async () => {if (!discardAllowed() || !confirm('«' + item.title + '» حذف شود؟')) return;const next = clone(data);next.modules[key].items = next.modules[key].items.filter(i => i.id !== item.id);if(key==='services')delete next.pageBanners['service:'+item.id];if (await commit(next,'محتوا حذف شد.')) paintList();});
+        const remove = el('button',{type:'button',class:'admin-button danger'},'حذف');remove.addEventListener('click',async () => {if (!discardAllowed() || !confirm('«' + item.title + '» حذف شود؟')) return;const next = clone(data);next.modules[key].items = next.modules[key].items.filter(i => i.id !== item.id);if(key==='services')delete next.pageBanners['service:'+item.id];if(key==='equipment'&&next.partnerCatalog){next.partnerCatalog.categories=next.partnerCatalog.categories.filter(id=>id!==item.id);next.partnerCatalog.excludedEquipmentIds=next.partnerCatalog.excludedEquipmentIds.filter(id=>id!==item.id);for(const product of next.modules.products.items)if(product.partnerCategoryId===item.id)product.partnerCategoryId='';}if (await commit(next,'محتوا حذف شد.')) paintList();});
         actions.append(edit,toggle,remove);row.append(actions);list.append(row);
       });
     }
@@ -1454,6 +1474,7 @@
     form.elements.priceKind.value = item?.priceKind || 'quote';
     form.elements.priceUnit.value = item?.priceUnit || 'هر ماژول';
     form.elements.priceDate.value = item?.priceDate || '';
+    form.elements.partnerCategoryId.replaceChildren(el('option',{value:''},'در همکاران نمایش داده نشود'),...partnerGroups(true).map(c=>el('option',{value:c.id},c.title)));const selectedPartner=$('#entry-partner-filter')?.value;form.elements.partnerCategoryId.value=item?.partnerCategoryId||(!item&&currentPage==='partner-products'&&selectedPartner!=='linked'?selectedPartner:'')||'';
     form.elements.priceOptions.value=(item?.priceOptions||[]).map(o=>[o.name,o.priceAmount??'',o.priceUnit].join(' | ')).join('\n');
     form.elements.imageCaption.value = item?.imageCaption || '';
     form.elements.featured.checked = item?.featured === true;
@@ -1535,6 +1556,7 @@
     else if (page === 'security') renderSecurity(root);
     else if (page === 'backup') renderBackup(root);
     else if (page === 'contact') renderContactEditor(root);
+    else if (page === 'partner-products') renderModule(root,'products');
     else if (page === 'categories') renderCategories(root);
     else renderModule(root,page);
   }
@@ -1618,7 +1640,7 @@
     event.preventDefault();const values = formValues(event.currentTarget);
     const item = {id:values.id || (typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : 'entry-' + Date.now() + '-' + Math.random().toString(36).slice(2,9)),title:values.title.trim(),summary:values.summary,body:values.body,meta:values.meta,url:values.url.trim(),status:values.status,seoTitle:values.seoTitle,seoDescription:values.seoDescription,image:entryImage,...(editingModule==='projects'?{gallery:clone(entryGallery)}:{}),imageAsset:entryImageAsset,banner:entryBannerEditor.read(),file:['catalog','products'].includes(editingModule) ? entryFile : '',fileName:['catalog','products'].includes(editingModule) ? values.fileName : ''};
     if (editingModule === 'products') {
-      const original=data.modules.products.items.find(p=>p.id===item.id);item.externalId=original?.externalId||'';
+      const original=data.modules.products.items.find(p=>p.id===item.id);item.externalId=original?.externalId||'';item.partnerCategoryId=values.partnerCategoryId;if(currentPage==='partner-products'&&!item.partnerCategoryId){$('#entry-error').textContent='دستهٔ همکاران را انتخاب کنید.';return;}
       item.priceOptions=[];
       for(const line of values.priceOptions.split('\n').map(x=>x.trim()).filter(Boolean)){
         const parts=line.split('|').map(x=>x.trim());if(parts.length!==3){$('#entry-error').textContent='گزینهٔ افزوده را به شکل نام | مبلغ تومان | واحد بنویسید.';return;}
@@ -1637,7 +1659,8 @@
     if (['products','services','equipment'].includes(editingModule)) writePageBanner(next,(editingModule==='products'?'product':editingModule==='services'?'service':'equipment')+':'+item.id,item.banner);
     const index = next.modules[editingModule].items.findIndex(i => i.id === item.id);
     if (index < 0) next.modules[editingModule].items.unshift(item);else next.modules[editingModule].items[index] = item;
-    if (await commit(next,'محتوا ذخیره شد.')) {$('#entry-editor').close();renderPage(editingModule);}
+    const returnPage=currentPage,partnerFilterBefore=$('#entry-partner-filter')?.value;
+    if (await commit(next,'محتوا ذخیره شد.')) {$('#entry-editor').close();renderPage(returnPage==='partner-products'?'partner-products':editingModule);const filter=$('#entry-partner-filter');if(filter&&partnerFilterBefore&&[...filter.options].some(o=>o.value===partnerFilterBefore)){filter.value=partnerFilterBefore;filter.dispatchEvent(new Event('change'));}}
     else $('#entry-error').textContent = 'ذخیره انجام نشد؛ پیام خطا را بررسی کن. فرم و تغییراتت حفظ شده‌اند.';
   });
   window.addEventListener('hashchange',transitionRoute);

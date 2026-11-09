@@ -248,6 +248,15 @@ def validate_content(data):
                     string(spec.get('value'), 400)
                     if not spec['label'].strip() or not spec['value'].strip():
                         raise ValueError('نام و مقدار مشخصه ضروری است.')
+    partner=data.get('partnerCatalog',{'enabled':False,'categories':[],'excludedEquipmentIds':[]})
+    equipment_ids={p['id'] for p in data['modules']['equipment']['items']}
+    if not isinstance(partner,dict) or type(partner.get('enabled')) is not bool:raise ValueError('تنظیم همکاران معتبر نیست.')
+    for field in ['categories','excludedEquipmentIds']:
+        values=partner.get(field,[])
+        if not isinstance(values,list) or len(values)>100 or any(not isinstance(v,str) or v not in equipment_ids for v in values) or len(set(values))!=len(values):raise ValueError('دسته‌های همکاران معتبر نیست.')
+    for product in data['modules']['products']['items']:
+        value=product.get('partnerCategoryId','')
+        if not isinstance(value,str) or (value and value not in equipment_ids):raise ValueError('دستهٔ محصول همکاران معتبر نیست.')
     for item_module in data['modules'].values():
         for item in item_module['items']:
             string(item.get('seoTitle',''),160);string(item.get('seoDescription',''),320)
@@ -541,8 +550,9 @@ class Handler(BaseHTTPRequestHandler):
                             old=existing.get(product.get('id')) if isinstance(product,dict) else None
                             if old:
                                 if old.get('externalId') and product.get('externalId',old['externalId'])!=old['externalId']:raise ValueError('شناسهٔ ورود محصول قابل تغییر نیست.')
-                                for field in ['externalId','priceOptions']:
+                                for field in ['externalId','priceOptions','partnerCategoryId']:
                                     if field not in product and field in old:product[field]=copy.deepcopy(old[field])
+                    if isinstance(candidate,dict) and 'partnerCatalog' not in candidate and 'partnerCatalog' in snapshot['raw']:candidate['partnerCatalog']=copy.deepcopy(snapshot['raw']['partnerCatalog'])
                     content = validate_content(candidate)
                 except (ValueError, TypeError, KeyError) as error:
                     return self.reply(400, {'error':str(error)})

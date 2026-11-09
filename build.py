@@ -5,7 +5,7 @@ import base64
 
 ROOT = Path(__file__).resolve().parent
 SRC = ROOT / 'src'
-RELEASE = '35'
+RELEASE = '36'
 page = (SRC / 'site-template.html').read_text().replace('<head>', '<head>\n<meta name="ava-media-mode" content="references">\n<meta name="ava-site-release" content="' + RELEASE + '">', 1)
 data = json.loads((SRC / 'defaults.json').read_text())
 encoded = json.dumps(data, ensure_ascii=False).replace('<', '\\u003c')

@@ -10,7 +10,7 @@ def rental_branch(text):
  if indoor!=outdoor:return 'rental-indoor' if indoor else 'rental-outdoor'
  return None
 
-def transform(data):
+def transform(data,already_marked=()):
  report={'moved_indoor':0,'moved_outdoor':0,'moved_flexible':0,'angled':0,'base_prices':0,'option_prices':0,'unclassified':[]}
  categories={c['id']:c for c in data['productCategories']}
  if 'rental' not in categories:raise ValueError('Rental parent category is missing')
@@ -27,10 +27,10 @@ def transform(data):
   elif cat=='led-curved':p['categoryId']='rental-flexible';report['moved_flexible']+=1
   elif cat=='led-angled':report['angled']+=1
   value=p.get('priceAmount')
-  if type(value) is int:p['priceAmount']=(value*110+50)//100;report['base_prices']+=1
+  if p.get('externalId') not in already_marked and type(value) is int:p['priceAmount']=(value*110+50)//100;report['base_prices']+=1
   for option in p.get('priceOptions',[]):
    value=option.get('priceAmount')
-   if type(value) is int:option['priceAmount']=(value*110+50)//100;report['option_prices']+=1
+   if p.get('externalId') not in already_marked and type(value) is int:option['priceAmount']=(value*110+50)//100;report['option_prices']+=1
  data['productCategories']=[c for c in data['productCategories'] if c['id']!='led-curved']
  data.setdefault('categoryRedirects',{})['led-curved']='rental-flexible'
  return report
@@ -53,7 +53,8 @@ def refine(database,apply=False,backup_dir=None):
    if db.execute('SELECT 1 FROM catalog_adjustments WHERE key=?',(KEY,)).fetchone():return {'already_applied':True,'base_prices':0,'option_prices':0,'applied':False}
   else:db.execute('BEGIN')
   row=db.execute('SELECT revision,data FROM content WHERE id=1').fetchone();data=json.loads(row['data'])
-  report=transform(data);server.validate_content(data);report.update(applied=apply,already_applied=False,backup=str(backup) if backup else None)
+  partner_table=db.execute("SELECT 1 FROM sqlite_master WHERE name='partner_import_sources'").fetchone();already_marked={r[0] for r in db.execute('SELECT external_id FROM partner_import_sources')} if partner_table else set()
+  report=transform(data,already_marked);server.validate_content(data);report.update(applied=apply,already_applied=False,backup=str(backup) if backup else None)
   if apply:
    data['updatedAt']=int(dt.datetime.now(dt.timezone.utc).timestamp()*1000)
    db.execute('UPDATE content SET revision=?,data=? WHERE id=1',(row['revision']+1,json.dumps(data,ensure_ascii=False)))

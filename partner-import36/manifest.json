@@ -1,0 +1,1249 @@
+{
+  "version": 1,
+  "markupPercent": 10,
+  "assets": {
+    "assets/product-197.webp": "6fd5d0a60a549db84ca4a4e299653fa2d776d822c8bccf99e3027f3fc0d7aa9f",
+    "assets/product-200.webp": "fe10522139e946423ebe4f94b63f1029d4e5873306c6ad0b4b1c2fd3667f91b4",
+    "assets/product-210.webp": "24d02129ddfc1b59bf2b70e61702cf13717c6ca308b0825f1e3a967a5d520a4e",
+    "assets/product-205.webp": "b183cba897d0e7c8d2d294873cbabf1ad57f26e65ff2af1b1fcd267296d27af3",
+    "assets/product-204.webp": "a730a40c2bb6293764954275ca159063c1fb686246adf3c7daa3a5c31a9bd638",
+    "assets/product-203.webp": "89df686ad555d781d9935d146664afa72160b15dde12f502b57810f8b6be5e32",
+    "assets/product-207.webp": "f1e40bc3f00519ff00753904f54e09d800c6213e7841a216552a5fa98ad0f2fe",
+    "assets/product-206.webp": "ef0ea68c6fd9f389154e1b866b586fb71ae7c9eb3c5973223843798f73cd3f77",
+    "assets/product-208.webp": "3269de0d18ae946169fe3e3e65a65a3030a1a910490b4d514bc659a20edb4c59",
+    "assets/product-214.webp": "e246d07feb6698386d08d6e831f232f51880e4a3d4db3e546e815be2003d767b",
+    "assets/product-215.webp": "eb9e6fe0fc4044f7e10420eeef741c2823f4f5c2999e800c6c169913677932d5",
+    "assets/product-179.webp": "da9d38446aa1ace7a7f465cd88e30ccf513431635516f57e3e34353f819cc39c",
+    "assets/product-178.webp": "0ae1bba46fffa5d2703c5e31761b28ea5d77617d7059f59c7602719c17773062",
+    "assets/product-183.webp": "6ca2bf3093b530ea095c6bd27887ed5190a362f52ec37e47c2fa67b7f543d6a2",
+    "assets/product-182.webp": "3df12fb977fc9dde371231c5d7422424b175f42404d6b8763c04bb47fa2e19ff",
+    "assets/product-180.webp": "9970f516daae9157411fc63c6486ab2dd888c51a02cbd13c0521f4a5bc8753fc",
+    "assets/product-181.webp": "aa6bcdd7a46b189f05b63d207606baec9f572b8ce8364b79b38685f134367310",
+    "assets/product-186.webp": "0238295dda29c2b8d7c8389df0a823b97ed6838fb1bee339b76394f63b328eff",
+    "assets/product-192.webp": "a449450b6f462ef794cb37bdb0d344155a9bdfb9c344cc8a8dc74524d00a875f",
+    "assets/product-187.webp": "a674b5c75adcab6f32e0a36afe4cee9c8435867b510a512a409b1cf80f06bd77",
+    "assets/product-188.webp": "52c0ce229cafe8f1d628aaba1131c9cf7675f71a96bfd46090581e6d5776b2ce",
+    "assets/product-189.webp": "238a2ac08f65f859fd0d720c275e01d634c0097b1bfcb34f3e65e56b7b935aac",
+    "assets/product-190.webp": "80f9b8bd505f8e31ffb18f168f0e094ef392f3fd2807f58004476f6b7db049e5",
+    "assets/product-191.webp": "3f4a0ebc64a6f074920fc701d2fbfa827fa1e4230d259300181e00bcaeb365c3",
+    "assets/product-195.webp": "48fc2d2837581d433e8b39ee9dc0c1ff6589c26e30c338a00d8ec555ffc421e8",
+    "assets/product-196.webp": "0758c5949b88cecae1ca4367cc339043ade47d194186242f7e71b2cbe33cd942",
+    "assets/product-209.webp": "9d08b43858b4ab7622bfe2d1ed4ba7c114f7ccb6c3412e3fc70af77ad00de0c3",
+    "assets/product-211.webp": "9f7d083c38f8fada5900de4ca795138432402471994f2f664c0f4496320d92d1",
+    "assets/product-219.webp": "4d35021bdc859accb704b2cb2dbc6ca8ed62e328bb269380b93eed14296d7f50",
+    "assets/product-220.webp": "8dad4857b4b433268e18ba4a5ee301f739a5a9f52375e3a9e8019bb9b165b9f0",
+    "assets/product-221.webp": "579182fb61c5a6da8bd8109f77f845651f786e96ed2cfdbb86d085479d1540dd",
+    "assets/product-222.webp": "0f4315230cbf2b037d61ec0677f7b925e08abbc485960b37037892e22dbbcbbc"
+  },
+  "products": [
+    {
+      "externalId": "ava-led-catalog:ava-49-06",
+      "brand": "AVA Groups",
+      "name": "200W 5V 40A Power supply Voltage 220-240V",
+      "category": "پاور",
+      "categoryPath": [
+        "همکاران",
+        "پاور"
+      ],
+      "series": "منبع تغذیه LED",
+      "model": null,
+      "pitch": null,
+      "dimensionsMm": null,
+      "priceToman": 1980000,
+      "priceStatus": "unit_review",
+      "priceUnit": null,
+      "priceUnitLabel": "واحد نیازمند تأیید",
+      "options": [],
+      "specifications": [
+        "/"
+      ],
+      "images": [
+        {
+          "path": "assets/product-197.webp",
+          "kind": "supplier-reference"
+        }
+      ],
+      "basePriceToman": 1800000
+    },
+    {
+      "externalId": "ava-led-catalog:ava-50-01",
+      "brand": "AVA Groups",
+      "name": "200W 5V 40A Power supply Voltage 110V",
+      "category": "پاور",
+      "categoryPath": [
+        "همکاران",
+        "پاور"
+      ],
+      "series": "منبع تغذیه LED",
+      "model": null,
+      "pitch": null,
+      "dimensionsMm": null,
+      "priceToman": 2640000,
+      "priceStatus": "unit_review",
+      "priceUnit": null,
+      "priceUnitLabel": "واحد نیازمند تأیید",
+      "options": [],
+      "specifications": [
+        "/"
+      ],
+      "images": [
+        {
+          "path": "assets/product-197.webp",
+          "kind": "supplier-reference"
+        }
+      ],
+      "basePriceToman": 2400000
+    },
+    {
+      "externalId": "ava-led-catalog:ava-50-02",
+      "brand": "AVA Groups",
+      "name": "200W 5V 40A Power supply Voltage 110-220V",
+      "category": "پاور",
+      "categoryPath": [
+        "همکاران",
+        "پاور"
+      ],
+      "series": "منبع تغذیه LED",
+      "model": null,
+      "pitch": null,
+      "dimensionsMm": null,
+      "priceToman": 3300000,
+      "priceStatus": "unit_review",
+      "priceUnit": null,
+      "priceUnitLabel": "واحد نیازمند تأیید",
+      "options": [],
+      "specifications": [
+        "/"
+      ],
+      "images": [
+        {
+          "path": "assets/product-197.webp",
+          "kind": "supplier-reference"
+        }
+      ],
+      "basePriceToman": 3000000
+    },
+    {
+      "externalId": "ava-led-catalog:ava-50-03",
+      "brand": "AVA Groups",
+      "name": "300W 5V 60A Power supply Voltage 220-240V",
+      "category": "پاور",
+      "categoryPath": [
+        "همکاران",
+        "پاور"
+      ],
+      "series": "منبع تغذیه LED",
+      "model": null,
+      "pitch": null,
+      "dimensionsMm": null,
+      "priceToman": 3300000,
+      "priceStatus": "unit_review",
+      "priceUnit": null,
+      "priceUnitLabel": "واحد نیازمند تأیید",
+      "options": [],
+      "specifications": [
+        "/"
+      ],
+      "images": [
+        {
+          "path": "assets/product-197.webp",
+          "kind": "supplier-reference"
+        }
+      ],
+      "basePriceToman": 3000000
+    },
+    {
+      "externalId": "ava-led-catalog:ava-50-04",
+      "brand": "AVA Groups",
+      "name": "300W 5V 60A Power supply Voltage 110V",
+      "category": "پاور",
+      "categoryPath": [
+        "همکاران",
+        "پاور"
+      ],
+      "series": "منبع تغذیه LED",
+      "model": null,
+      "pitch": null,
+      "dimensionsMm": null,
+      "priceToman": 4950000,
+      "priceStatus": "unit_review",
+      "priceUnit": null,
+      "priceUnitLabel": "واحد نیازمند تأیید",
+      "options": [],
+      "specifications": [
+        "/"
+      ],
+      "images": [
+        {
+          "path": "assets/product-197.webp",
+          "kind": "supplier-reference"
+        }
+      ],
+      "basePriceToman": 4500000
+    },
+    {
+      "externalId": "ava-led-catalog:ava-50-05",
+      "brand": "AVA Groups",
+      "name": "300W 5V 60A Power supply Voltage 110-220V",
+      "category": "پاور",
+      "categoryPath": [
+        "همکاران",
+        "پاور"
+      ],
+      "series": "منبع تغذیه LED",
+      "model": null,
+      "pitch": null,
+      "dimensionsMm": null,
+      "priceToman": 5940000,
+      "priceStatus": "unit_review",
+      "priceUnit": null,
+      "priceUnitLabel": "واحد نیازمند تأیید",
+      "options": [],
+      "specifications": [
+        "/"
+      ],
+      "images": [
+        {
+          "path": "assets/product-197.webp",
+          "kind": "supplier-reference"
+        }
+      ],
+      "basePriceToman": 5400000
+    },
+    {
+      "externalId": "ava-led-catalog:ava-50-06",
+      "brand": "AVA Groups",
+      "name": "200W Slim Power Supply 220V",
+      "category": "پاور",
+      "categoryPath": [
+        "همکاران",
+        "پاور"
+      ],
+      "series": "منبع تغذیه LED",
+      "model": null,
+      "pitch": null,
+      "dimensionsMm": null,
+      "priceToman": 2310000,
+      "priceStatus": "unit_review",
+      "priceUnit": null,
+      "priceUnitLabel": "واحد نیازمند تأیید",
+      "options": [],
+      "specifications": [
+        "Use for Front&Rear Removable HUB Box /"
+      ],
+      "images": [
+        {
+          "path": "assets/product-200.webp",
+          "kind": "supplier-reference"
+        }
+      ],
+      "basePriceToman": 2100000
+    },
+    {
+      "externalId": "ava-led-catalog:ava-50-07",
+      "brand": "AVA Groups",
+      "name": "200W Slim Power Supply Auto Bi-vol 110-220V",
+      "category": "پاور",
+      "categoryPath": [
+        "همکاران",
+        "پاور"
+      ],
+      "series": "منبع تغذیه LED",
+      "model": null,
+      "pitch": null,
+      "dimensionsMm": null,
+      "priceToman": 4290000,
+      "priceStatus": "unit_review",
+      "priceUnit": null,
+      "priceUnitLabel": "واحد نیازمند تأیید",
+      "options": [],
+      "specifications": [
+        "Power Box ID/OD Panel 500*500mm"
+      ],
+      "images": [],
+      "basePriceToman": 3900000
+    },
+    {
+      "externalId": "ava-led-catalog:ava-50-08",
+      "brand": "AVA Groups",
+      "name": "400W Slim Power Supply 220V",
+      "category": "پاور",
+      "categoryPath": [
+        "همکاران",
+        "پاور"
+      ],
+      "series": "منبع تغذیه LED",
+      "model": null,
+      "pitch": null,
+      "dimensionsMm": null,
+      "priceToman": 3630000,
+      "priceStatus": "unit_review",
+      "priceUnit": null,
+      "priceUnitLabel": "واحد نیازمند تأیید",
+      "options": [],
+      "specifications": [
+        "Use for Front&Rear Removable HUB Box /"
+      ],
+      "images": [
+        {
+          "path": "assets/product-200.webp",
+          "kind": "supplier-reference"
+        }
+      ],
+      "basePriceToman": 3300000
+    },
+    {
+      "externalId": "ava-led-catalog:ava-51-01",
+      "brand": "AVA Groups",
+      "name": "400W Slim Power Supply Auto Bi-vol 110-220V",
+      "category": "پاور",
+      "categoryPath": [
+        "همکاران",
+        "پاور"
+      ],
+      "series": "منبع تغذیه LED",
+      "model": null,
+      "pitch": null,
+      "dimensionsMm": null,
+      "priceToman": 5280000,
+      "priceStatus": "unit_review",
+      "priceUnit": null,
+      "priceUnitLabel": "واحد نیازمند تأیید",
+      "options": [],
+      "specifications": [
+        "Power Box ID/OD Panel 500*1000mm"
+      ],
+      "images": [],
+      "basePriceToman": 4800000
+    },
+    {
+      "externalId": "ava-led-catalog:ava-51-02",
+      "brand": "AVA Groups",
+      "name": "NOVA TB10 plus+4G Video player",
+      "category": "سندر",
+      "categoryPath": [
+        "همکاران",
+        "سندر"
+      ],
+      "series": "پلیر و کنترلر LED",
+      "model": null,
+      "pitch": null,
+      "dimensionsMm": null,
+      "priceToman": 66000000,
+      "priceStatus": "unit_review",
+      "priceUnit": null,
+      "priceUnitLabel": "واحد نیازمند تأیید",
+      "options": [],
+      "specifications": [],
+      "images": [
+        {
+          "path": "assets/product-210.webp",
+          "kind": "supplier-reference"
+        }
+      ],
+      "basePriceToman": 60000000
+    },
+    {
+      "externalId": "ava-led-catalog:ava-51-03",
+      "brand": "AVA Groups",
+      "name": "NOVA TB20 plus+4G Video player",
+      "category": "سندر",
+      "categoryPath": [
+        "همکاران",
+        "سندر"
+      ],
+      "series": "پلیر و کنترلر LED",
+      "model": null,
+      "pitch": null,
+      "dimensionsMm": null,
+      "priceToman": 72600000,
+      "priceStatus": "unit_review",
+      "priceUnit": null,
+      "priceUnitLabel": "واحد نیازمند تأیید",
+      "options": [],
+      "specifications": [],
+      "images": [
+        {
+          "path": "assets/product-210.webp",
+          "kind": "supplier-reference"
+        }
+      ],
+      "basePriceToman": 66000000
+    },
+    {
+      "externalId": "ava-led-catalog:ava-51-04",
+      "brand": "AVA Groups",
+      "name": "Asynchronous TB40 NOVA Sending box+4G",
+      "category": "سندر",
+      "categoryPath": [
+        "همکاران",
+        "سندر"
+      ],
+      "series": "پلیر و کنترلر LED",
+      "model": null,
+      "pitch": null,
+      "dimensionsMm": null,
+      "priceToman": 82500000,
+      "priceStatus": "unit_review",
+      "priceUnit": null,
+      "priceUnitLabel": "واحد نیازمند تأیید",
+      "options": [],
+      "specifications": [
+        "TB40 has a maximum of 1.3 million pixels; (TB40",
+        "can be plugged into 2 network cables, and one",
+        "network cable can carry a maximum of 65w",
+        "pixels)"
+      ],
+      "images": [
+        {
+          "path": "assets/product-205.webp",
+          "kind": "supplier-reference"
+        },
+        {
+          "path": "assets/product-204.webp",
+          "kind": "supplier-reference"
+        },
+        {
+          "path": "assets/product-203.webp",
+          "kind": "supplier-reference"
+        }
+      ],
+      "basePriceToman": 75000000
+    },
+    {
+      "externalId": "ava-led-catalog:ava-51-05",
+      "brand": "AVA Groups",
+      "name": "Asynchronous TB60 NOVA Sending box+4G",
+      "category": "سندر",
+      "categoryPath": [
+        "همکاران",
+        "سندر"
+      ],
+      "series": "پلیر و کنترلر LED",
+      "model": null,
+      "pitch": null,
+      "dimensionsMm": null,
+      "priceToman": 148500000,
+      "priceStatus": "unit_review",
+      "priceUnit": null,
+      "priceUnitLabel": "واحد نیازمند تأیید",
+      "options": [],
+      "specifications": [
+        "TB60 has a maximum of 2.6 million pixels; (TB60",
+        "can be plugged into 4 network cables), but the",
+        "total load cannot exceed 2.3 million"
+      ],
+      "images": [
+        {
+          "path": "assets/product-207.webp",
+          "kind": "supplier-reference"
+        },
+        {
+          "path": "assets/product-206.webp",
+          "kind": "supplier-reference"
+        },
+        {
+          "path": "assets/product-203.webp",
+          "kind": "supplier-reference"
+        }
+      ],
+      "basePriceToman": 135000000
+    },
+    {
+      "externalId": "ava-led-catalog:ava-51-06",
+      "brand": "AVA Groups",
+      "name": "LCB4K+4G Video Player (which connect with VX series video processor )",
+      "category": "سندر",
+      "categoryPath": [
+        "همکاران",
+        "سندر"
+      ],
+      "series": "پلیر و کنترلر LED",
+      "model": null,
+      "pitch": null,
+      "dimensionsMm": null,
+      "priceToman": 85800000,
+      "priceStatus": "priced",
+      "priceUnit": "piece",
+      "priceUnitLabel": "هر عدد",
+      "options": [],
+      "specifications": [
+        "6.5m pixels support max"
+      ],
+      "images": [
+        {
+          "path": "assets/product-208.webp",
+          "kind": "supplier-reference"
+        }
+      ],
+      "basePriceToman": 78000000
+    },
+    {
+      "externalId": "ava-led-catalog:ava-52-05",
+      "brand": "AVA Groups",
+      "name": "NOVA MSD600-1 Sending Card",
+      "category": "سندر",
+      "categoryPath": [
+        "همکاران",
+        "سندر"
+      ],
+      "series": "کارت سندر",
+      "model": null,
+      "pitch": null,
+      "dimensionsMm": null,
+      "priceToman": 59400000,
+      "priceStatus": "unit_review",
+      "priceUnit": null,
+      "priceUnitLabel": "واحد نیازمند تأیید",
+      "options": [],
+      "specifications": [],
+      "images": [
+        {
+          "path": "assets/product-214.webp",
+          "kind": "supplier-reference"
+        }
+      ],
+      "basePriceToman": 54000000
+    },
+    {
+      "externalId": "ava-led-catalog:ava-52-06",
+      "brand": "AVA Groups",
+      "name": "NOVA MSD300-1 Sending Card",
+      "category": "سندر",
+      "categoryPath": [
+        "همکاران",
+        "سندر"
+      ],
+      "series": "کارت سندر",
+      "model": null,
+      "pitch": null,
+      "dimensionsMm": null,
+      "priceToman": 28050000,
+      "priceStatus": "unit_review",
+      "priceUnit": null,
+      "priceUnitLabel": "واحد نیازمند تأیید",
+      "options": [],
+      "specifications": [],
+      "images": [
+        {
+          "path": "assets/product-215.webp",
+          "kind": "supplier-reference"
+        }
+      ],
+      "basePriceToman": 25500000
+    },
+    {
+      "externalId": "ava-led-catalog:ava-47-01",
+      "brand": "AVA Groups",
+      "name": "LVP300 Video Processor (no receiving card inside) GT-LVP300",
+      "category": "پروسسور",
+      "categoryPath": [
+        "همکاران",
+        "پروسسور"
+      ],
+      "series": "پردازنده VDWALL",
+      "model": null,
+      "pitch": null,
+      "dimensionsMm": null,
+      "priceToman": 66000000,
+      "priceStatus": "unit_review",
+      "priceUnit": null,
+      "priceUnitLabel": "واحد نیازمند تأیید",
+      "options": [],
+      "specifications": [
+        "LVP300 VDWALL Stage Events HD LED Video",
+        "Processor",
+        "Product Description:",
+        "1. Faroudja® Real Color®True color image",
+        "processing,,Faroudja® DCDI interlacing video",
+        "processing Faroudja® TureLife™video"
+      ],
+      "images": [
+        {
+          "path": "assets/product-179.webp",
+          "kind": "supplier-reference"
+        }
+      ],
+      "basePriceToman": 60000000
+    },
+    {
+      "externalId": "ava-led-catalog:ava-47-02",
+      "brand": "AVA Groups",
+      "name": "LVP615 Video Processor (no receiving card inside) GT-LVP615",
+      "category": "پروسسور",
+      "categoryPath": [
+        "همکاران",
+        "پروسسور"
+      ],
+      "series": "پردازنده VDWALL",
+      "model": null,
+      "pitch": null,
+      "dimensionsMm": null,
+      "priceToman": 132000000,
+      "priceStatus": "unit_review",
+      "priceUnit": null,
+      "priceUnitLabel": "واحد نیازمند تأیید",
+      "options": [],
+      "specifications": [
+        "processing Faroudja® TureLife™video",
+        "2.3m Pixel Support"
+      ],
+      "images": [
+        {
+          "path": "assets/product-178.webp",
+          "kind": "supplier-reference"
+        }
+      ],
+      "basePriceToman": 120000000
+    },
+    {
+      "externalId": "ava-led-catalog:ava-47-03",
+      "brand": "AVA Groups",
+      "name": "LVP615S Video Processor (no receiving card inside) GT-LVP615S",
+      "category": "پروسسور",
+      "categoryPath": [
+        "همکاران",
+        "پروسسور"
+      ],
+      "series": "پردازنده VDWALL",
+      "model": null,
+      "pitch": null,
+      "dimensionsMm": null,
+      "priceToman": 141900000,
+      "priceStatus": "unit_review",
+      "priceUnit": null,
+      "priceUnitLabel": "واحد نیازمند تأیید",
+      "options": [],
+      "specifications": [
+        "2.3m Pixel Support"
+      ],
+      "images": [
+        {
+          "path": "assets/product-178.webp",
+          "kind": "supplier-reference"
+        }
+      ],
+      "basePriceToman": 129000000
+    },
+    {
+      "externalId": "ava-led-catalog:ava-47-04",
+      "brand": "AVA Groups",
+      "name": "Nova star CMS130 2K All-in-1 Video processor",
+      "category": "پروسسور",
+      "categoryPath": [
+        "همکاران",
+        "پروسسور"
+      ],
+      "series": "پردازنده NovaStar",
+      "model": null,
+      "pitch": null,
+      "dimensionsMm": null,
+      "priceToman": 56100000,
+      "priceStatus": "unit_review",
+      "priceUnit": null,
+      "priceUnitLabel": "واحد نیازمند تأیید",
+      "options": [],
+      "specifications": [
+        "most use for fix installation screen, support",
+        "1300000 pixels"
+      ],
+      "images": [
+        {
+          "path": "assets/product-183.webp",
+          "kind": "supplier-reference"
+        }
+      ],
+      "basePriceToman": 51000000
+    },
+    {
+      "externalId": "ava-led-catalog:ava-47-05",
+      "brand": "AVA Groups",
+      "name": "Nova star cms260 2K All- in-1 Video processor",
+      "category": "پروسسور",
+      "categoryPath": [
+        "همکاران",
+        "پروسسور"
+      ],
+      "series": "پردازنده NovaStar",
+      "model": null,
+      "pitch": null,
+      "dimensionsMm": null,
+      "priceToman": 136950000,
+      "priceStatus": "unit_review",
+      "priceUnit": null,
+      "priceUnitLabel": "واحد نیازمند تأیید",
+      "options": [],
+      "specifications": [
+        "most use for fix installation screen, support",
+        "2300000 pixels"
+      ],
+      "images": [
+        {
+          "path": "assets/product-182.webp",
+          "kind": "supplier-reference"
+        }
+      ],
+      "basePriceToman": 124500000
+    },
+    {
+      "externalId": "ava-led-catalog:ava-47-06",
+      "brand": "AVA Groups",
+      "name": "VX400 PRO 4K All-in-1 Video processor",
+      "category": "پروسسور",
+      "categoryPath": [
+        "همکاران",
+        "پروسسور"
+      ],
+      "series": "پردازنده NovaStar",
+      "model": "BT-VX400",
+      "pitch": null,
+      "dimensionsMm": null,
+      "priceToman": 316800000,
+      "priceStatus": "unit_review",
+      "priceUnit": null,
+      "priceUnitLabel": "واحد نیازمند تأیید",
+      "options": [],
+      "specifications": [
+        "Support 2.6 million pixels"
+      ],
+      "images": [
+        {
+          "path": "assets/product-180.webp",
+          "kind": "supplier-reference"
+        }
+      ],
+      "basePriceToman": 288000000
+    },
+    {
+      "externalId": "ava-led-catalog:ava-47-07",
+      "brand": "AVA Groups",
+      "name": "VX600 PRO 4K All-in-1 Video processor",
+      "category": "پروسسور",
+      "categoryPath": [
+        "همکاران",
+        "پروسسور"
+      ],
+      "series": "پردازنده NovaStar",
+      "model": "BT-VX600",
+      "pitch": null,
+      "dimensionsMm": null,
+      "priceToman": 338250000,
+      "priceStatus": "unit_review",
+      "priceUnit": null,
+      "priceUnitLabel": "واحد نیازمند تأیید",
+      "options": [],
+      "specifications": [
+        "3.9 million pixels, width up to 10240, height up to",
+        "8192. HDMI 1.3x2"
+      ],
+      "images": [
+        {
+          "path": "assets/product-181.webp",
+          "kind": "supplier-reference"
+        }
+      ],
+      "basePriceToman": 307500000
+    },
+    {
+      "externalId": "ava-led-catalog:ava-48-01",
+      "brand": "AVA Groups",
+      "name": "VX1000 PRO 4K All-in-1 Video processor",
+      "category": "پروسسور",
+      "categoryPath": [
+        "همکاران",
+        "پروسسور"
+      ],
+      "series": "پردازنده NovaStar",
+      "model": "BT-VX1000",
+      "pitch": null,
+      "dimensionsMm": null,
+      "priceToman": 471900000,
+      "priceStatus": "unit_review",
+      "priceUnit": null,
+      "priceUnitLabel": "واحد نیازمند تأیید",
+      "options": [],
+      "specifications": [
+        "6.5 million pixels, width up to 10240, height up to 8192.",
+        "HDMI 1.4x2"
+      ],
+      "images": [
+        {
+          "path": "assets/product-186.webp",
+          "kind": "supplier-reference"
+        }
+      ],
+      "basePriceToman": 429000000
+    },
+    {
+      "externalId": "ava-led-catalog:ava-48-02",
+      "brand": "AVA Groups",
+      "name": "VX2000 PRO 4K All-in-1 Video processor",
+      "category": "پروسسور",
+      "categoryPath": [
+        "همکاران",
+        "پروسسور"
+      ],
+      "series": "پردازنده NovaStar",
+      "model": "BT-VX2000",
+      "pitch": null,
+      "dimensionsMm": null,
+      "priceToman": 917400000,
+      "priceStatus": "unit_review",
+      "priceUnit": null,
+      "priceUnitLabel": "واحد نیازمند تأیید",
+      "options": [],
+      "specifications": [
+        "max load 1300,0000pixels with 16ports"
+      ],
+      "images": [
+        {
+          "path": "assets/product-192.webp",
+          "kind": "supplier-reference"
+        }
+      ],
+      "basePriceToman": 834000000
+    },
+    {
+      "externalId": "ava-led-catalog:ava-48-03",
+      "brand": "AVA Groups",
+      "name": "VX16S All-in-1 Video processor",
+      "category": "پروسسور",
+      "categoryPath": [
+        "همکاران",
+        "پروسسور"
+      ],
+      "series": "پردازنده NovaStar",
+      "model": "BT-VX16S",
+      "pitch": null,
+      "dimensionsMm": null,
+      "priceToman": 801900000,
+      "priceStatus": "unit_review",
+      "priceUnit": null,
+      "priceUnitLabel": "واحد نیازمند تأیید",
+      "options": [],
+      "specifications": [
+        "Ultra HD 4K×2K@60Hz image processing and sending",
+        "capabilities, as well as up to 10,400,000 pixels",
+        "Industry-standard input connectors",
+        "− 2x 3G-SDI",
+        "− 1x HDMI 2.0",
+        "− 4x SL-DVI"
+      ],
+      "images": [
+        {
+          "path": "assets/product-187.webp",
+          "kind": "supplier-reference"
+        }
+      ],
+      "basePriceToman": 729000000
+    },
+    {
+      "externalId": "ava-led-catalog:ava-48-04",
+      "brand": "AVA Groups",
+      "name": "Nova star KU20 Video processor",
+      "category": "پروسسور",
+      "categoryPath": [
+        "همکاران",
+        "پروسسور"
+      ],
+      "series": "پردازنده NovaStar",
+      "model": "BT-KU20",
+      "pitch": null,
+      "dimensionsMm": null,
+      "priceToman": 245850000,
+      "priceStatus": "unit_review",
+      "priceUnit": null,
+      "priceUnitLabel": "واحد نیازمند تأیید",
+      "options": [],
+      "specifications": [
+        "/"
+      ],
+      "images": [
+        {
+          "path": "assets/product-188.webp",
+          "kind": "supplier-reference"
+        }
+      ],
+      "basePriceToman": 223500000
+    },
+    {
+      "externalId": "ava-led-catalog:ava-48-05",
+      "brand": "AVA Groups",
+      "name": "Nova star TU15PRO Video processor",
+      "category": "پروسسور",
+      "categoryPath": [
+        "همکاران",
+        "پروسسور"
+      ],
+      "series": "پردازنده NovaStar",
+      "model": "BT-TU15PRO",
+      "pitch": null,
+      "dimensionsMm": null,
+      "priceToman": 188100000,
+      "priceStatus": "unit_review",
+      "priceUnit": null,
+      "priceUnitLabel": "واحد نیازمند تأیید",
+      "options": [],
+      "specifications": [
+        "/"
+      ],
+      "images": [
+        {
+          "path": "assets/product-189.webp",
+          "kind": "supplier-reference"
+        }
+      ],
+      "basePriceToman": 171000000
+    },
+    {
+      "externalId": "ava-led-catalog:ava-48-06",
+      "brand": "AVA Groups",
+      "name": "Nova star TU20PRO Video processor",
+      "category": "پروسسور",
+      "categoryPath": [
+        "همکاران",
+        "پروسسور"
+      ],
+      "series": "پردازنده NovaStar",
+      "model": "BT-TU20PRO",
+      "pitch": null,
+      "dimensionsMm": null,
+      "priceToman": 308550000,
+      "priceStatus": "unit_review",
+      "priceUnit": null,
+      "priceUnitLabel": "واحد نیازمند تأیید",
+      "options": [],
+      "specifications": [
+        "/"
+      ],
+      "images": [
+        {
+          "path": "assets/product-190.webp",
+          "kind": "supplier-reference"
+        }
+      ],
+      "basePriceToman": 280500000
+    },
+    {
+      "externalId": "ava-led-catalog:ava-48-07",
+      "brand": "AVA Groups",
+      "name": "Nova star MX30 Video processor",
+      "category": "پروسسور",
+      "categoryPath": [
+        "همکاران",
+        "پروسسور"
+      ],
+      "series": "پردازنده NovaStar",
+      "model": "BT-MX30",
+      "pitch": null,
+      "dimensionsMm": null,
+      "priceToman": 607200000,
+      "priceStatus": "unit_review",
+      "priceUnit": null,
+      "priceUnitLabel": "واحد نیازمند تأیید",
+      "options": [],
+      "specifications": [
+        "/"
+      ],
+      "images": [
+        {
+          "path": "assets/product-191.webp",
+          "kind": "supplier-reference"
+        }
+      ],
+      "basePriceToman": 552000000
+    },
+    {
+      "externalId": "ava-led-catalog:ava-49-01",
+      "brand": "AVA Groups",
+      "name": "Nova star NOVAPRO UHD JR Video processor",
+      "category": "پروسسور",
+      "categoryPath": [
+        "همکاران",
+        "پروسسور"
+      ],
+      "series": "پردازنده NovaStar",
+      "model": "BT-NOVAPRO UHD JR",
+      "pitch": null,
+      "dimensionsMm": null,
+      "priceToman": 1555950000,
+      "priceStatus": "unit_review",
+      "priceUnit": null,
+      "priceUnitLabel": "واحد نیازمند تأیید",
+      "options": [],
+      "specifications": [
+        "/"
+      ],
+      "images": [
+        {
+          "path": "assets/product-195.webp",
+          "kind": "supplier-reference"
+        }
+      ],
+      "basePriceToman": 1414500000
+    },
+    {
+      "externalId": "ava-led-catalog:ava-49-02",
+      "brand": "AVA Groups",
+      "name": "Nova star MX40PRO Video processor",
+      "category": "پروسسور",
+      "categoryPath": [
+        "همکاران",
+        "پروسسور"
+      ],
+      "series": "پردازنده NovaStar",
+      "model": "BT-MX40PRO",
+      "pitch": null,
+      "dimensionsMm": null,
+      "priceToman": 2013000000,
+      "priceStatus": "unit_review",
+      "priceUnit": null,
+      "priceUnitLabel": "واحد نیازمند تأیید",
+      "options": [],
+      "specifications": [
+        "/"
+      ],
+      "images": [
+        {
+          "path": "assets/product-196.webp",
+          "kind": "supplier-reference"
+        }
+      ],
+      "basePriceToman": 1830000000
+    },
+    {
+      "externalId": "ava-led-catalog:ava-49-03",
+      "brand": "AVA Groups",
+      "name": "H2 4K Video Processor 1pc of H- 2*HDMI2.0+2*DP1.2 1pc of H-4*3g sdi Output 2pcs of H- 16rj45+2op mvr pre-monitoring board 1pc",
+      "category": "پروسسور",
+      "categoryPath": [
+        "همکاران",
+        "پروسسور"
+      ],
+      "series": "پردازنده NovaStar",
+      "model": null,
+      "pitch": null,
+      "dimensionsMm": null,
+      "priceToman": 1839750000,
+      "priceStatus": "unit_review",
+      "priceUnit": null,
+      "priceUnitLabel": "واحد نیازمند تأیید",
+      "options": [],
+      "specifications": [
+        "max loading 20,800,000pixels"
+      ],
+      "images": [],
+      "basePriceToman": 1672500000
+    },
+    {
+      "externalId": "ava-led-catalog:ava-49-04",
+      "brand": "AVA Groups",
+      "name": "H2 4K Video Processor Input 2pcs of H- 2*HDMI2.0+2*Dp1.2 Output 2pcs of H-20rj45",
+      "category": "پروسسور",
+      "categoryPath": [
+        "همکاران",
+        "پروسسور"
+      ],
+      "series": "پردازنده NovaStar",
+      "model": null,
+      "pitch": null,
+      "dimensionsMm": null,
+      "priceToman": 1725900000,
+      "priceStatus": "unit_review",
+      "priceUnit": null,
+      "priceUnitLabel": "واحد نیازمند تأیید",
+      "options": [],
+      "specifications": [
+        "max loading 26,000,000pixels"
+      ],
+      "images": [],
+      "basePriceToman": 1569000000
+    },
+    {
+      "externalId": "ava-led-catalog:ava-49-05",
+      "brand": "AVA Groups",
+      "name": "H2 4K Video Processor Input 2pcs of H- 2*HDMI2.0 Output 2pcs of H-20rj45",
+      "category": "پروسسور",
+      "categoryPath": [
+        "همکاران",
+        "پروسسور"
+      ],
+      "series": "پردازنده NovaStar",
+      "model": null,
+      "pitch": null,
+      "dimensionsMm": null,
+      "priceToman": 1605450000,
+      "priceStatus": "unit_review",
+      "priceUnit": null,
+      "priceUnitLabel": "واحد نیازمند تأیید",
+      "options": [],
+      "specifications": [
+        "max loading 26,000,000pixels"
+      ],
+      "images": [],
+      "basePriceToman": 1459500000
+    },
+    {
+      "externalId": "ava-led-catalog:ava-51-07",
+      "brand": "AVA Groups",
+      "name": "NovaStar NV7508",
+      "category": "ریسیور",
+      "categoryPath": [
+        "همکاران",
+        "ریسیور"
+      ],
+      "series": "کارت دریافت LED",
+      "model": null,
+      "pitch": null,
+      "dimensionsMm": null,
+      "priceToman": 3300000,
+      "priceStatus": "unit_review",
+      "priceUnit": null,
+      "priceUnitLabel": "واحد نیازمند تأیید",
+      "options": [],
+      "specifications": [],
+      "images": [
+        {
+          "path": "assets/product-209.webp",
+          "kind": "supplier-reference"
+        }
+      ],
+      "basePriceToman": 3000000
+    },
+    {
+      "externalId": "ava-led-catalog:ava-51-08",
+      "brand": "AVA Groups",
+      "name": "Nova Receiving Card NV7512",
+      "category": "ریسیور",
+      "categoryPath": [
+        "همکاران",
+        "ریسیور"
+      ],
+      "series": "کارت دریافت LED",
+      "model": null,
+      "pitch": null,
+      "dimensionsMm": null,
+      "priceToman": 3960000,
+      "priceStatus": "unit_review",
+      "priceUnit": null,
+      "priceUnitLabel": "واحد نیازمند تأیید",
+      "options": [],
+      "specifications": [],
+      "images": [
+        {
+          "path": "assets/product-211.webp",
+          "kind": "supplier-reference"
+        }
+      ],
+      "basePriceToman": 3600000
+    },
+    {
+      "externalId": "ava-led-catalog:ava-52-01",
+      "brand": "AVA Groups",
+      "name": "Nova Receiving Card NV7516",
+      "category": "ریسیور",
+      "categoryPath": [
+        "همکاران",
+        "ریسیور"
+      ],
+      "series": "کارت دریافت LED",
+      "model": null,
+      "pitch": null,
+      "dimensionsMm": null,
+      "priceToman": 4290000,
+      "priceStatus": "unit_review",
+      "priceUnit": null,
+      "priceUnitLabel": "واحد نیازمند تأیید",
+      "options": [],
+      "specifications": [],
+      "images": [
+        {
+          "path": "assets/product-219.webp",
+          "kind": "supplier-reference"
+        }
+      ],
+      "basePriceToman": 3900000
+    },
+    {
+      "externalId": "ava-led-catalog:ava-52-02",
+      "brand": "AVA Groups",
+      "name": "NOVA Receivng Card A5S plus",
+      "category": "ریسیور",
+      "categoryPath": [
+        "همکاران",
+        "ریسیور"
+      ],
+      "series": "کارت دریافت LED",
+      "model": null,
+      "pitch": null,
+      "dimensionsMm": null,
+      "priceToman": 3630000,
+      "priceStatus": "unit_review",
+      "priceUnit": null,
+      "priceUnitLabel": "واحد نیازمند تأیید",
+      "options": [],
+      "specifications": [],
+      "images": [
+        {
+          "path": "assets/product-220.webp",
+          "kind": "supplier-reference"
+        }
+      ],
+      "basePriceToman": 3300000
+    },
+    {
+      "externalId": "ava-led-catalog:ava-52-03",
+      "brand": "AVA Groups",
+      "name": "NOVA Receivng Card A8s-n",
+      "category": "ریسیور",
+      "categoryPath": [
+        "همکاران",
+        "ریسیور"
+      ],
+      "series": "کارت دریافت LED",
+      "model": null,
+      "pitch": null,
+      "dimensionsMm": null,
+      "priceToman": 6600000,
+      "priceStatus": "unit_review",
+      "priceUnit": null,
+      "priceUnitLabel": "واحد نیازمند تأیید",
+      "options": [],
+      "specifications": [],
+      "images": [
+        {
+          "path": "assets/product-221.webp",
+          "kind": "supplier-reference"
+        }
+      ],
+      "basePriceToman": 6000000
+    },
+    {
+      "externalId": "ava-led-catalog:ava-52-04",
+      "brand": "AVA Groups",
+      "name": "NOVA Receivng Card A10spro",
+      "category": "ریسیور",
+      "categoryPath": [
+        "همکاران",
+        "ریسیور"
+      ],
+      "series": "کارت دریافت LED",
+      "model": null,
+      "pitch": null,
+      "dimensionsMm": null,
+      "priceToman": 15510000,
+      "priceStatus": "unit_review",
+      "priceUnit": null,
+      "priceUnitLabel": "واحد نیازمند تأیید",
+      "options": [],
+      "specifications": [],
+      "images": [
+        {
+          "path": "assets/product-222.webp",
+          "kind": "supplier-reference"
+        }
+      ],
+      "basePriceToman": 14100000
+    }
+  ]
+}
