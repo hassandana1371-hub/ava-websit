@@ -28,7 +28,7 @@ class PartnerTests(unittest.TestCase):
  def test_partner_catalogue_excludes_modules_but_keeps_legacy_page_and_other_products(self):
   self.load_previous();self.run_import();public=json.loads(self.request('/api/content',**{'X-AvA-Media':'references'})[2])['data'];groups=fixture.app.site_features.partner_groups(public)
   self.assertEqual([g['title'] for g in groups],['مگنت','پاور','ریسیور','سندر','پروسسور']);self.assertEqual(len(fixture.app.site_features.partner_products(public)),42)
-  html=self.request('/partners')[2].decode();self.assertIn('۸۵٬۸۰۰٬۰۰۰',html);self.assertNotIn('href="/equipment/led-module"',html);self.assertNotIn('priceUsd',html);self.assertNotIn('rateTomanPerUsd',html)
+  html=self.request('/partners')[2].decode();self.assertNotIn('قیمت هر ماژول',html.split('<main id="ava-seo-content"',1)[1]);self.assertIn('۸۵٬۸۰۰٬۰۰۰',html);self.assertNotIn('href="/equipment/led-module"',html);self.assertNotIn('priceUsd',html);self.assertNotIn('rateTomanPerUsd',html)
   self.assertEqual(self.request('/equipment/led-module')[0],200)
   self.assertTrue(any(p['id']=='led-module' for p in self.data()['modules']['equipment']['items']))
   for id,count in [('power-supply',10),('receiving-card',6),('sending-card',7),('processor',19),('magnet',0)]:self.assertEqual(len(fixture.app.site_features.partner_products(public,id)),count)

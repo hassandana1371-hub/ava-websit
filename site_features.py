@@ -270,7 +270,8 @@ def catalogue_html(data,path,page):
     items=catalogue_products(data,path,page)
     if not items:return ''
     esc=html.escape
-    out='<section class="server-catalogue" aria-label="محصولات قابل بررسی"><h2>مدل‌ها و قیمت‌های ثبت‌شده</h2><p>قیمت هر ماژول با هزینهٔ نمایشگر کامل یکسان نیست؛ واحد و تاریخ قیمت هر مدل را بررسی کنید.</p><ul class="server-product-list">'
+    note='واحد و تاریخ قیمت هر کالا را بررسی کنید؛ مبلغ گزینه‌های افزوده جدا از قیمت پایه است.' if page.get('partnerOverview') or page.get('partnerCategory') else 'قیمت هر ماژول با هزینهٔ نمایشگر کامل یکسان نیست؛ واحد و تاریخ قیمت هر مدل را بررسی کنید.'
+    out='<section class="server-catalogue" aria-label="محصولات قابل بررسی"><h2>مدل‌ها و قیمت‌های ثبت‌شده</h2><p>'+esc(note)+'</p><ul class="server-product-list">'
     for item in items:
         out+='<li><h3><a href="/product/'+esc(item['id'],quote=True)+'">'+esc(item['title'])+'</a></h3>'
         if item.get('model'):out+='<p dir="auto">'+esc(item['model'])+'</p>'
